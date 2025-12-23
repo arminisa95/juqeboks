@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register || Juke</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/register.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <a href="../index.html">
+            <img src="../images/juqe.png" alt="Juke Logo" class="logo-img">
+        </a>
+    </header>
+    <div class="register-container">
+        <h1 class="register-title">Create Account</h1>
+        
+        <!-- Social Login Buttons -->
+        <div class="social-buttons">
+            <button type="button" class="social-btn google">
+                <i class="fab fa-google"></i> Continue with Google
+            </button>
+            <button type="button" class="social-btn facebook">
+                <i class="fab fa-facebook-f"></i> Continue with Facebook
+            </button>
+            <button type="button" class="social-btn apple">
+                <i class="fab fa-apple"></i> Continue with Apple
+            </button>
+        </div>
+
+        <div class="divider">or</div>
+
+        <!-- Regular Registration Form -->
+        <form action="/register" method="POST">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required minlength="3">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required minlength="8">
+                <div class="password-requirements">At least 8 characters</div>
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm-password" required>
+            </div>
+            <button type="submit" class="register-btn">Create Account</button>
+        </form>
+
+        <div class="login-link">
+            Already have an account? <a href="login.html">Log in</a>
+        </div>
+    </div>
+    <footer>
+        <p class="contact">All rights reserved &copy; 2025 juqeboks</p>
+        <a id="mail" href="mailto:arminisa@outlook.com" class="contact">contact:mail</a>
+        <a id="phone" href="tel:06509014453" class="contact">contact:phone</a>
+    
+        <a href="../index.html" class="floating-button">
+            <img src="../images/U-pink.png" alt="Juke Logo">
+        </a>
+    </footer>
+
+    <script>
+        // Client-side password confirmation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+            }
+        });
+
+        // Social login buttons
+        document.querySelectorAll('.social-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const provider = this.classList.contains('google') ? 'google' : 
+                                this.classList.contains('facebook') ? 'facebook' : 'apple';
+                
+                // These URLs should point to your backend OAuth endpoints
+                const oauthUrls = {
+                    google: '/auth/google',
+                    facebook: '/auth/facebook',
+                    apple: '/auth/apple'
+                };
+                
+                // Redirect to the OAuth provider
+                if (oauthUrls[provider]) {
+                    window.location.href = oauthUrls[provider];
+                }
+            });
+        });
+    </script>
+</body>
+</html>

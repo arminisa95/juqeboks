@@ -1,0 +1,240 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    overflow-x: hidden;
+    /* Prevents horizontal scrollbar */
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: rgb(16, 10, 86);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* HEADER
++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++
+*/
+header {
+    margin: 0px 50px;
+    padding-bottom: 0;
+    display: flex;
+}
+
+
+nav {
+    display: flex;
+    position: relative;
+    justify-content: center;
+}
+
+.header-right {
+    display: flex;
+    margin-right: 50px;
+}
+
+.nav-buttons {
+    display: flex;
+    border: none;
+    margin: 1px 100px;
+    margin-left: 10px;
+    height: 40px;
+    width: 130px;
+    float: right;
+    gap: 15px;
+}
+
+.nav-buttons a {
+    position: relative;
+    color: #dbd8d8;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 6.5px;
+    padding: 0 5px;
+    display: inline-block;
+    min-width: 80px;
+    text-align: center;
+    transition: transform 0.3s ease, font-weight 0.3s ease;
+}
+
+a:hover {
+    transform: scale(1.05);
+    color: #5957c4;
+    opacity: 0.8;
+}
+
+.login {
+    color: #F72193 !important;
+    font-weight: 900;
+}
+
+/* Logo */
+.logo-img {
+    position: sticky;
+    z-index: 1000;
+    height: 90px;
+    width: auto;
+}
+
+
+/* Search Bar
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*/
+.search-container {
+    display: flex;
+    max-width: 600px;
+    width: 100%;
+    margin: 5px 60px;
+    max-height: 32px;
+    opacity: 0.8;
+}
+
+.search-bar {
+    flex: 1;
+    padding: 0px 20px;
+    border: 1px solid;
+    border-color: rgb(155, 151, 151);
+    border-style: double;
+    font-size: 16px;
+    background: rgba(124, 122, 122, 0.1);
+    color: #ffffff !important;
+    outline: none;
+    transition: all 0.2s;
+    width: 300px;
+}
+
+.search-bar:focus {
+    border-color: #00ffd0 !important;
+    border: 2px solid;
+    color: #ffffff !important;
+}
+
+.search-bar::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.search-btn {
+    max-height: 35px;
+    background-color: rgb(155, 151, 151);
+    border: none;
+    padding: 0 20px;
+    border-radius: 0 30px 30px 0;
+    transition: background 0.2s ease;
+    cursor: pointer;
+    color: #ffffff;
+}
+
+.search-btn:hover {
+    border-color: #00ffd0;
+}
+
+h1,
+h2,
+h3 {
+    color: #dbd8d8;
+    text-decoration: blink;
+    font-weight: 300;
+}
+
+h1 {
+    display: inline-block;
+    /* Changed from flex to inline-block */
+    margin: 0 10px;
+    /* Add some space between the h1 elements */
+    font-size: 1.5rem;
+    /* Adjusted size for better appearance */
+    color: #dbd8d8;
+    font-weight: 400;
+    /* Slightly bolder than default */
+    vertical-align: middle;
+}
+
+.index-btn {
+    margin-top: 150px;
+    margin-left: 120px;
+}
+
+h1 a {
+    color: #dbd8d8;
+    font-size: 2.6rem;
+    margin: 50px;
+    text-decoration: none;
+    position: static;
+}
+
+h1 a:hover {
+    color: #d8dbdb;
+    font-size: 2.7rem !important;
+    text-decoration: none;
+    position: static;
+}
+
+footer {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 20px;
+    z-index: 1000;
+    background: rgba(16, 10, 86, 0.9);
+}
+
+.contact {
+    display: flex;
+    color: #dbd8d8;
+    font-size: 10px;
+}
+
+#mail {
+    margin-left: 200px;
+}
+
+#phone {
+    margin-left: 270px;
+}
+
+footer a {
+    color: #dbd8d8;
+}
+
+footer a:hover {
+    color: #00ffd0;
+}
+
+.floating-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 150px;
+    height: 150px;
+    z-index: 1001;
+    margin: 0;
+    padding: 0;
+}
+
+.floating-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.6s ease;
+    display: block;
+}

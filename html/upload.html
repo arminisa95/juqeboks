@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload - Juke</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Upload Page Specific Styles */
+        .upload-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: rgba(30, 25, 100, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .upload-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-header h1 {
+            color: #fff;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-header p {
+            color: #a0a0a0;
+            font-size: 1.1rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed #4a4a8a;
+            border-radius: 10px;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #00ffd0;
+            background: rgba(74, 74, 138, 0.2);
+        }
+        
+        .upload-area i {
+            font-size: 3rem;
+            color: #4a4a8a;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .upload-area p {
+            color: #a0a0a0;
+            margin: 0.5rem 0;
+        }
+        
+        .upload-area .browse-link {
+            color: #00ffd0;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #dbd8d8;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #4a4a8a;
+            background: rgba(30, 25, 100, 0.5);
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #00ffd0;
+        }
+        
+        .btn-upload {
+            background: #00ffd0;
+            color: #100a56;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-upload:hover {
+            background: #00e6b8;
+            transform: translateY(-2px);
+        }
+        
+        .file-info {
+            margin-top: 1rem;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .upload-container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .upload-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="../index.html">
+            <img src="../images/juqe.png" alt="Juke Logo" class="logo-img">
+        </a>
+
+        <nav>
+            <div class="nav-buttons">
+                <a href="user.html" class="feed">_feed</a>
+                <a href="artists.html" class="artists">_artists</a>
+                <a href="playlists.html" class="lists">_disco</a>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-bar" placeholder="Search for music, artists...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="header-right">
+                <div class="nav-buttons">
+                    <a href="upload.html" class="app active">_upload</a>
+                    <a href="coleqtion.html" class="register">_coleqtion</a>
+                    <a href="profile.html" class="login">_U</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="upload-container">
+            <div class="upload-header">
+                <h1>Upload Your Music</h1>
+                <p>Share your sound with the world</p>
+            </div>
+            
+            <form id="uploadForm">
+                <div class="upload-area" id="dropZone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Drag & drop your audio files here or</p>
+                    <p><span class="browse-link">browse</span> your files</p>
+                    <input type="file" id="fileInput" accept="audio/*" style="display: none;" multiple>
+                    <div class="file-info" id="fileInfo">No files selected</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="trackTitle">Track Title *</label>
+                    <input type="text" id="trackTitle" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="artistName">Artist Name *</label>
+                    <input type="text" id="artistName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="genre">Genre *</label>
+                    <select id="genre" class="form-control" required>
+                        <option value="">Select a genre</option>
+                        <option value="electronic">Electronic</option>
+                        <option value="hiphop">Hip Hop</option>
+                        <option value="rock">Rock</option>
+                        <option value="pop">Pop</option>
+                        <option value="jazz">Jazz</option>
+                        <option value="classical">Classical</option>
+                        <option value="rnb">R&B</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" class="form-control" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="terms" required>
+                        I have the rights to upload this content and agree to the <a href="#" style="color: #00ffd0;">Terms of Service</a>.
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn-upload">Upload Track</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const uploadForm = document.getElementById('uploadForm');
+            
+            // Handle click on drop zone
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', (e) => {
+                updateFileInfo(e.target.files);
+            });
+            
+            // Handle drag over
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#00ffd0';
+                dropZone.style.background = 'rgba(0, 255, 208, 0.1)';
+            });
+            
+            // Handle drag leave
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.style.borderColor = '#4a4a8a';
+                dropZone.style.background = 'transparent';
+            });
+            
+            // Handle drop
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#4a4a8a';
+                dropZone.style.background = 'transparent';
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    updateFileInfo(e.dataTransfer.files);
+                }
+            });
+            
+            // Update file info display
+            function updateFileInfo(files) {
+                if (files.length === 0) {
+                    fileInfo.textContent = 'No files selected';
+                } else if (files.length === 1) {
+                    fileInfo.textContent = `Selected: ${files[0].name}`;
+                } else {
+                    fileInfo.textContent = `Selected ${files.length} files`;
+                }
+            }
+            
+            // Handle form submission
+            uploadForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // Here you would typically handle the file upload
+                // using FormData and fetch/XMLHttpRequest
+                const formData = new FormData();
+                const files = fileInput.files;
+                
+                if (files.length === 0) {
+                    alert('Please select at least one file to upload');
+                    return;
+                }
+                
+                // Add files to FormData
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('audioFiles', files[i]);
+                }
+                
+                // Add other form data
+                formData.append('title', document.getElementById('trackTitle').value);
+                formData.append('artist', document.getElementById('artistName').value);
+                formData.append('genre', document.getElementById('genre').value);
+                formData.append('description', document.getElementById('description').value);
+                
+                // Show loading state
+                const submitBtn = uploadForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Uploading...';
+                
+                // Simulate upload (replace with actual upload code)
+                console.log('Uploading files...', formData);
+                
+                // Example of how you would do the actual upload:
+                /*
+                fetch('your-upload-endpoint', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Upload successful!');
+                    uploadForm.reset();
+                    fileInfo.textContent = 'No files selected';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Upload failed. Please try again.');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                });
+                */
+                
+                // For demo purposes, we'll just show a success message
+                setTimeout(() => {
+                    alert('Upload successful! (Demo)');
+                    uploadForm.reset();
+                    fileInfo.textContent = 'No files selected';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>

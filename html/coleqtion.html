@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discoteq - Your Music Library | Juke</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/coleqtion.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+</head>
+
+<body>
+    <header>
+        <a href="../index.html">
+            <img src="../images/juqe.png" alt="Juke Logo" class="logo-img">
+        </a>
+
+        <nav>
+            <div class="nav-buttons">
+                <a href="user.html" class="feed">_feed</a>
+                <a href="artists.html" class="artists">_artists</a>
+                <a href="playlists.html" class="lists">_disco</a>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-bar" placeholder="Search for music, artists...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="header-right">
+                <div class="nav-buttons">
+                    <a href="upload.html" class="app">_upload</a>
+                    <a href="coleqtion.html" class="register active">_coleqtion</a>
+                    <a href="profile.html" class="login">_U</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="library-container">
+            <div class="library-header">
+                <h1>U_coleqtion</h1>
+                <div class="library-actions">
+                    <input type="text" class="search-library" placeholder="Search your library...">
+                    <button class="filter-btn">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Filters</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active">Tracks</div>
+                <div class="tab">Playlists</div>
+                <div class="tab">Albums</div>
+                <div class="tab">Likes</div>
+            </div>
+
+            <div class="tracks-grid" id="tracksGrid">
+                <!-- Track cards will be dynamically inserted here -->
+            </div>
+
+            <div class="pagination">
+                <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Music Player (same as in other pages) -->
+    <div class="music-player">
+        <!-- Player content from other pages -->
+    </div>
+
+    <script>
+        // Sample track data - replace with your actual data
+        const tracks = [
+            {
+                id: 1,
+                title: "Midnight Drive",
+                artist: "Neon Waves",
+                cover: "../images/cover1.jpg",
+                duration: "3:45",
+                plays: "12.5K",
+                likes: "856",
+                date: "2 days ago"
+            },
+            {
+                id: 2,
+                title: "Electric Dreams",
+                artist: "Synth Master",
+                cover: "../images/cover2.jpg",
+                duration: "4:12",
+                plays: "8.2K",
+                likes: "642",
+                date: "1 week ago"
+            },
+            {
+                id: 3,
+                title: "Summer Breeze",
+                artist: "Chill Vibes",
+                cover: "../images/cover3.jpg",
+                duration: "3:28",
+                plays: "24.7K",
+                likes: "1.2K",
+                date: "2 weeks ago"
+            },
+            {
+                id: 4,
+                title: "Urban Jungle",
+                artist: "Bassline",
+                cover: "../images/cover4.jpg",
+                duration: "3:15",
+                plays: "5.6K",
+                likes: "423",
+                date: "3 weeks ago"
+            },
+            {
+                id: 5,
+                title: "Starry Night",
+                artist: "Cosmic Sounds",
+                cover: "../images/cover5.jpg",
+                duration: "4:35",
+                plays: "18.3K",
+                likes: "1.1K",
+                date: "1 month ago"
+            },
+            {
+                id: 6,
+                title: "Lost in Time",
+                artist: "Echo Chamber",
+                cover: "../images/cover6.jpg",
+                duration: "3:52",
+                plays: "9.8K",
+                likes: "732",
+                date: "1 month ago"
+            }
+        ];
+
+        // Function to create track card HTML
+        function createTrackCard(track) {
+            return `
+                <div class="track-card" data-id="${track.id}">
+                    <div class="track-cover">
+                        <img src="${track.cover}" alt="${track.title}">
+                        <div class="track-overlay">
+                            <button class="play-btn" onclick="playTrack(${track.id})">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="track-info">
+                        <h3 class="track-title">${track.title}</h3>
+                        <p class="track-artist">${track.artist}</p>
+                        <div class="track-stats">
+                            <span>${track.plays} plays</span>
+                            <div class="track-actions">
+                                <button class="action-btn" title="Like" onclick="toggleLike(${track.id})">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                                <button class="action-btn" title="Add to playlist" onclick="addToPlaylist(${track.id})">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button class="action-btn" title="More options" onclick="showTrackOptions(${track.id})">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Function to render tracks
+        function renderTracks() {
+            const tracksGrid = document.getElementById('tracksGrid');
+            tracksGrid.innerHTML = tracks.map(track => createTrackCard(track)).join('');
+        }
+
+        // Play track function
+        function playTrack(trackId) {
+            const track = tracks.find(t => t.id === trackId);
+            if (track) {
+                console.log('Now playing:', track.title);
+                // Add your play logic here
+            }
+        }
+
+        // Toggle like function
+        function toggleLike(trackId) {
+            console.log('Toggled like for track:', trackId);
+            // Add your like logic here
+        }
+
+        // Add to playlist function
+        function addToPlaylist(trackId) {
+            console.log('Add to playlist:', trackId);
+            // Add your add to playlist logic here
+        }
+
+        // Show track options
+        function showTrackOptions(trackId) {
+            console.log('Show options for track:', trackId);
+            // Add your options logic here
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTracks();
+
+            // Tab switching
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    // Here you would load the appropriate content based on the selected tab
+                });
+            });
+
+            // Search functionality
+            const searchInput = document.querySelector('.search-library');
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                // Add your search logic here
+                console.log('Searching for:', searchTerm);
+            });
+        });
+    </script>
+</body>
+
+</html>

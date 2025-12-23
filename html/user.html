@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juke || Webplayer, really for all</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/musicplayer.css">
+    <link rel="stylesheet" href="../css/feed.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="../script.js" defer></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Honk:MORF@15&family=Kedebideri:wght@400;500;600;700;800;900&family=Sigmar&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <a href="../index.html">
+            <img src="../images/juqe.png" alt="Juke Logo" class="logo-img">
+        </a>
+
+        <nav>
+            <div class="nav-buttons">
+                <a href="login.html" class="feed">_feed</a>
+                <a href="login.html" class="artists">_artists</a>
+                <a href="login.html" class="lists">_disco</a>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-bar" placeholder="Search for music, artists...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="header-right">
+                <div class="nav-buttons">
+                    <a href="upload.html" class="app">_upload</a>
+                    <a href="coleqtion.html" class="register">_coleqtion</a>
+                    <a href="login.html" class="login">_U</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <section class="music-feed">
+        <div class="feed-container">
+            <h2 class="feed-title">#Top 10</h2>
+            <div class="music-grid">
+                <!-- Music Card 1 -->
+                <div class="music-card">
+                    <div class="album-cover">
+                        <img src="../images/placeholder-cover.jpg" alt="Album Cover">
+                        <button class="play-btn" aria-label="Play track">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                    <div class="track-info">
+                        <h3 class="track-title">Track Title</h3>
+                        <p class="artist-name">Artist Name</p>
+                    </div>
+                    <div class="track-actions">
+                        <button class="like-btn" aria-label="Like track">
+                            <i class="far fa-heart"></i>
+                        </button>
+                        <span class="duration">3:42</span>
+                    </div>
+                </div>
+
+                <!-- Repeat for more tracks -->
+                <!-- Music Card 2 -->
+                <div class="music-card">
+                    <!-- Same structure as above -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Music Player -->
+    <div class="music-player">
+        <div class="now-playing">
+            <div class="track-info">
+                <img src="../images/placeholder-cover.jpg" alt="Now Playing" class="now-playing-cover">
+                <div class="track-details">
+                    <h4 class="now-playing-title">Not Playing</h4>
+                    <p class="now-playing-artist">-</p>
+                </div>
+                <button class="like-btn" aria-label="Like track">
+                    <i class="far fa-heart"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="player-controls">
+            <div class="control-buttons">
+                <button class="control-btn" id="shuffle" aria-label="Shuffle">
+                    <i class="fas fa-random"></i>
+                </button>
+                <button class="control-btn" id="prev" aria-label="Previous track">
+                    <i class="fas fa-step-backward"></i>
+                </button>
+                <button class="play-btn large" id="play" aria-label="Play/Pause">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button class="control-btn" id="next" aria-label="Next track">
+                    <i class="fas fa-step-forward"></i>
+                </button>
+                <button class="control-btn" id="repeat" aria-label="Repeat">
+                    <i class="fas fa-redo"></i>
+                </button>
+            </div>
+            <div class="progress-container">
+                <span class="time current-time">0:00</span>
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+                <span class="time duration">0:00</span>
+            </div>
+        </div>
+        <a href="../index.html" class="floating-button">
+            <img src="../images/U-pink.png" alt="Juke Logo">
+        </a>
+        <div class="volume-controls">
+            <i class="fas fa-volume-up"></i>
+            <div class="volume-slider-container">
+                <input type="range" class="volume-slider" min="0" max="100" value="70">
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
