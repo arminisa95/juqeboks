@@ -237,3 +237,88 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* iPhone 12 and Small Mobile Devices (390px) */
+@media (max-width: 390px) {
+    .library-container {
+        margin: 1rem auto;
+        padding: 0 0.5rem;
+    }
+    
+    .library-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .library-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .search-library {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 14px;
+    }
+    
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        font-size: 14px;
+    }
+    
+    .tabs {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .tab {
+        padding: 0.5rem 1rem;
+        font-size: 14px;
+        flex: 1;
+        text-align: center;
+        min-width: 60px;
+    }
+    
+    .tracks-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .track-card {
+        border-radius: 8px;
+    }
+    
+    .track-info {
+        padding: 0.8rem;
+    }
+    
+    .track-title {
+        font-size: 1rem;
+    }
+    
+    .track-artist {
+        font-size: 0.8rem;
+    }
+    
+    .track-stats {
+        font-size: 0.7rem;
+    }
+    
+    .play-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .action-btn {
+        font-size: 14px;
+    }
+    
+    .pagination {
+        gap: 0.3rem;
+    }
+    
+    .page-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+    }
+}
