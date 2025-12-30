@@ -8,7 +8,29 @@ const { db } = require('./database/connection');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+// Add at the top after existing requires
+const fs = require('fs');
+const path = require('path');
 
+// Auto-create tables on startup
+async function initializeDatabase() {
+    try {
+        const schemaPath = path.join(__dirname, 'database', 'schema.sql');
+        const schema = fs.readFileSync(schemaPath, 'utf8');
+        await db.query(schema);
+        console.log('Database schema initialized');
+    } catch (error) {
+        console.error('Database initialization error:', error);
+    }
+}
+
+// Modify your server start
+initializeDatabase().then(() => {
+    app.listen(PORT, () => {
+        console.log(`🎵 JUKE Music API Server running on port ${PORT}`);
+        console.log(`📍 API Base URL: http://localhost:${PORT}/api`);
+    });
+});
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -34,10 +56,10 @@ const authenticateToken = (req, res, next) => {
 // Helper function to generate JWT
 const generateToken = (user) => {
     return jwt.sign(
-        { 
-            id: user.id, 
-            username: user.username, 
-            email: user.email 
+        {
+            id: user.id,
+            username: user.username,
+            email: user.email
         },
         JWT_SECRET,
         { expiresIn: '24h' }
@@ -168,7 +190,7 @@ app.get('/api/artists', async (req, res) => {
 app.get('/api/artists/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const artist = await db.get(`
             SELECT id, name, bio, image_url, website_url, social_links, verified 
             FROM artists 
@@ -211,7 +233,7 @@ app.get('/api/artists/:id', async (req, res) => {
 app.get('/api/tracks', async (req, res) => {
     try {
         const { limit = 20, offset = 0, genre } = req.query;
-        
+
         let query = `
             SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
                    a.name as artist_name, al.title as album_title, al.cover_image_url
@@ -219,20 +241,20 @@ app.get('/api/tracks', async (req, res) => {
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
         `;
-        
+
         const params = [];
-        
+
         if (genre) {
             query += ' WHERE t.genre = $1';
             params.push(genre);
         }
-        
+
         query += ' ORDER BY t.play_count DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
         params.push(limit, offset);
-        
+
         const tracks = await db.getAll(query, params);
         res.json(tracks);
-        
+
     } catch (error) {
         console.error('Get tracks error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -243,7 +265,7 @@ app.get('/api/tracks', async (req, res) => {
 app.get('/api/tracks/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const track = await db.get(`
             SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
                    t.lyrics, t.metadata, t.release_date,
@@ -288,7 +310,7 @@ app.get('/api/albums', async (req, res) => {
 app.get('/api/albums/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const album = await db.get(`
             SELECT al.id, al.title, al.release_date, al.cover_image_url, al.genre, al.description, al.label,
                    a.name as artist_name, a.id as artist_id
@@ -326,7 +348,7 @@ app.get('/api/albums/:id', async (req, res) => {
 app.get('/api/users/profile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        
+
         const user = await db.get(`
             SELECT id, username, email, first_name, last_name, avatar_url, bio, subscription_tier, created_at
             FROM users
@@ -375,7 +397,7 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
 app.get('/api/search', async (req, res) => {
     try {
         const { q, type = 'all', limit = 20 } = req.query;
-        
+
         if (!q) {
             return res.status(400).json({ error: 'Search query is required' });
         }
