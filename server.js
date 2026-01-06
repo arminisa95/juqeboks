@@ -15,20 +15,55 @@ const path = require('path');
 app.use(cors());
 app.use(express.json());
 
-// Modify the initializeDatabase function
+// Update your initializeDatabase function in server.js
 async function initializeDatabase() {
     try {
-        // Create tables
-        const schemaPath = path.join(__dirname, 'database', 'schema.sql');
-        const schema = fs.readFileSync(schemaPath, 'utf8');
+        console.log('Starting database initialization...');
+        
+        // Create tables with IF NOT EXISTS
+        const schema = `
+            CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+            
+            CREATE TABLE IF NOT EXISTS users (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                username VARCHAR(50) UNIQUE NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                first_name VARCHAR(100),
+                last_name VARCHAR(100),
+                avatar_url VARCHAR(500),
+                bio TEXT,
+                subscription_tier VARCHAR(20) DEFAULT 'free',
+                is_active BOOLEAN DEFAULT true,
+                email_verified BOOLEAN DEFAULT false,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            CREATE TABLE IF NOT EXISTS artists (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                name VARCHAR(200) NOT NULL,
+                bio TEXT,
+                image_url VARCHAR(500),
+                website_url VARCHAR(500),
+                social_links JSONB,
+                verified BOOLEAN DEFAULT false,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        
         await db.query(schema);
         console.log('Database schema initialized');
         
-        // Add seed data
-        const seedPath = path.join(__dirname, 'database', 'seed_data.sql');
-        const seedData = fs.readFileSync(seedPath, 'utf8');
-        await db.query(seedData);
-        console.log('Seed data inserted');
+        // Insert sample artists
+        await db.query(`
+            INSERT INTO artists (id, name, bio, verified) VALUES
+            ('550e8400-e29b-41d4-a716-446655440001', 'The Midnight Dreams', 'Electronic music duo from Berlin', true),
+            ('550e8400-e29b-41d4-a716-446655440002', 'Luna Rodriguez', 'Indie folk singer-songwriter', true)
+            ON CONFLICT (id) DO NOTHING
+        `);
+        console.log('Sample artists inserted');
         
     } catch (error) {
         console.error('Database initialization error:', error);
