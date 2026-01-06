@@ -6,7 +6,6 @@ node_modules/
 
 # Database files (exclude only sensitive files)
 database/setup.js
-# Remove: database/seed_data.sql
 
 # Build outputs
 dist/
