@@ -11,26 +11,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 // Add at the top after existing requires
 const fs = require('fs');
 const path = require('path');
-
-// Auto-create tables on startup
-async function initializeDatabase() {
-    try {
-        const schemaPath = path.join(__dirname, 'database', 'schema.sql');
-        const schema = fs.readFileSync(schemaPath, 'utf8');
-        await db.query(schema);
-        console.log('Database schema initialized');
-    } catch (error) {
-        console.error('Database initialization error:', error);
-    }
-}
-
-// Modify your server start
-initializeDatabase().then(() => {
-    app.listen(PORT, () => {
-        console.log(`🎵 JUKE Music API Server running on port ${PORT}`);
-        console.log(`📍 API Base URL: http://localhost:${PORT}/api`);
-    });
-});
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -54,6 +34,17 @@ async function initializeDatabase() {
         console.error('Database initialization error:', error);
     }
 }
+
+// Modify your server start
+initializeDatabase().then(() => {
+    app.listen(PORT, () => {
+        console.log(`🎵 JUKE Music API Server running on port ${PORT}`);
+        console.log(`📍 API Base URL: http://localhost:${PORT}/api`);
+    });
+});
+
+
+
 
 // JWT Authentication Middleware
 const authenticateToken = (req, res, next) => {
