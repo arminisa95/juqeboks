@@ -4,13 +4,19 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { db } = require('./database/connection');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
-// Add at the top after existing requires
-const fs = require('fs');
-const path = require('path');
+
+const upload = multer({ 
+    dest: 'uploads/',
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -69,17 +75,6 @@ async function initializeDatabase() {
         console.error('Database initialization error:', error);
     }
 }
-
-// Modify your server start
-initializeDatabase().then(() => {
-    app.listen(PORT, () => {
-        console.log(`🎵 JUKE Music API Server running on port ${PORT}`);
-        console.log(`📍 API Base URL: http://localhost:${PORT}/api`);
-    });
-});
-
-
-
 
 // JWT Authentication Middleware
 const authenticateToken = (req, res, next) => {
@@ -494,11 +489,40 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
-// ==================== START SERVER ====================
+// ==================== UPLOAD ENDPOINT ====================
 
-app.listen(PORT, () => {
-    console.log(`🎵 JUKE Music API Server running on port ${PORT}`);
-    console.log(`📍 API Base URL: http://localhost:${PORT}/api`);
+app.post('/api/upload', upload.single('audioFile'), async (req, res) => {
+    try {
+        const { title, artist, genre } = req.body;
+        const file = req.file;
+        
+        if (!file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+        
+        const result = await db.insert('tracks', {
+            title,
+            artist_id: artist,
+            genre,
+            file_path: file.path,
+            duration_seconds: 0,
+            release_date: new Date().toISOString().split('T')[0],
+            is_available: true
+        });
+        
+        res.json({ success: true, track: result });
+    } catch (error) {
+        console.error('Upload error:', error);
+        res.status(500).json({ error: 'Upload failed' });
+    }
+});
+
+// Initialize database and start server
+initializeDatabase().then(() => {
+    app.listen(PORT, () => {
+        console.log(`🎵 JUKE Music API Server running on port ${PORT}`);
+        console.log(`📍 API Base URL: http://localhost:${PORT}/api`);
+    });
 });
 
 // Graceful shutdown
