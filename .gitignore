@@ -4,7 +4,7 @@ node_modules/
 # Environment variables
 .env
 
-# Database files (exclude only sensitive files)
+# Database files (exclude only sensitive files)[]
 database/setup.js
 database/seed_data.sql
 
