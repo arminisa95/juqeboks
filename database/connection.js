@@ -5,7 +5,7 @@ const { Pool } = require('pg');
 const config = {
     user: process.env.DB_USER || 'juke_user',
     host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'juke_db',
+    database: process.env.DB_NAME || 'juke_db_s8gk',
     password: process.env.DB_PASSWORD || 'your_password_here',
     port: process.env.DB_PORT || 5432,
     ssl: {
