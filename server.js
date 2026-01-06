@@ -35,6 +35,26 @@ initializeDatabase().then(() => {
 app.use(cors());
 app.use(express.json());
 
+// Modify the initializeDatabase function
+async function initializeDatabase() {
+    try {
+        // Create tables
+        const schemaPath = path.join(__dirname, 'database', 'schema.sql');
+        const schema = fs.readFileSync(schemaPath, 'utf8');
+        await db.query(schema);
+        console.log('Database schema initialized');
+        
+        // Add seed data
+        const seedPath = path.join(__dirname, 'database', 'seed_data.sql');
+        const seedData = fs.readFileSync(seedPath, 'utf8');
+        await db.query(seedData);
+        console.log('Seed data inserted');
+        
+    } catch (error) {
+        console.error('Database initialization error:', error);
+    }
+}
+
 // JWT Authentication Middleware
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
