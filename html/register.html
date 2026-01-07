@@ -7,6 +7,23 @@
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/register.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="../js/auth.js" defer></script>
+    <style>
+        .error-message {
+            background: #ff4757;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .register-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -33,7 +50,7 @@
         <div class="divider">or</div>
 
         <!-- Regular Registration Form -->
-        <form action="/register" method="POST">
+        <form id="registerForm">
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" required minlength="3">
@@ -67,38 +84,5 @@
             <img src="../images/U-pink.png" alt="Juke Logo">
         </a>
     </footer>
-
-    <script>
-        // Client-side password confirmation
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            
-            if (password !== confirmPassword) {
-                e.preventDefault();
-                alert('Passwords do not match!');
-            }
-        });
-
-        // Social login buttons
-        document.querySelectorAll('.social-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const provider = this.classList.contains('google') ? 'google' : 
-                                this.classList.contains('facebook') ? 'facebook' : 'apple';
-                
-                // These URLs should point to your backend OAuth endpoints
-                const oauthUrls = {
-                    google: '/auth/google',
-                    facebook: '/auth/facebook',
-                    apple: '/auth/apple'
-                };
-                
-                // Redirect to the OAuth provider
-                if (oauthUrls[provider]) {
-                    window.location.href = oauthUrls[provider];
-                }
-            });
-        });
-    </script>
 </body>
 </html>

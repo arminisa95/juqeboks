@@ -8,8 +8,22 @@
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/login.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="../js/auth.js" defer></script>
     <style>
+        .error-message {
+            background: #ff4757;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
         
+        .login-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -21,7 +35,7 @@
     </header>
     <div class="login-container">
         <h1 class="login-title">Welcome to Juke</h1>
-        <form action="/login" method="POST">
+        <form id="loginForm">
             <div class="form-group">
                 <label for="username">Username or Email</label>
                 <input type="text" id="username" name="username" required>
