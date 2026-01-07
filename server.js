@@ -59,6 +59,29 @@ async function initializeDatabase() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
+            
+            CREATE TABLE IF NOT EXISTS tracks (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                title VARCHAR(200) NOT NULL,
+                artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
+                album_id UUID REFERENCES albums(id) ON DELETE SET NULL,
+                file_path VARCHAR(500) NOT NULL,
+                file_size BIGINT,
+                duration_seconds INTEGER NOT NULL DEFAULT 0,
+                bitrate INTEGER,
+                sample_rate INTEGER,
+                track_number INTEGER,
+                genre VARCHAR(100),
+                lyrics TEXT,
+                metadata JSONB,
+                play_count INTEGER DEFAULT 0,
+                like_count INTEGER DEFAULT 0,
+                is_explicit BOOLEAN DEFAULT false,
+                is_available BOOLEAN DEFAULT true,
+                release_date DATE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
         `;
         
         await db.query(schema);
