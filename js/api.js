@@ -2,6 +2,8 @@
 const API_BASE = 'https://juke-api.onrender.com/api';
 const API_ORIGIN = API_BASE.replace(/\/api$/, '');
 
+let likedTrackIds = new Set();
+
 function getAuthToken() {
     return localStorage.getItem('juke_token');
 }
@@ -22,10 +24,32 @@ async function fetchJson(url, options = {}) {
     return response.json();
 }
 
+async function loadLikedTrackIds() {
+    const token = getAuthToken();
+    if (!token) {
+        likedTrackIds = new Set();
+        return;
+    }
+
+    try {
+        const profile = await fetchJson(`${API_BASE}/users/profile`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        const favorites = (profile && profile.favorites) ? profile.favorites : [];
+        likedTrackIds = new Set(favorites.map((t) => t.id));
+    } catch (e) {
+        likedTrackIds = new Set();
+    }
+}
+
 // Fetch all tracks for feed
 async function loadTracks() {
     try {
         const tracksGrid = document.getElementById('tracksGrid');
+
+        await loadLikedTrackIds();
 
         if (tracksGrid) {
             const token = getAuthToken();
@@ -80,6 +104,7 @@ function createFeedTrackCard(track) {
 
     const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
     const artistName = track.artist_name || 'Unknown Artist';
+    const isLiked = likedTrackIds.has(track.id);
 
     card.innerHTML = `
         <div class="album-cover">
@@ -93,8 +118,8 @@ function createFeedTrackCard(track) {
             <div class="artist-name">${artistName}</div>
         </div>
         <div class="track-actions">
-            <button class="like-btn" onclick="likeTrack('${track.id}')">
-                <i class="fas fa-heart"></i>
+            <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="likeTrack('${track.id}')">
+                <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
             </button>
             <span class="duration">${track.genre || ''}</span>
         </div>
@@ -109,6 +134,7 @@ function createCollectionTrackCard(track) {
 
     const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
     const artistName = track.artist_name || 'Unknown Artist';
+    const isLiked = likedTrackIds.has(track.id);
 
     card.innerHTML = `
         <div class="track-cover">
@@ -125,8 +151,8 @@ function createCollectionTrackCard(track) {
             <div class="track-stats">
                 <span>${track.genre || ''}</span>
                 <div class="track-actions">
-                    <button class="action-btn" onclick="likeTrack('${track.id}')">
-                        <i class="fas fa-heart"></i>
+                    <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="likeTrack('${track.id}')">
+                        <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
                     </button>
                 </div>
             </div>
@@ -158,7 +184,11 @@ function likeTrack(trackId) {
         }
     })
         .then((r) => r.json())
-        .then(() => loadTracks())
+        .then((data) => {
+            if (data && data.liked === true) likedTrackIds.add(trackId);
+            if (data && data.liked === false) likedTrackIds.delete(trackId);
+            return loadTracks();
+        })
         .catch((e) => console.error('Liking track failed:', e));
 }
 

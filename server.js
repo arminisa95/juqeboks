@@ -481,7 +481,8 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
         // Get user's favorite tracks
         const favorites = await db.getAll(`
             SELECT t.id, t.title, t.duration_seconds,
-                   a.name as artist_name, al.cover_image_url
+                   a.name as artist_name,
+                   COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
             FROM user_favorites uf
             JOIN tracks t ON uf.track_id = t.id
             JOIN artists a ON t.artist_id = a.id
@@ -673,6 +674,24 @@ app.post('/api/tracks/:id/like', authenticateToken, async (req, res) => {
         const userId = req.user.id;
         const { id: trackId } = req.params;
 
+        const existing = await db.get(
+            'SELECT id FROM user_favorites WHERE user_id = $1 AND track_id = $2',
+            [userId, trackId]
+        );
+
+        if (existing) {
+            await db.query(
+                'DELETE FROM user_favorites WHERE user_id = $1 AND track_id = $2',
+                [userId, trackId]
+            );
+            await db.query(
+                'UPDATE tracks SET like_count = GREATEST(like_count - 1, 0), updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+                [trackId]
+            );
+            res.json({ success: true, liked: false });
+            return;
+        }
+
         await db.query(
             'INSERT INTO user_favorites (user_id, track_id) VALUES ($1, $2) ON CONFLICT (user_id, track_id) DO NOTHING',
             [userId, trackId]
@@ -683,7 +702,7 @@ app.post('/api/tracks/:id/like', authenticateToken, async (req, res) => {
             [trackId]
         );
 
-        res.json({ success: true });
+        res.json({ success: true, liked: true });
     } catch (error) {
         console.error('Like track error:', error);
         res.status(500).json({ error: 'Internal server error' });
