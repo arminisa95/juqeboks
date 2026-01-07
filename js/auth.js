@@ -26,6 +26,12 @@ function logout() {
     localStorage.removeItem('juke_token');
     localStorage.removeItem('juke_user');
     currentUser = null;
+
+    if (document.body && document.body.dataset && document.body.dataset.spa) {
+        window.location.hash = '#/login';
+        return;
+    }
+
     const base = getBasePath();
     window.location.href = `${base}/html/login.html`;
 }
@@ -50,6 +56,11 @@ function setFloatingButtonDestination() {
 function requireAuth() {
     if (getCurrentUser()) return;
 
+    if (document.body && document.body.dataset && document.body.dataset.spa) {
+        window.location.hash = '#/login';
+        return;
+    }
+
     const base = getBasePath();
     window.location.href = `${base}/html/login.html`;
 }
@@ -72,10 +83,14 @@ async function login(username, password) {
             localStorage.setItem('juke_token', data.token);
             localStorage.setItem('juke_user', JSON.stringify(data.user));
             currentUser = data.user;
-            
-            // Redirect to feed
-            const base = getBasePath();
-            window.location.href = `${base}/html/user.html`;
+
+            if (document.body && document.body.dataset && document.body.dataset.spa) {
+                window.location.hash = '#/feed';
+            } else {
+                // Redirect to feed
+                const base = getBasePath();
+                window.location.href = `${base}/html/user.html`;
+            }
             return { success: true };
         } else {
             return { success: false, error: data.error };
@@ -90,6 +105,13 @@ function setupProfilePage() {
     const profileForm = document.getElementById('profileForm');
     const logoutBtn = document.getElementById('logoutBtn');
     if (!profileForm && !logoutBtn) return;
+
+    if (profileForm && profileForm.dataset.bound === 'true') {
+        return;
+    }
+
+    if (profileForm) profileForm.dataset.bound = 'true';
+    if (logoutBtn) logoutBtn.dataset.bound = 'true';
 
     requireAuth();
     const user = getCurrentUser();
@@ -161,10 +183,14 @@ async function register(username, email, password, firstName, lastName) {
             localStorage.setItem('juke_token', data.token);
             localStorage.setItem('juke_user', JSON.stringify(data.user));
             currentUser = data.user;
-            
-            // Redirect to feed
-            const base = getBasePath();
-            window.location.href = `${base}/html/user.html`;
+
+            if (document.body && document.body.dataset && document.body.dataset.spa) {
+                window.location.hash = '#/feed';
+            } else {
+                // Redirect to feed
+                const base = getBasePath();
+                window.location.href = `${base}/html/user.html`;
+            }
             return { success: true };
         } else {
             return { success: false, error: data.error };
@@ -206,6 +232,9 @@ function setupLoginForm() {
     const form = document.getElementById('loginForm');
     if (!form) return;
 
+    if (form.dataset.bound === 'true') return;
+    form.dataset.bound = 'true';
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -245,6 +274,9 @@ function setupLoginForm() {
 function setupRegisterForm() {
     const form = document.getElementById('registerForm');
     if (!form) return;
+
+    if (form.dataset.bound === 'true') return;
+    form.dataset.bound = 'true';
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();

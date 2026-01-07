@@ -1,6 +1,10 @@
 var API_BASE = 'https://juke-api.onrender.com/api';
 var API_ORIGIN = API_BASE.replace(/\/api$/, '');
 
+function isSpaMode() {
+    return !!(document.body && document.body.dataset && document.body.dataset.spa);
+}
+
 function resolveAssetUrl(url, fallback) {
     if (!url) return fallback;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -72,7 +76,11 @@ function renderTrackCard(t) {
 async function loadLists() {
     const token = getAuthToken();
     if (!token) {
-        window.location.href = 'login.html';
+        if (isSpaMode()) {
+            window.location.hash = '#/login';
+        } else {
+            window.location.href = 'login.html';
+        }
         return;
     }
 
@@ -129,6 +137,7 @@ async function loadLists() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (isSpaMode()) return;
     if (typeof isLoggedIn === 'function' && !isLoggedIn()) {
         window.location.href = 'login.html';
         return;
@@ -136,3 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadLists();
 });
+
+window.JukeLists = {
+    loadLists
+};

@@ -1,0 +1,120 @@
+/* Upload Page Specific Styles */
+.upload-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: rgba(30, 25, 100, 0.7);
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.upload-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.upload-header h1 {
+    color: #fff;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.upload-header p {
+    color: #a0a0a0;
+    font-size: 1.1rem;
+}
+
+.upload-area {
+    border: 2px dashed #4a4a8a;
+    border-radius: 10px;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: #00ffd0;
+    background: rgba(74, 74, 138, 0.2);
+}
+
+.upload-area i {
+    font-size: 3rem;
+    color: #4a4a8a;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.upload-area p {
+    color: #a0a0a0;
+    margin: 0.5rem 0;
+}
+
+.upload-area .browse-link {
+    color: #00ffd0;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: #dbd8d8;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #4a4a8a;
+    background: rgba(30, 25, 100, 0.5);
+    border-radius: 5px;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #00ffd0;
+}
+
+.btn-upload {
+    background: #00ffd0;
+    color: #100a56;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.btn-upload:hover {
+    background: #00e6b8;
+    transform: translateY(-2px);
+}
+
+.file-info {
+    margin-top: 1rem;
+    color: #a0a0a0;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .upload-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+
+    .upload-header h1 {
+        font-size: 2rem;
+    }
+}

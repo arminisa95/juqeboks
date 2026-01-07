@@ -4,6 +4,10 @@ var API_ORIGIN = API_BASE.replace(/\/api$/, '');
 
 let likedTrackIds = new Set();
 
+function isSpaMode() {
+    return !!(document.body && document.body.dataset && document.body.dataset.spa);
+}
+
 function getAuthToken() {
     return localStorage.getItem('juke_token');
 }
@@ -54,7 +58,11 @@ async function loadTracks() {
         if (tracksGrid) {
             const token = getAuthToken();
             if (!token) {
-                window.location.href = 'login.html';
+                if (isSpaMode()) {
+                    window.location.hash = '#/login';
+                } else {
+                    window.location.href = 'login.html';
+                }
                 return;
             }
 
@@ -176,7 +184,11 @@ function playTrack(trackId) {
 function likeTrack(trackId) {
     const token = getAuthToken();
     if (!token) {
-        window.location.href = 'login.html';
+        if (isSpaMode()) {
+            window.location.hash = '#/login';
+        } else {
+            window.location.href = 'login.html';
+        }
         return;
     }
 
@@ -204,7 +216,12 @@ function addToPlaylist(trackId) {
 
 // Load tracks when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    if (isSpaMode()) return;
     if (document.querySelector('.music-grid') || document.getElementById('tracksGrid')) {
         loadTracks();
     }
 });
+
+window.JukeApi = {
+    loadTracks
+};

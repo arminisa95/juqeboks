@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JUKE SPA</title>
+
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/musicplayer.css">
+    <link rel="stylesheet" href="css/feed.css">
+    <link rel="stylesheet" href="css/koleqtion.css">
+    <link rel="stylesheet" href="css/lists.css">
+    <link rel="stylesheet" href="css/upload.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/register.css">
+    <link rel="stylesheet" href="css/profile.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script src="js/player.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/api.js" defer></script>
+    <script src="js/lists.js" defer></script>
+    <script src="js/uploadPage.js" defer></script>
+    <script src="js/spa.js" defer></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Honk:MORF@15&family=Kedebideri:wght@400;500;600;700;800;900&family=Sigmar&display=swap" rel="stylesheet">
+</head>
+<body data-spa="true">
+    <header>
+        <a href="#/feed">
+            <img src="images/juqe.png" alt="Juke Logo" class="logo-img">
+        </a>
+
+        <nav>
+            <div class="nav-buttons">
+                <a href="#/feed" class="feed">_feed</a>
+                <a href="#/lists" class="artists">_lists</a>
+                <a href="#/disqo" class="lists">_disqo</a>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-bar" placeholder="Search for music, artists...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="header-right">
+                <div class="nav-buttons">
+                    <a href="#/upload" class="app">_uqload</a>
+                    <a href="#/koleqtion" class="register">_koleqtion</a>
+                    <a href="#/login" class="login auth-login">_U</a>
+                    <a href="#/profile" class="login auth-user" style="display:none;">_U</a>
+                    <a href="#" class="login auth-user" style="display:none;" onclick="logout()">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main id="app"></main>
+
+    <div class="music-player"></div>
+</body>
+</html>
