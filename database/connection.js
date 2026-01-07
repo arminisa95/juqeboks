@@ -8,12 +8,12 @@ const config = {
     database: process.env.DB_NAME || 'juke_db_s8gk',
     password: process.env.DB_PASSWORD || 'your_password_here',
     port: process.env.DB_PORT || 5432,
-    ssl: {
+    ssl: process.env.DB_HOST === 'localhost' ? false : {
         rejectUnauthorized: false
     },
     max: 20, // Maximum number of connections in the pool
     idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-    connectionTimeoutMillis: 2000, // How long to wait when connecting a new client
+    connectionTimeoutMillis: 2000 // How long to wait when connecting a new client
 };
 
 // Create connection pool
