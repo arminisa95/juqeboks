@@ -21,8 +21,8 @@
         <nav>
             <div class="nav-buttons">
                 <a href="user.html" class="feed">_feed</a>
-                <a href="artists.html" class="artists">_artists</a>
-                <a href="playlists.html" class="lists">_disco</a>
+                <a href="lists.html" class="artists">_lists</a>
+                <a href="disqo.html" class="lists">_disqo</a>
             </div>
             <div class="search-container">
                 <input type="text" class="search-bar" placeholder="Search for music, artists...">
@@ -32,7 +32,9 @@
                 <div class="nav-buttons">
                     <a href="upload.html" class="app">_upload</a>
                     <a href="koleqtion.html" class="register active">_koleqtion</a>
-                    <a href="profile.html" class="login">_U</a>
+                    <a href="login.html" class="login auth-login">_U</a>
+                    <a href="profile.html" class="login auth-user" style="display:none;">_U</a>
+                    <a href="#" class="login auth-user" style="display:none;" onclick="logout()">Logout</a>
                 </div>
             </div>
         </nav>
@@ -78,6 +80,7 @@
     </div>
 
     <script src="../js/api.js" defer></script>
+    <script src="../js/auth.js" defer></script>
 </body>
 
 </html>

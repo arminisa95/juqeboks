@@ -1,24 +1,16 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Juke || Webplayer, really for all</title>
+    <title>Disqo || Juke</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/musicplayer.css">
     <link rel="stylesheet" href="../css/feed.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="../js/api.js" defer></script>
     <script src="../js/auth.js" defer></script>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Honk:MORF@15&family=Kedebideri:wght@400;500;600;700;800;900&family=Sigmar&display=swap"
-        rel="stylesheet">
 </head>
-
 <body>
     <header>
         <a href="../index.html">
@@ -27,9 +19,9 @@
 
         <nav>
             <div class="nav-buttons">
-                <a href="#" class="feed" onclick="if(!isLoggedIn()) { window.location.href='login.html'; return false; }">_feed</a>
-                <a href="lists.html" class="artists" onclick="if(!isLoggedIn()) { window.location.href='login.html'; return false; }">_lists</a>
-                <a href="disqo.html" class="lists" onclick="if(!isLoggedIn()) { window.location.href='login.html'; return false; }">_disqo</a>
+                <a href="user.html" class="feed">_feed</a>
+                <a href="lists.html" class="artists">_lists</a>
+                <a href="disqo.html" class="lists">_disqo</a>
             </div>
             <div class="search-container">
                 <input type="text" class="search-bar" placeholder="Search for music, artists...">
@@ -49,7 +41,7 @@
 
     <section class="music-feed">
         <div class="feed-container">
-            <h2 class="feed-title">#Top 10</h2>
+            <h2 class="feed-title">#Disqo</h2>
             <div class="music-grid">
                 <!-- Tracks will be loaded dynamically from API -->
             </div>
@@ -60,7 +52,7 @@
     <div class="music-player">
         <div class="now-playing">
             <div class="track-info">
-                <img src="../images/placeholder-cover.jpg" alt="Now Playing" class="now-playing-cover">
+                <img src="../images/juke.png" alt="Now Playing" class="now-playing-cover">
                 <div class="track-details">
                     <h4 class="now-playing-title">Not Playing</h4>
                     <p class="now-playing-artist">-</p>
@@ -107,6 +99,13 @@
             </div>
         </div>
     </div>
-</body>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!isLoggedIn()) {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
 </html>

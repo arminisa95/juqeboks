@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lists || Juke</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/lists.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="../js/auth.js" defer></script>
+    <script src="../js/lists.js" defer></script>
+</head>
+<body>
+    <header>
+        <a href="../index.html">
+            <img src="../images/juqe.png" alt="Juke Logo" class="logo-img">
+        </a>
+
+        <nav>
+            <div class="nav-buttons">
+                <a href="user.html" class="feed">_feed</a>
+                <a href="lists.html" class="artists">_lists</a>
+                <a href="disqo.html" class="lists">_disqo</a>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-bar" placeholder="Search for music, artists...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="header-right">
+                <div class="nav-buttons">
+                    <a href="upload.html" class="app">_uqload</a>
+                    <a href="koleqtion.html" class="register">_koleqtion</a>
+                    <a href="login.html" class="login auth-login">_U</a>
+                    <a href="profile.html" class="login auth-user" style="display:none;">_U</a>
+                    <a href="#" class="login auth-user" style="display:none;" onclick="logout()">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="lists-container">
+            <div class="lists-header">
+                <h1>U_lists</h1>
+                <div class="lists-subtitle">Playlists, curated picks, and liked tracks</div>
+            </div>
+
+            <div class="lists-section">
+                <h2 class="section-title">Your Playlists</h2>
+                <div id="myPlaylists" class="cards-grid"></div>
+            </div>
+
+            <div class="lists-section">
+                <h2 class="section-title">Curated</h2>
+                <div id="curatedPlaylists" class="cards-grid"></div>
+            </div>
+
+            <div class="lists-section">
+                <h2 class="section-title">Liked Tracks</h2>
+                <div id="likedTracks" class="cards-grid"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p class="contact">All rights reserved &copy; 2025 juqeboks</p>
+        <a id="mail" href="mailto:arminisa@outlook.com" class="contact">contact:mail</a>
+        <a id="phone" href="tel:06509014453" class="contact">contact:phone</a>
+
+        <a href="../index.html" class="floating-button">
+            <img src="../images/U-pink.png" alt="Juke Logo">
+        </a>
+    </footer>
+</body>
+</html>

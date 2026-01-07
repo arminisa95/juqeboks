@@ -58,8 +58,10 @@ CREATE TABLE albums (
 CREATE TABLE tracks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title VARCHAR(200) NOT NULL,
+    uploader_id UUID REFERENCES users(id) ON DELETE SET NULL,
     artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
     album_id UUID REFERENCES albums(id) ON DELETE SET NULL,
+    cover_image_url VARCHAR(500),
     file_path VARCHAR(500) NOT NULL,
     file_size BIGINT,
     duration_seconds INTEGER NOT NULL,

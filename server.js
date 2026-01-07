@@ -17,26 +17,38 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-const upload = multer({ 
-    dest: 'uploads/',
-    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
-});
-
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
-} // Added closing brace here
+}
+
+app.use('/uploads', express.static(uploadsDir));
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname) || '';
+        cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+    }
+});
+
+const upload = multer({
+    storage,
+    limits: { fileSize: 50 * 1024 * 1024 }
+});
 
 // Update your initializeDatabase function in server.js
 async function initializeDatabase() {
     try {
         console.log('Starting database initialization...');
-        
+
         // Create tables with IF NOT EXISTS
         const schema = `
             CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-            
+
             CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 username VARCHAR(50) UNIQUE NOT NULL,
@@ -52,24 +64,35 @@ async function initializeDatabase() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-            
+
             CREATE TABLE IF NOT EXISTS artists (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 name VARCHAR(200) NOT NULL,
                 bio TEXT,
-                image_url VARCHAR(500),
-                website_url VARCHAR(500),
-                social_links JSONB,
                 verified BOOLEAN DEFAULT false,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-            
-            CREATE TABLE IF NOT EXISTS tracks (
+
+            CREATE TABLE IF NOT EXISTS albums (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 title VARCHAR(200) NOT NULL,
                 artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
+                release_date DATE,
+                cover_image_url VARCHAR(500),
+                description TEXT,
+                genre VARCHAR(100),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS tracks (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                title VARCHAR(200) NOT NULL,
+                uploader_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
                 album_id UUID REFERENCES albums(id) ON DELETE SET NULL,
+                cover_image_url VARCHAR(500),
                 file_path VARCHAR(500) NOT NULL,
                 file_size BIGINT,
                 duration_seconds INTEGER NOT NULL DEFAULT 0,
@@ -87,11 +110,43 @@ async function initializeDatabase() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS playlists (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                name VARCHAR(200) NOT NULL,
+                description TEXT,
+                cover_image_url VARCHAR(500),
+                is_public BOOLEAN DEFAULT false,
+                track_count INTEGER DEFAULT 0,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS playlist_tracks (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                playlist_id UUID NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
+                track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+                added_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                position INTEGER,
+                UNIQUE(playlist_id, track_id)
+            );
+
+            CREATE TABLE IF NOT EXISTS user_favorites (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, track_id)
+            );
         `;
-        
+
         await db.query(schema);
+
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS uploader_id UUID REFERENCES users(id) ON DELETE SET NULL');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)');
         console.log('Database schema initialized');
-        
+
     } catch (error) {
         console.error('Database initialization error:', error);
     }
@@ -298,7 +353,9 @@ app.get('/api/tracks', async (req, res) => {
 
         let query = `
             SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
-                   a.name as artist_name, al.title as album_title, al.cover_image_url
+                   t.uploader_id,
+                   a.name as artist_name, al.title as album_title,
+                   COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
             FROM tracks t
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
@@ -453,6 +510,32 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
     }
 });
 
+// Get my tracks
+app.get('/api/tracks/my', authenticateToken, async (req, res) => {
+    try {
+        const { limit = 50, offset = 0 } = req.query;
+        const userId = req.user.id;
+
+        const tracks = await db.getAll(`
+            SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
+                   t.uploader_id,
+                   a.name as artist_name, al.title as album_title,
+                   COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
+            FROM tracks t
+            JOIN artists a ON t.artist_id = a.id
+            LEFT JOIN albums al ON t.album_id = al.id
+            WHERE t.uploader_id = $1
+            ORDER BY t.created_at DESC
+            LIMIT $2 OFFSET $3
+        `, [userId, limit, offset]);
+
+        res.json(tracks);
+    } catch (error) {
+        console.error('Get my tracks error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // ==================== SEARCH ENDPOINTS ====================
 
 // Search for music
@@ -512,21 +595,23 @@ app.get('/api/search', async (req, res) => {
 
 // ==================== UPLOAD ENDPOINT ====================
 
-app.post('/api/upload', upload.single('audioFile'), async (req, res) => {
+app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }]), async (req, res) => {
     try {
         const { title, artist, genre } = req.body;
-        const file = req.file;
-        
+        const file = req.files && req.files.audioFile ? req.files.audioFile[0] : null;
+        const cover = req.files && req.files.coverImage ? req.files.coverImage[0] : null;
+        const userId = req.user.id;
+
         if (!file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
-        
+
         // Get or create artist first
         let artistResult = await db.query(
             'SELECT id FROM artists WHERE name = $1',
             [artist]
         );
-        
+
         let artistId;
         if (artistResult.rows.length === 0) {
             // Create new artist
@@ -539,18 +624,20 @@ app.post('/api/upload', upload.single('audioFile'), async (req, res) => {
         } else {
             artistId = artistResult.rows[0].id;
         }
-        
+
         const result = await db.insert('tracks', {
             title,
+            uploader_id: userId,
             artist_id: artistId,
             album_id: null,
             genre,
             file_path: file.path,
+            cover_image_url: cover ? `/uploads/${path.basename(cover.path)}` : null,
             duration_seconds: 0,
             release_date: new Date().toISOString().split('T')[0],
             is_available: true
         });
-        
+
         res.json({ success: true, track: result });
     } catch (error) {
         console.error('Upload error:', error);
@@ -558,11 +645,56 @@ app.post('/api/upload', upload.single('audioFile'), async (req, res) => {
     }
 });
 
+// Get curated playlists
+app.get('/api/playlists/curated', async (req, res) => {
+    try {
+        const { limit = 20, offset = 0 } = req.query;
+
+        const playlists = await db.getAll(`
+            SELECT p.id, p.name, p.description, p.cover_image_url, p.is_public, p.track_count, p.created_at,
+                   u.username as owner_username
+            FROM playlists p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.is_public = true
+            ORDER BY p.created_at DESC
+            LIMIT $1 OFFSET $2
+        `, [limit, offset]);
+
+        res.json(playlists);
+    } catch (error) {
+        console.error('Get curated playlists error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Like track
+app.post('/api/tracks/:id/like', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id: trackId } = req.params;
+
+        await db.query(
+            'INSERT INTO user_favorites (user_id, track_id) VALUES ($1, $2) ON CONFLICT (user_id, track_id) DO NOTHING',
+            [userId, trackId]
+        );
+
+        await db.query(
+            'UPDATE tracks SET like_count = like_count + 1, updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+            [trackId]
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Like track error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Initialize database and start server
 initializeDatabase().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
-        console.log(`🎵 JUKE Music API Server running on port ${PORT}`);
-        console.log(`📍 API Base URL: http://localhost:${PORT}/api`);
+        console.log(` JUKE Music API Server running on port ${PORT}`);
+        console.log(` API Base URL: http://localhost:${PORT}/api`);
     });
 });
 

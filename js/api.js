@@ -1,60 +1,138 @@
 // JUKE API Integration
 const API_BASE = 'https://juke-api.onrender.com/api';
+const API_ORIGIN = API_BASE.replace(/\/api$/, '');
+
+function getAuthToken() {
+    return localStorage.getItem('juke_token');
+}
+
+function resolveAssetUrl(url, fallback) {
+    if (!url) return fallback;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return `${API_ORIGIN}${url}`;
+    return url;
+}
+
+async function fetchJson(url, options = {}) {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Request failed: ${response.status}`);
+    }
+    return response.json();
+}
 
 // Fetch all tracks for feed
 async function loadTracks() {
     try {
-        const response = await fetch(`${API_BASE}/tracks`);
-        const tracks = await response.json();
-        displayTracks(tracks);
+        const tracksGrid = document.getElementById('tracksGrid');
+
+        if (tracksGrid) {
+            const token = getAuthToken();
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const tracks = await fetchJson(`${API_BASE}/tracks/my`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            displayCollectionTracks(tracks);
+            return;
+        }
+
+        const tracks = await fetchJson(`${API_BASE}/tracks`);
+        displayFeedTracks(tracks);
     } catch (error) {
         console.error('Error loading tracks:', error);
     }
 }
 
-// Display tracks in feed/grid
-function displayTracks(tracks) {
-    const musicGrid = document.querySelector('.music-grid') || document.querySelector('.library-grid');
+function displayFeedTracks(tracks) {
+    const musicGrid = document.querySelector('.music-grid');
     if (!musicGrid) return;
 
     musicGrid.innerHTML = '';
 
     tracks.forEach(track => {
-        const trackCard = createTrackCard(track);
+        const trackCard = createFeedTrackCard(track);
         musicGrid.appendChild(trackCard);
     });
 }
 
-// Create track card element
-function createTrackCard(track) {
+function displayCollectionTracks(tracks) {
+    const tracksGrid = document.getElementById('tracksGrid');
+    if (!tracksGrid) return;
+
+    tracksGrid.innerHTML = '';
+
+    tracks.forEach(track => {
+        const card = createCollectionTrackCard(track);
+        tracksGrid.appendChild(card);
+    });
+}
+
+function createFeedTrackCard(track) {
     const card = document.createElement('div');
     card.className = 'music-card';
-    
+
+    const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
+    const artistName = track.artist_name || 'Unknown Artist';
+
     card.innerHTML = `
-        <div class="track-artwork">
-            <img src="${track.cover_image_url || '../images/default-album.jpg'}" alt="${track.title}">
-        </div>
-        <div class="track-info">
-            <h3 class="track-title">${track.title}</h3>
-            <p class="track-artist">${track.artist_name || 'Unknown Artist'}</p>
-            <p class="track-meta">
-                <span class="track-genre">${track.genre || 'Unknown'}</span>
-                <span class="track-plays">${track.play_count || 0} plays</span>
-            </p>
-        </div>
-        <div class="track-actions">
+        <div class="album-cover">
+            <img src="${coverUrl}" alt="${track.title}">
             <button class="play-btn" onclick="playTrack('${track.id}')">
                 <i class="fas fa-play"></i>
             </button>
+        </div>
+        <div class="track-info">
+            <div class="track-title">${track.title}</div>
+            <div class="artist-name">${artistName}</div>
+        </div>
+        <div class="track-actions">
             <button class="like-btn" onclick="likeTrack('${track.id}')">
                 <i class="fas fa-heart"></i>
             </button>
-            <button class="add-to-playlist-btn" onclick="addToPlaylist('${track.id}')">
-                <i class="fas fa-plus"></i>
-            </button>
+            <span class="duration">${track.genre || ''}</span>
         </div>
     `;
-    
+
+    return card;
+}
+
+function createCollectionTrackCard(track) {
+    const card = document.createElement('div');
+    card.className = 'track-card';
+
+    const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
+    const artistName = track.artist_name || 'Unknown Artist';
+
+    card.innerHTML = `
+        <div class="track-cover">
+            <img src="${coverUrl}" alt="${track.title}">
+            <div class="track-overlay">
+                <button class="play-btn" onclick="playTrack('${track.id}')">
+                    <i class="fas fa-play"></i>
+                </button>
+            </div>
+        </div>
+        <div class="track-info">
+            <h3 class="track-title">${track.title}</h3>
+            <p class="track-artist">${artistName}</p>
+            <div class="track-stats">
+                <span>${track.genre || ''}</span>
+                <div class="track-actions">
+                    <button class="action-btn" onclick="likeTrack('${track.id}')">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
     return card;
 }
 
@@ -67,9 +145,21 @@ function playTrack(trackId) {
 
 // Like track function
 function likeTrack(trackId) {
-    console.log('Liking track:', trackId);
-    // Add your like logic here
-    alert(`Liked track: ${trackId}`);
+    const token = getAuthToken();
+    if (!token) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    fetch(`${API_BASE}/tracks/${trackId}/like`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+        .then((r) => r.json())
+        .then(() => loadTracks())
+        .catch((e) => console.error('Liking track failed:', e));
 }
 
 // Add to playlist function
@@ -81,8 +171,7 @@ function addToPlaylist(trackId) {
 
 // Load tracks when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if we're on feed or collection page
-    if (document.querySelector('.music-grid') || document.querySelector('.library-grid')) {
+    if (document.querySelector('.music-grid') || document.getElementById('tracksGrid')) {
         loadTracks();
     }
 });
