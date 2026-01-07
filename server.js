@@ -17,9 +17,11 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+} // Added closing brace here
 
 // Update your initializeDatabase function in server.js
 async function initializeDatabase() {
