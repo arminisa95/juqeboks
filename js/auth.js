@@ -26,7 +26,32 @@ function logout() {
     localStorage.removeItem('juke_token');
     localStorage.removeItem('juke_user');
     currentUser = null;
-    window.location.href = 'login.html';
+    const base = getBasePath();
+    window.location.href = `${base}/html/login.html`;
+}
+
+function getBasePath() {
+    const path = window.location.pathname.replace(/\\/g, '/');
+    return path.includes('/html/') ? '..' : '.';
+}
+
+function setFloatingButtonDestination() {
+    const floatingButton = document.querySelector('a.floating-button');
+    if (!floatingButton) return;
+
+    const base = getBasePath();
+    if (getCurrentUser()) {
+        floatingButton.href = `${base}/html/profile.html`;
+    } else {
+        floatingButton.href = `${base}/html/login.html`;
+    }
+}
+
+function requireAuth() {
+    if (getCurrentUser()) return;
+
+    const base = getBasePath();
+    window.location.href = `${base}/html/login.html`;
 }
 
 // Login function
@@ -49,7 +74,8 @@ async function login(username, password) {
             currentUser = data.user;
             
             // Redirect to feed
-            window.location.href = 'user.html';
+            const base = getBasePath();
+            window.location.href = `${base}/html/user.html`;
             return { success: true };
         } else {
             return { success: false, error: data.error };
@@ -57,6 +83,63 @@ async function login(username, password) {
     } catch (error) {
         console.error('Login error:', error);
         return { success: false, error: 'Network error. Please try again.' };
+    }
+}
+
+function setupProfilePage() {
+    const profileForm = document.getElementById('profileForm');
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (!profileForm && !logoutBtn) return;
+
+    requireAuth();
+    const user = getCurrentUser();
+    if (!user) return;
+
+    const emailEl = document.getElementById('profileEmail');
+    const firstNameEl = document.getElementById('profileFirstName');
+    const lastNameEl = document.getElementById('profileLastName');
+    const bioEl = document.getElementById('profileBio');
+    const avatarEl = document.getElementById('profileAvatar');
+    const messageEl = document.getElementById('profileMessage');
+
+    if (emailEl) emailEl.value = user.email || '';
+    if (firstNameEl) firstNameEl.value = user.firstName || user.first_name || '';
+    if (lastNameEl) lastNameEl.value = user.lastName || user.last_name || '';
+    if (bioEl) bioEl.value = user.bio || '';
+    if (avatarEl) avatarEl.value = user.avatarUrl || user.avatar_url || '';
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => logout());
+    }
+
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (messageEl) {
+                messageEl.style.display = 'none';
+                messageEl.className = 'profile-message';
+                messageEl.textContent = '';
+            }
+
+            const updatedUser = {
+                ...user,
+                firstName: firstNameEl ? firstNameEl.value.trim() : user.firstName,
+                lastName: lastNameEl ? lastNameEl.value.trim() : user.lastName,
+                bio: bioEl ? bioEl.value.trim() : user.bio,
+                avatarUrl: avatarEl ? avatarEl.value.trim() : user.avatarUrl,
+            };
+
+            localStorage.setItem('juke_user', JSON.stringify(updatedUser));
+            currentUser = updatedUser;
+            updateAuthUI();
+
+            if (messageEl) {
+                messageEl.textContent = 'Saved locally.';
+                messageEl.className = 'profile-message success';
+                messageEl.style.display = 'block';
+            }
+        });
     }
 }
 
@@ -80,7 +163,8 @@ async function register(username, email, password, firstName, lastName) {
             currentUser = data.user;
             
             // Redirect to feed
-            window.location.href = 'user.html';
+            const base = getBasePath();
+            window.location.href = `${base}/html/user.html`;
             return { success: true };
         } else {
             return { success: false, error: data.error };
@@ -101,14 +185,14 @@ function updateAuthUI() {
     if (user) {
         // Show user-specific elements
         loginLinks.forEach(link => link.style.display = 'none');
-        userLinks.forEach(link => link.style.display = 'block');
+        userLinks.forEach(link => link.style.display = '');
         
         if (usernameDisplay) {
             usernameDisplay.textContent = user.username || user.firstName || 'User';
         }
     } else {
         // Show login elements
-        loginLinks.forEach(link => link.style.display = 'block');
+        loginLinks.forEach(link => link.style.display = '');
         userLinks.forEach(link => link.style.display = 'none');
         
         if (usernameDisplay) {
@@ -216,4 +300,5 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
     setupLoginForm();
     setupRegisterForm();
+    setupProfilePage();
 });

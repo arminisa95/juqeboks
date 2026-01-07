@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Profile || Juke</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/profile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="../js/auth.js" defer></script>
+</head>
+<body class="auth-page">
+    <header>
+        <a href="../index.html">
+            <img src="../images/juqe.png" alt="Juke Logo" class="logo-img">
+        </a>
+    </header>
+
+    <main class="auth-main">
+        <div class="profile-container">
+            <h1 class="profile-title">Profile & Settings</h1>
+
+            <div class="profile-subtitle">Signed in as <span class="username-display"></span></div>
+
+            <div id="profileMessage" class="profile-message" style="display:none"></div>
+
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="profileEmail">Email</label>
+                    <input type="email" id="profileEmail" name="profileEmail" disabled>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profileFirstName">First Name</label>
+                        <input type="text" id="profileFirstName" name="profileFirstName">
+                    </div>
+                    <div class="form-group">
+                        <label for="profileLastName">Last Name</label>
+                        <input type="text" id="profileLastName" name="profileLastName">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="profileBio">Bio</label>
+                    <input type="text" id="profileBio" name="profileBio" placeholder="Tell us something about you">
+                </div>
+
+                <div class="form-group">
+                    <label for="profileAvatar">Avatar URL</label>
+                    <input type="url" id="profileAvatar" name="profileAvatar" placeholder="https://...">
+                </div>
+
+                <button type="submit" class="profile-btn">Save Settings</button>
+            </form>
+
+            <button type="button" id="logoutBtn" class="profile-btn secondary">Log out</button>
+
+            <div class="profile-links">
+                <a href="user.html">Back to _app</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p class="contact">All rights reserved &copy; 2025 juqeboks</p>
+        <a id="mail" href="mailto:arminisa@outlook.com" class="contact">contact:mail</a>
+        <a id="phone" href="tel:06509014453" class="contact">contact:phone</a>
+
+        <a href="../index.html" class="floating-button">
+            <img src="../images/U-pink.png" alt="Juke Logo">
+        </a>
+    </footer>
+</body>
+</html>
