@@ -144,6 +144,7 @@ async function initializeDatabase() {
 
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS uploader_id UUID REFERENCES users(id) ON DELETE SET NULL');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500)');
 
         await db.query(`
             DO $$
@@ -367,6 +368,8 @@ app.get('/api/tracks', async (req, res) => {
         let query = `
             SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
                    t.uploader_id,
+                   t.audio_url,
+                   t.file_path,
                    a.name as artist_name, al.title as album_title,
                    COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
             FROM tracks t
@@ -385,7 +388,12 @@ app.get('/api/tracks', async (req, res) => {
         params.push(limit, offset);
 
         const tracks = await db.getAll(query, params);
-        res.json(tracks);
+        const normalized = tracks.map((t) => {
+            const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
+            const { file_path, ...rest } = t;
+            return { ...rest, audio_url: audioUrl };
+        });
+        res.json(normalized);
 
     } catch (error) {
         console.error('Get tracks error:', error);
@@ -395,14 +403,18 @@ app.get('/api/tracks', async (req, res) => {
 
 // Get track by ID
 app.get('/api/tracks/:id', async (req, res) => {
+
     try {
         const { id } = req.params;
 
         const track = await db.get(`
             SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
                    t.lyrics, t.metadata, t.release_date,
+                   t.audio_url,
+                   t.file_path,
                    a.name as artist_name, a.id as artist_id,
-                   al.title as album_title, al.id as album_id, al.cover_image_url
+                   al.title as album_title, al.id as album_id,
+                   COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
             FROM tracks t
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
@@ -413,7 +425,9 @@ app.get('/api/tracks/:id', async (req, res) => {
             return res.status(404).json({ error: 'Track not found' });
         }
 
-        res.json(track);
+        const audioUrl = track.audio_url || (track.file_path ? `/uploads/${path.basename(track.file_path)}` : null);
+        const { file_path, ...rest } = track;
+        res.json({ ...rest, audio_url: audioUrl });
 
     } catch (error) {
         console.error('Get track error:', error);
@@ -421,111 +435,9 @@ app.get('/api/tracks/:id', async (req, res) => {
     }
 });
 
-// Get all albums
-app.get('/api/albums', async (req, res) => {
-    try {
-        const albums = await db.getAll(`
-            SELECT al.id, al.title, al.release_date, al.cover_image_url, al.genre, al.total_tracks, al.duration_seconds,
-                   a.name as artist_name, a.id as artist_id
-            FROM albums al
-            JOIN artists a ON al.artist_id = a.id
-            ORDER BY al.release_date DESC
-        `);
-        res.json(albums);
-    } catch (error) {
-        console.error('Get albums error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Get album by ID with tracks
-app.get('/api/albums/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const album = await db.get(`
-            SELECT al.id, al.title, al.release_date, al.cover_image_url, al.genre, al.description, al.label,
-                   a.name as artist_name, a.id as artist_id
-            FROM albums al
-            JOIN artists a ON al.artist_id = a.id
-            WHERE al.id = $1
-        `, [id]);
-
-        if (!album) {
-            return res.status(404).json({ error: 'Album not found' });
-        }
-
-        // Get album tracks
-        const tracks = await db.getAll(`
-            SELECT id, title, duration_seconds, track_number, genre, play_count
-            FROM tracks
-            WHERE album_id = $1
-            ORDER BY track_number
-        `, [id]);
-
-        res.json({
-            ...album,
-            tracks
-        });
-
-    } catch (error) {
-        console.error('Get album error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// ==================== USER ENDPOINTS ====================
-
-// Get user profile
-app.get('/api/users/profile', authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user.id;
-
-        const user = await db.get(`
-            SELECT id, username, email, first_name, last_name, avatar_url, bio, subscription_tier, created_at
-            FROM users
-            WHERE id = $1
-        `, [userId]);
-
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        // Get user's favorite tracks
-        const favorites = await db.getAll(`
-            SELECT t.id, t.title, t.duration_seconds,
-                   a.name as artist_name,
-                   COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
-            FROM user_favorites uf
-            JOIN tracks t ON uf.track_id = t.id
-            JOIN artists a ON t.artist_id = a.id
-            LEFT JOIN albums al ON t.album_id = al.id
-            WHERE uf.user_id = $1
-            ORDER BY uf.created_at DESC
-        `, [userId]);
-
-        // Get user's playlists
-        const playlists = await db.getAll(`
-            SELECT id, name, description, cover_image_url, is_public, track_count, created_at
-            FROM playlists
-            WHERE user_id = $1
-            ORDER BY created_at DESC
-        `, [userId]);
-
-        res.json({
-            ...user,
-            favorites,
-            playlists
-        });
-
-    } catch (error) {
-        console.error('Get profile error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
 // Get my tracks
 app.get('/api/tracks/my', authenticateToken, async (req, res) => {
+
     try {
         const { limit = 50, offset = 0 } = req.query;
         const userId = req.user.id;
@@ -533,6 +445,8 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
         const tracks = await db.getAll(`
             SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
                    t.uploader_id,
+                   t.audio_url,
+                   t.file_path,
                    a.name as artist_name, al.title as album_title,
                    COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
             FROM tracks t
@@ -543,14 +457,18 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
             LIMIT $2 OFFSET $3
         `, [userId, limit, offset]);
 
-        res.json(tracks);
+        const normalized = tracks.map((t) => {
+            const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
+            const { file_path, ...rest } = t;
+            return { ...rest, audio_url: audioUrl };
+        });
+
+        res.json(normalized);
     } catch (error) {
         console.error('Get my tracks error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-// ==================== SEARCH ENDPOINTS ====================
 
 // Search for music
 app.get('/api/search', async (req, res) => {
@@ -646,6 +564,7 @@ app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', m
             album_id: null,
             genre,
             file_path: file.path,
+            audio_url: `/uploads/${path.basename(file.path)}`,
             cover_image_url: cover ? `/uploads/${path.basename(cover.path)}` : null,
             duration_seconds: 0,
             release_date: new Date().toISOString().split('T')[0],

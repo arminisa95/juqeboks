@@ -164,9 +164,12 @@ function createCollectionTrackCard(track) {
 
 // Play track function
 function playTrack(trackId) {
-    console.log('Playing track:', trackId);
-    // Add your audio player logic here
-    alert(`Playing track: ${trackId}`);
+    if (window.JukePlayer && typeof window.JukePlayer.playTrackById === 'function') {
+        window.JukePlayer.playTrackById(trackId);
+        return;
+    }
+
+    console.log('Player not initialized yet.');
 }
 
 // Like track function
