@@ -4,8 +4,6 @@ node_modules/
 # Environment variables
 .env
 
-# Database files (exclude only sensitive files)
-database/setup.js
 
 # Build outputs
 dist/
