@@ -569,7 +569,7 @@ app.post('/api/upload', upload.single('audioFile'), async (req, res) => {
 
 // Initialize database and start server
 initializeDatabase().then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log(`🎵 JUKE Music API Server running on port ${PORT}`);
         console.log(`📍 API Base URL: http://localhost:${PORT}/api`);
     });
