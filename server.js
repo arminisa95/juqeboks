@@ -500,9 +500,29 @@ app.post('/api/upload', upload.single('audioFile'), async (req, res) => {
             return res.status(400).json({ error: 'No file uploaded' });
         }
         
+        // Get or create artist first
+        let artistResult = await db.query(
+            'SELECT id FROM artists WHERE name = $1',
+            [artist]
+        );
+        
+        let artistId;
+        if (artistResult.rows.length === 0) {
+            // Create new artist
+            const newArtist = await db.insert('artists', {
+                name: artist,
+                bio: 'Uploaded via JUKE platform',
+                verified: false
+            });
+            artistId = newArtist.id;
+        } else {
+            artistId = artistResult.rows[0].id;
+        }
+        
         const result = await db.insert('tracks', {
             title,
-            artist_id: artist,
+            artist_id: artistId,
+            album_id: null,
             genre,
             file_path: file.path,
             duration_seconds: 0,
