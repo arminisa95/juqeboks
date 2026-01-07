@@ -76,7 +76,7 @@ async function initializeDatabase() {
     }
 }
 
-// JWT Authentication Middleware
+// JUKE Music Streaming Platform API Server
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
