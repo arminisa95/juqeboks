@@ -4,10 +4,9 @@
 */
 
 .register-container {
-    max-width: 400px;
-    max-height: 800px;
-    margin: 30px auto;
-    padding: 40px;
+    width: min(92vw, 360px);
+    margin: 0 auto;
+    padding: 24px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
@@ -18,28 +17,38 @@
 .register-title {
     color: #fff;
     text-align: center;
-    margin-bottom: 30px;
-    font-size: 2em;
+    margin-bottom: 18px;
+    font-size: 1.6em;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
+}
+
+.form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.form-row .form-group {
+    flex: 1;
 }
 
 .form-group label {
     display: block;
     color: #dbd8d8;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    font-size: 14px;
 }
 
 .form-group input {
     width: 100%;
-    padding: 12px 15px;
+    padding: 10px 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 5px;
+    border-radius: 8px;
     color: #fff;
-    font-size: 16px;
+    font-size: 14px;
     transition: all 0.3s ease;
 }
 
@@ -51,12 +60,12 @@
 
 .register-btn {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     background: #F72193;
     color: white;
     border: none;
-    border-radius: 5px;
-    font-size: 16px;
+    border-radius: 8px;
+    font-size: 14px;
     cursor: pointer;
     transition: background 0.3s ease;
     margin-top: 10px;
@@ -68,8 +77,9 @@
 
 .login-link {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 14px;
     color: #dbd8d8;
+    font-size: 14px;
 }
 
 .login-link a {
@@ -94,7 +104,7 @@
     align-items: center;
     text-align: center;
     color: #a0a0a0;
-    margin: 20px 0;
+    margin: 14px 0;
     font-size: 14px;
 }
 
@@ -117,19 +127,19 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin: 20px 0;
+    margin: 14px 0;
 }
 
 .social-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
+    padding: 10px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.05);
     color: #dbd8d8;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.3s ease;
 }

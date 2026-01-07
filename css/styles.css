@@ -18,6 +18,24 @@ body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
+body.auth-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body.auth-page .auth-main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 0 40px;
+}
+
+body.auth-page footer {
+    margin-top: auto;
+}
+
 /* HEADER
 +++++++++++++++++++++++++++++++++++++++++++++++++++
 +++++++++++++++++++++++++++++++++++++++++++++++++++
