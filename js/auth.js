@@ -168,9 +168,20 @@ function setupRegisterForm() {
         const username = document.getElementById('username').value.trim();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
         const firstName = document.getElementById('firstName').value.trim();
         const lastName = document.getElementById('lastName').value.trim();
         const submitBtn = form.querySelector('button[type="submit"]');
+        
+        // Validate password confirmation
+        if (password !== confirmPassword) {
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'registerError';
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = 'Passwords do not match!';
+            form.insertBefore(errorDiv, form.firstChild);
+            return;
+        }
         
         // Show loading state
         submitBtn.disabled = true;
