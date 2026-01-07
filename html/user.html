@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="../css/musicplayer.css">
     <link rel="stylesheet" href="../css/feed.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="../js/script.js" defer></script>
+    <script src="../js/api.js" defer></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,31 +48,7 @@
         <div class="feed-container">
             <h2 class="feed-title">#Top 10</h2>
             <div class="music-grid">
-                <!-- Music Card 1 -->
-                <div class="music-card">
-                    <div class="album-cover">
-                        <img src="../images/placeholder-cover.jpg" alt="Album Cover">
-                        <button class="play-btn" aria-label="Play track">
-                            <i class="fas fa-play"></i>
-                        </button>
-                    </div>
-                    <div class="track-info">
-                        <h3 class="track-title">Track Title</h3>
-                        <p class="artist-name">Artist Name</p>
-                    </div>
-                    <div class="track-actions">
-                        <button class="like-btn" aria-label="Like track">
-                            <i class="far fa-heart"></i>
-                        </button>
-                        <span class="duration">3:42</span>
-                    </div>
-                </div>
-
-                <!-- Repeat for more tracks -->
-                <!-- Music Card 2 -->
-                <div class="music-card">
-                    <!-- Same structure as above -->
-                </div>
+                <!-- Tracks will be loaded dynamically from API -->
             </div>
         </div>
     </section>
