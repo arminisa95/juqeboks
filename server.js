@@ -76,7 +76,7 @@ async function initializeDatabase() {
     }
 }
 
-// JUKE Music Streaming Platform API Server
+// JUKE Music Streaming Platform API Server v2
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
