@@ -1,5 +1,5 @@
 // JUKE Authentication System
-const API_BASE = 'https://juke-api.onrender.com/api';
+var API_BASE = 'https://juke-api.onrender.com/api';
 
 // Store user session
 let currentUser = null;

@@ -136,8 +136,7 @@ async function initializeDatabase() {
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, track_id)
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `;
 
@@ -145,6 +144,20 @@ async function initializeDatabase() {
 
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS uploader_id UUID REFERENCES users(id) ON DELETE SET NULL');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)');
+
+        await db.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM pg_constraint
+                    WHERE conname = 'user_favorites_user_track_unique'
+                ) THEN
+                    ALTER TABLE user_favorites
+                    ADD CONSTRAINT user_favorites_user_track_unique UNIQUE(user_id, track_id);
+                END IF;
+            END $$;
+        `);
         console.log('Database schema initialized');
 
     } catch (error) {
@@ -693,7 +706,7 @@ app.post('/api/tracks/:id/like', authenticateToken, async (req, res) => {
         }
 
         await db.query(
-            'INSERT INTO user_favorites (user_id, track_id) VALUES ($1, $2) ON CONFLICT (user_id, track_id) DO NOTHING',
+            'INSERT INTO user_favorites (user_id, track_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
             [userId, trackId]
         );
 

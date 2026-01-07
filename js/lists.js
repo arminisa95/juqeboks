@@ -1,5 +1,5 @@
-const API_BASE = 'https://juke-api.onrender.com/api';
-const API_ORIGIN = API_BASE.replace(/\/api$/, '');
+var API_BASE = 'https://juke-api.onrender.com/api';
+var API_ORIGIN = API_BASE.replace(/\/api$/, '');
 
 function resolveAssetUrl(url, fallback) {
     if (!url) return fallback;
