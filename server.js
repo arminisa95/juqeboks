@@ -92,15 +92,6 @@ async function initializeDatabase() {
         await db.query(schema);
         console.log('Database schema initialized');
         
-        // Insert sample artists
-        await db.query(`
-            INSERT INTO artists (id, name, bio, verified) VALUES
-            ('550e8400-e29b-41d4-a716-446655440001', 'The Midnight Dreams', 'Electronic music duo from Berlin', true),
-            ('550e8400-e29b-41d4-a716-446655440002', 'Luna Rodriguez', 'Indie folk singer-songwriter', true)
-            ON CONFLICT (id) DO NOTHING
-        `);
-        console.log('Sample artists inserted');
-        
     } catch (error) {
         console.error('Database initialization error:', error);
     }
