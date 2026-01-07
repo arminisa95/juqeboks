@@ -16,23 +16,23 @@
     function routeToTemplate(route) {
         switch (route) {
             case '#/feed':
-                return { file: 'html/user.html', selector: 'section.music-feed' };
+                return { templateId: 'tpl-feed', file: 'html/user.html', selector: 'section.music-feed' };
             case '#/disqo':
-                return { file: 'html/disqo.html', selector: 'section.music-feed' };
+                return { templateId: 'tpl-disqo', file: 'html/disqo.html', selector: 'section.music-feed' };
             case '#/koleqtion':
-                return { file: 'html/koleqtion.html', selector: 'main' };
+                return { templateId: 'tpl-koleqtion', file: 'html/koleqtion.html', selector: 'main' };
             case '#/lists':
-                return { file: 'html/lists.html', selector: 'main' };
+                return { templateId: 'tpl-lists', file: 'html/lists.html', selector: 'main' };
             case '#/upload':
-                return { file: 'html/upload.html', selector: 'main' };
+                return { templateId: 'tpl-upload', file: 'html/upload.html', selector: 'main' };
             case '#/login':
-                return { file: 'html/login.html', selector: 'main' };
+                return { templateId: 'tpl-login', file: 'html/login.html', selector: 'main' };
             case '#/register':
-                return { file: 'html/register.html', selector: 'main' };
+                return { templateId: 'tpl-register', file: 'html/register.html', selector: 'main' };
             case '#/profile':
-                return { file: 'html/profile.html', selector: 'main' };
+                return { templateId: 'tpl-profile', file: 'html/profile.html', selector: 'main' };
             default:
-                return { file: 'html/user.html', selector: 'section.music-feed' };
+                return { templateId: 'tpl-feed', file: 'html/user.html', selector: 'section.music-feed' };
         }
     }
 
@@ -87,6 +87,57 @@
         }
 
         var tpl = routeToTemplate(route);
+
+        if (tpl.templateId) {
+            var templateEl = document.getElementById(tpl.templateId);
+            if (templateEl && templateEl.content) {
+                app.innerHTML = '';
+                app.appendChild(templateEl.content.cloneNode(true));
+                normalizeLinks(app);
+                setActiveNav(route);
+
+                document.dispatchEvent(new CustomEvent('spa:navigate', { detail: { route: route } }));
+
+                if (typeof updateAuthUI === 'function') updateAuthUI();
+
+                if (route === '#/feed' || route === '#/disqo' || route === '#/koleqtion') {
+                    if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
+                        window.JukeApi.loadTracks();
+                    } else if (typeof loadTracks === 'function') {
+                        loadTracks();
+                    }
+                }
+
+                if (route === '#/lists') {
+                    if (window.JukeLists && typeof window.JukeLists.loadLists === 'function') {
+                        window.JukeLists.loadLists();
+                    } else if (typeof loadLists === 'function') {
+                        loadLists();
+                    }
+                }
+
+                if (route === '#/upload') {
+                    if (window.JukeUpload && typeof window.JukeUpload.init === 'function') {
+                        window.JukeUpload.init();
+                    }
+                }
+
+                if (route === '#/profile') {
+                    if (typeof setupProfilePage === 'function') setupProfilePage();
+                }
+
+                if (route === '#/login') {
+                    if (typeof setupLoginForm === 'function') setupLoginForm();
+                }
+
+                if (route === '#/register') {
+                    if (typeof setupRegisterForm === 'function') setupRegisterForm();
+                }
+
+                return;
+            }
+        }
+
         var res = await fetch(tpl.file, { cache: 'no-cache' });
         if (!res.ok) {
             app.innerHTML = '<div style="color:white; padding: 2rem;">Failed to load view.</div>';

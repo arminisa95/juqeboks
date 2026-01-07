@@ -56,6 +56,275 @@
         </nav>
     </header>
 
+    <template id="tpl-feed">
+        <section class="music-feed">
+            <div class="feed-container">
+                <h2 class="feed-title">#Top 10</h2>
+                <div class="music-grid"></div>
+            </div>
+        </section>
+    </template>
+
+    <template id="tpl-disqo">
+        <section class="music-feed">
+            <div class="feed-container">
+                <h2 class="feed-title">#Disqo</h2>
+                <div class="music-grid"></div>
+            </div>
+        </section>
+    </template>
+
+    <template id="tpl-koleqtion">
+        <main>
+            <div class="library-container">
+                <div class="library-header">
+                    <h1>U_koleqtion</h1>
+                    <div class="library-actions">
+                        <input type="text" class="search-library" placeholder="Search your library...">
+                        <button class="filter-btn">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Filters</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active">Tracks</div>
+                    <div class="tab">Playlists</div>
+                    <div class="tab">Albums</div>
+                    <div class="tab">Likes</div>
+                </div>
+
+                <div class="tracks-grid" id="tracksGrid"></div>
+
+                <div class="pagination">
+                    <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </main>
+    </template>
+
+    <template id="tpl-lists">
+        <main>
+            <div class="lists-container">
+                <div class="lists-header">
+                    <h1>U_lists</h1>
+                    <div class="lists-subtitle">Playlists, curated picks, and liked tracks</div>
+                </div>
+
+                <div class="lists-section">
+                    <h2 class="section-title">Your Playlists</h2>
+                    <div id="myPlaylists" class="cards-grid"></div>
+                </div>
+
+                <div class="lists-section">
+                    <h2 class="section-title">Curated</h2>
+                    <div id="curatedPlaylists" class="cards-grid"></div>
+                </div>
+
+                <div class="lists-section">
+                    <h2 class="section-title">Liked Tracks</h2>
+                    <div id="likedTracks" class="cards-grid"></div>
+                </div>
+            </div>
+        </main>
+    </template>
+
+    <template id="tpl-upload">
+        <main>
+            <div class="upload-container">
+                <div class="upload-header">
+                    <h1>Upload Your Music</h1>
+                    <p>Share your sound with the world</p>
+                </div>
+
+                <form id="uploadForm">
+                    <div class="upload-area" id="dropZone">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drag & drop your audio files here or</p>
+                        <p><span class="browse-link">browse</span> your files</p>
+                        <input type="file" id="fileInput" accept="audio/*" style="display: none;" multiple>
+                        <div class="file-info" id="fileInfo">No files selected</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="coverInput">Cover Image (optional)</label>
+                        <input type="file" id="coverInput" class="form-control" accept="image/*">
+                        <div class="file-info" id="coverInfo">No cover selected</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="trackTitle">Track Title *</label>
+                        <input type="text" id="trackTitle" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="artistName">Artist Name *</label>
+                        <input type="text" id="artistName" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="genre">Genre *</label>
+                        <select id="genre" class="form-control" required>
+                            <option value="">Select a genre</option>
+                            <option value="electronic">Electronic</option>
+                            <option value="hiphop">Hip Hop</option>
+                            <option value="rock">Rock</option>
+                            <option value="pop">Pop</option>
+                            <option value="jazz">Jazz</option>
+                            <option value="classical">Classical</option>
+                            <option value="rnb">R&B</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="terms" required>
+                            I have the rights to upload this content and agree to the <a href="#" style="color: #00ffd0;">Terms of Service</a>.
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-upload">Upload Track</button>
+                </form>
+            </div>
+        </main>
+    </template>
+
+    <template id="tpl-login">
+        <main class="auth-main">
+            <div class="login-container">
+                <h1 class="login-title">Welcome to Juke</h1>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username or Email</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="login-btn">Log In</button>
+                </form>
+                <div class="signup-link">
+                    Don't have an account? <a href="#/register">Sign up</a>
+                </div>
+            </div>
+        </main>
+    </template>
+
+    <template id="tpl-register">
+        <main class="auth-main">
+            <div class="register-container">
+                <h1 class="register-title">Create Account</h1>
+
+                <div class="social-buttons">
+                    <button type="button" class="social-btn google">
+                        <i class="fab fa-google"></i> Continue with Google
+                    </button>
+                    <button type="button" class="social-btn facebook">
+                        <i class="fab fa-facebook-f"></i> Continue with Facebook
+                    </button>
+                    <button type="button" class="social-btn apple">
+                        <i class="fab fa-apple"></i> Continue with Apple
+                    </button>
+                </div>
+
+                <div class="divider">or</div>
+
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required minlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required minlength="8">
+                        <div class="password-requirements">At least 8 characters</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password</label>
+                        <input type="password" id="confirm-password" name="confirm-password" required>
+                    </div>
+                    <button type="submit" class="register-btn">Create Account</button>
+                </form>
+
+                <div class="login-link">
+                    Already have an account? <a href="#/login">Log in</a>
+                </div>
+            </div>
+        </main>
+    </template>
+
+    <template id="tpl-profile">
+        <main class="auth-main">
+            <div class="profile-container">
+                <h1 class="profile-title">Profile & Settings</h1>
+
+                <div class="profile-subtitle">Signed in as <span class="username-display"></span></div>
+
+                <div id="profileMessage" class="profile-message" style="display:none"></div>
+
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label for="profileEmail">Email</label>
+                        <input type="email" id="profileEmail" name="profileEmail" disabled>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="profileFirstName">First Name</label>
+                            <input type="text" id="profileFirstName" name="profileFirstName">
+                        </div>
+                        <div class="form-group">
+                            <label for="profileLastName">Last Name</label>
+                            <input type="text" id="profileLastName" name="profileLastName">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileBio">Bio</label>
+                        <input type="text" id="profileBio" name="profileBio" placeholder="Tell us something about you">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileAvatar">Avatar URL</label>
+                        <input type="url" id="profileAvatar" name="profileAvatar" placeholder="https://...">
+                    </div>
+
+                    <button type="submit" class="profile-btn">Save Settings</button>
+                </form>
+
+                <button type="button" id="logoutBtn" class="profile-btn secondary">Log out</button>
+            </div>
+        </main>
+    </template>
+
     <main id="app"></main>
 
     <div class="music-player"></div>
