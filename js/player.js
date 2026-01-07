@@ -67,6 +67,7 @@
 
         audio.volume = state.volume;
         if (state.audioUrl) {
+            state.audioUrl = resolveAssetUrl(state.audioUrl);
             audio.src = state.audioUrl;
         }
     }
@@ -318,6 +319,14 @@
         var el = ensurePlayerElement();
         var bound = bindPlayer(el);
 
+        audio.addEventListener('error', function () {
+            try {
+                console.error('Audio element error:', audio.error, 'src:', audio.currentSrc || audio.src);
+            } catch (_) {
+                console.error('Audio element error (unable to inspect src).');
+            }
+        });
+
         window.JukePlayer = {
             playTrackById: playTrackById,
             render: bound.render
@@ -328,6 +337,7 @@
         };
 
         if (state.audioUrl) {
+            state.audioUrl = resolveAssetUrl(state.audioUrl);
             audio.src = state.audioUrl;
             audio.volume = state.volume;
             saveState();
