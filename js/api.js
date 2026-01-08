@@ -61,7 +61,7 @@ async function apiFetchJson(path, options, validateOkData) {
 
             if (res.ok) {
                 if (typeof validateOkData === 'function' && !validateOkData(data)) {
-                    lastErr = new Error('Invalid response');
+                    lastErr = new Error('Invalid response from ' + (base + path));
                     continue;
                 }
                 try {
@@ -72,11 +72,11 @@ async function apiFetchJson(path, options, validateOkData) {
             }
 
             if (res.status === 401 || res.status === 403 || res.status === 404 || res.status === 405) {
-                lastErr = new Error((data && data.error) ? data.error : ('Request failed: ' + res.status));
+                lastErr = new Error(((data && data.error) ? data.error : ('Request failed: ' + res.status)) + ' (' + (base + path) + ')');
                 continue;
             }
 
-            throw new Error((data && data.error) ? data.error : ('Request failed: ' + res.status));
+            throw new Error(((data && data.error) ? data.error : ('Request failed: ' + res.status)) + ' (' + (base + path) + ')');
         } catch (e) {
             lastErr = e;
         }
@@ -599,7 +599,12 @@ async function addToPlaylist(trackId) {
         alert('Added to playlist.');
     } catch (e) {
         console.error('Add to playlist failed:', e);
-        alert('Add to playlist failed. Please try again.');
+        var msg = 'Add to playlist failed.';
+        try {
+            if (e && e.message) msg = e.message;
+        } catch (_) {
+        }
+        alert(msg);
     }
 }
 

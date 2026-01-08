@@ -925,10 +925,17 @@ app.post('/api/playlists/:id/tracks', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Track not found' });
         }
 
-        const inserted = await db.get(
-            'INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES ($1, $2, NULL) ON CONFLICT (playlist_id, track_id) DO NOTHING RETURNING id',
-            [playlistId, trackId]
-        );
+        const inserted = await db.get(`
+            WITH ins AS (
+                INSERT INTO playlist_tracks (playlist_id, track_id, position)
+                SELECT $1, $2, NULL
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM playlist_tracks WHERE playlist_id = $1 AND track_id = $2
+                )
+                RETURNING id
+            )
+            SELECT id FROM ins
+        `, [playlistId, trackId]);
 
         if (inserted && inserted.id) {
             await db.query(
