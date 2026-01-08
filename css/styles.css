@@ -367,61 +367,81 @@ footer a:hover {
         flex-direction: column;
         align-items: center;
     }
-    
+
+    nav {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
     .nav-buttons {
-        margin: 10px 20px;
+        margin: 10px 0;
         width: 100%;
         justify-content: center;
         flex-wrap: wrap;
+        height: auto;
+        gap: 10px;
     }
-    
+
     .nav-buttons a {
         font-size: 16px;
-        min-width: 70px;
+        min-width: 0;
         margin: 5px;
     }
-    
+
+    .header-right {
+        margin-right: 0;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .header-right .nav-buttons {
+        margin: 0;
+        justify-content: center;
+        gap: 10px;
+    }
+
     .search-container {
         margin: 10px 20px;
         width: calc(100% - 40px);
         max-width: none;
     }
-    
+
     .search-bar {
         width: 100%;
         font-size: 14px;
     }
-    
+
     .search-btn {
         max-height: 30px;
         padding: 0 15px;
     }
-    
+
     .index-btn {
         margin-top: 100px;
         margin-left: 20px;
         text-align: center;
     }
-    
+
     h1 a {
         font-size: 1.8rem;
         margin: 20px 10px;
         display: block;
     }
-    
+
     .nav-icon {
         width: 30px;
         height: 30px;
     }
-    
+
     .logo-img {
         height: 60px;
     }
-    
+
     .floating-button {
         width: 100px;
         height: 100px;
-        bottom: 15px;
+        bottom: 55px;
         right: 15px;
     }
 }
@@ -431,87 +451,99 @@ footer a:hover {
     .search-container {
         max-width: 500px;
     }
-    
+
     .index-btn {
         margin-top: 120px;
         margin-left: 50px;
     }
-    
-h1 a {
-font-size: 2.2rem;
-}
+
+    h1 a {
+        font-size: 2.2rem;
+    }
 }
 
 /* iPhone 12 and Small Mobile Devices (390px) */
 @media (max-width: 390px) {
-header {
-margin: 0px 10px;
-padding: 10px 0;
-}
-    
-.logo-img {
-height: 50px;
-}
-    
-.nav-buttons {
-margin: 5px 10px;
-gap: 5px;
-}
-    
-.nav-buttons a {
-font-size: 14px;
-min-width: 60px;
-margin: 2px;
-padding: 0 3px;
-}
-    
-.search-container {
-margin: 5px 10px;
-width: calc(100% - 20px);
-height: 28px;
-}
-    
-.search-bar {
-font-size: 12px;
-padding: 0 10px;
-height: 28px;
-}
-    
-.search-btn {
-max-height: 28px;
-padding: 0 10px;
-}
-    
-.index-btn {
-margin-top: 80px;
-margin-left: 10px;
-text-align: center;
-width: calc(100% - 20px);
-}
-    
-h1 a {
-font-size: 1.4rem;
-margin: 15px 5px;
-display: block;
-text-align: center;
-}
-    
-.nav-icon {
-width: 25px;
-height: 25px;
-}
-    
-.floating-button {
-width: 80px;
-height: 80px;
-bottom: 10px;
-right: 10px;
-}
-    
-footer {
-padding: 5px 10px;
-font-size: 0.8rem;
-}
+    header {
+        margin: 0px 10px;
+        padding: 10px 0;
+    }
+
+    .logo-img {
+        height: 50px;
+    }
+
+    .nav-buttons {
+        margin: 5px 10px;
+        gap: 5px;
+    }
+
+    .nav-buttons a {
+        font-size: 14px;
+        min-width: 60px;
+        margin: 2px;
+        padding: 0 3px;
+    }
+
+    .search-container {
+        margin: 5px 10px;
+        width: calc(100% - 20px);
+        height: 28px;
+    }
+
+    .search-bar {
+        font-size: 12px;
+        padding: 0 10px;
+        height: 28px;
+    }
+
+    .search-btn {
+        max-height: 28px;
+        padding: 0 10px;
+    }
+
+    .index-btn {
+        margin-top: 80px;
+        margin-left: 10px;
+        text-align: center;
+        width: calc(100% - 20px);
+    }
+
+    h1 a {
+        font-size: 1.4rem;
+        margin: 15px 5px;
+        display: block;
+        text-align: center;
+    }
+
+    .nav-icon {
+        width: 25px;
+        height: 25px;
+    }
+
+    .floating-button {
+        width: 80px;
+        height: 80px;
+        bottom: 50px;
+        right: 10px;
+    }
+
+    footer {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+
+    .contact {
+        font-size: 8px;
+    }
+
+    #mail {
+        margin-left: 50px;
+    }
+
+    #phone {
+        margin-left: 80px;
+    }
     
 .contact {
 font-size: 8px;
