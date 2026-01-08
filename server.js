@@ -326,12 +326,10 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
         `, [userId]);
 
         const favorites = await db.getAll(`
-            SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
-                   t.uploader_id,
-                   t.audio_url,
-                   t.file_path,
-                   a.name as artist_name, al.title as album_title,
-                   COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
+            SELECT t.*, 
+                   a.name as artist_name,
+                   al.title as album_title,
+                   al.cover_image_url as album_cover_image_url
             FROM user_favorites uf
             JOIN tracks t ON uf.track_id = t.id
             JOIN artists a ON t.artist_id = a.id
@@ -343,8 +341,9 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
 
         const normalizedFavorites = favorites.map((t) => {
             const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
-            const { file_path, ...rest } = t;
-            return { ...rest, audio_url: audioUrl };
+            const coverUrl = t.cover_image_url || t.album_cover_image_url || null;
+            const { file_path, album_cover_image_url, ...rest } = t;
+            return { ...rest, audio_url: audioUrl, cover_image_url: coverUrl };
         });
 
         res.json({
@@ -430,12 +429,10 @@ app.get('/api/tracks', async (req, res) => {
         const { limit = 20, offset = 0, genre } = req.query;
 
         let query = `
-            SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
-                   t.uploader_id,
-                   t.audio_url,
-                   t.file_path,
-                   a.name as artist_name, al.title as album_title,
-                   COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
+            SELECT t.*,
+                   a.name as artist_name,
+                   al.title as album_title,
+                   al.cover_image_url as album_cover_image_url
             FROM tracks t
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
@@ -454,8 +451,9 @@ app.get('/api/tracks', async (req, res) => {
         const tracks = await db.getAll(query, params);
         const normalized = tracks.map((t) => {
             const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
-            const { file_path, ...rest } = t;
-            return { ...rest, audio_url: audioUrl };
+            const coverUrl = t.cover_image_url || t.album_cover_image_url || null;
+            const { file_path, album_cover_image_url, ...rest } = t;
+            return { ...rest, audio_url: audioUrl, cover_image_url: coverUrl };
         });
         res.json(normalized);
 
@@ -472,13 +470,10 @@ app.get('/api/tracks/:id', async (req, res) => {
         const { id } = req.params;
 
         const track = await db.get(`
-            SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
-                   t.lyrics, t.metadata, t.release_date,
-                   t.audio_url,
-                   t.file_path,
+            SELECT t.*,
                    a.name as artist_name, a.id as artist_id,
                    al.title as album_title, al.id as album_id,
-                   COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
+                   al.cover_image_url as album_cover_image_url
             FROM tracks t
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
@@ -490,8 +485,9 @@ app.get('/api/tracks/:id', async (req, res) => {
         }
 
         const audioUrl = track.audio_url || (track.file_path ? `/uploads/${path.basename(track.file_path)}` : null);
-        const { file_path, ...rest } = track;
-        res.json({ ...rest, audio_url: audioUrl });
+        const coverUrl = track.cover_image_url || track.album_cover_image_url || null;
+        const { file_path, album_cover_image_url, ...rest } = track;
+        res.json({ ...rest, audio_url: audioUrl, cover_image_url: coverUrl });
 
     } catch (error) {
         console.error('Get track error:', error);
@@ -510,12 +506,10 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
         const userId = req.user.id;
 
         const tracks = await db.getAll(`
-            SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
-                   t.uploader_id,
-                   t.audio_url,
-                   t.file_path,
-                   a.name as artist_name, al.title as album_title,
-                   COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
+            SELECT t.*,
+                   a.name as artist_name,
+                   al.title as album_title,
+                   al.cover_image_url as album_cover_image_url
             FROM tracks t
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
@@ -526,8 +520,9 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
 
         const normalized = tracks.map((t) => {
             const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
-            const { file_path, ...rest } = t;
-            return { ...rest, audio_url: audioUrl };
+            const coverUrl = t.cover_image_url || t.album_cover_image_url || null;
+            const { file_path, album_cover_image_url, ...rest } = t;
+            return { ...rest, audio_url: audioUrl, cover_image_url: coverUrl };
         });
 
         res.json(normalized);
