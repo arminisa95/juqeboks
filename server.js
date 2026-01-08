@@ -858,8 +858,6 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
-// ==================== UPLOAD ENDPOINT ====================
-
 app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }]), async (req, res) => {
     try {
         const { title, artist, genre } = req.body;
@@ -873,7 +871,46 @@ app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', m
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        // ... (rest of the code remains the same)
+        // Get or create artist first
+        let artistResult = await db.query(
+            'SELECT id FROM artists WHERE name = $1',
+            [artist]
+        );
+
+        let artistId;
+        if (artistResult.rows.length === 0) {
+            // Create new artist
+            const newArtist = await db.insert('artists', {
+                name: artist,
+                bio: 'Uploaded via JUKE platform',
+                verified: false
+            });
+            artistId = newArtist.id;
+        } else {
+            artistId = artistResult.rows[0].id;
+        }
+
+        // Create/find album row (optional) and store both album_id + plain album title.
+        // We keep the string column as the authoritative display value.
+        let albumId = null;
+        if (albumTitle && albumTitle !== 'Single') {
+            const albumExisting = await db.get(
+                'SELECT id FROM albums WHERE title = $1 AND artist_id = $2',
+                [albumTitle, artistId]
+            );
+            if (albumExisting && albumExisting.id) {
+                albumId = albumExisting.id;
+            } else {
+                const newAlbum = await db.insert('albums', {
+                    title: albumTitle,
+                    artist_id: artistId,
+                    release_date: new Date().toISOString().split('T')[0],
+                    cover_image_url: cover ? `/uploads/${path.basename(cover.path)}` : null,
+                    genre: genre || null
+                });
+                albumId = newAlbum.id;
+            }
+        }
 
         const s3 = getS3Client();
         let audioUrl = `/uploads/${path.basename(file.path)}`;
