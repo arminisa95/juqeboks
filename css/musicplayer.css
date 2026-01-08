@@ -104,6 +104,13 @@ MUSIC PLAYER
     transition: transform 0.2s ease;
 }
 
+.music-player .play-btn,
+.music-player .play-btn.large {
+    opacity: 1;
+    position: static;
+    transform: none;
+}
+
 .play-btn.large:hover {
     transform: scale(1.05);
 }
@@ -157,6 +164,7 @@ MUSIC PLAYER
     width: 100%;
     height: 4px;
     -webkit-appearance: none;
+    appearance: none;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
     outline: none;
@@ -165,6 +173,7 @@ MUSIC PLAYER
 
 .volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
     width: 12px;
     height: 12px;
     background: white;
