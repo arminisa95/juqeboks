@@ -147,6 +147,8 @@ async function initializeDatabase() {
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS uploader_id UUID REFERENCES users(id) ON DELETE SET NULL');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500)');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
 
         await db.query(`
             DO $$
@@ -502,6 +504,7 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
 
     try {
         const { limit = 50, offset = 0 } = req.query;
+
         const limitNum = Math.max(1, Math.min(parseInt(limit, 10) || 50, 200));
         const offsetNum = Math.max(0, parseInt(offset, 10) || 0);
         const userId = req.user.id;
@@ -517,7 +520,7 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
             WHERE t.uploader_id = $1
-            ORDER BY t.created_at DESC
+            ORDER BY t.created_at DESC NULLS LAST
             LIMIT $2 OFFSET $3
         `, [userId, limitNum, offsetNum]);
 
