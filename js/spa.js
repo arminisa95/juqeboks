@@ -13,7 +13,18 @@
         return !isAuthRoute(route);
     }
 
+    function parseUserKoleqtionRoute(route) {
+        if (!route || typeof route !== 'string') return null;
+        if (!route.startsWith('#/koleqtion/')) return null;
+        var id = route.slice('#/koleqtion/'.length);
+        if (!id) return null;
+        return id;
+    }
+
     function routeToTemplate(route) {
+        if (parseUserKoleqtionRoute(route)) {
+            return { templateId: 'tpl-koleqtion', file: 'html/koleqtion.html', selector: 'main' };
+        }
         switch (route) {
             case '#/feed':
                 return { templateId: 'tpl-feed', file: 'html/user.html', selector: 'section.music-feed' };
@@ -112,6 +123,13 @@
                     }
                 }
 
+                var userK = parseUserKoleqtionRoute(route);
+                if (userK) {
+                    if (window.JukeApi && typeof window.JukeApi.loadUserTracks === 'function') {
+                        window.JukeApi.loadUserTracks(userK);
+                    }
+                }
+
                 if (route === '#/feed' || route === '#/disqo') {
                     if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
                         window.JukeApi.loadTracks();
@@ -180,6 +198,13 @@
                 window.JukeApi.loadTracks();
             } else if (typeof loadTracks === 'function') {
                 loadTracks();
+            }
+        }
+
+        var userK = parseUserKoleqtionRoute(route);
+        if (userK) {
+            if (window.JukeApi && typeof window.JukeApi.loadUserTracks === 'function') {
+                window.JukeApi.loadUserTracks(userK);
             }
         }
 

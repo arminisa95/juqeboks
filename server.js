@@ -94,6 +94,7 @@ async function initializeDatabase() {
                 uploader_id UUID REFERENCES users(id) ON DELETE SET NULL,
                 artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
                 album_id UUID REFERENCES albums(id) ON DELETE SET NULL,
+                album VARCHAR(200) DEFAULT 'Single',
                 cover_image_url VARCHAR(500),
                 file_path VARCHAR(500) NOT NULL,
                 file_size BIGINT,
@@ -140,6 +141,13 @@ async function initializeDatabase() {
                 track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS user_likes (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                liker_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                liked_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
         `;
 
         await db.query(schema);
@@ -147,6 +155,7 @@ async function initializeDatabase() {
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS uploader_id UUID REFERENCES users(id) ON DELETE SET NULL');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500)');
+        await db.query("ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album VARCHAR(200) DEFAULT 'Single'");
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
 
@@ -160,6 +169,20 @@ async function initializeDatabase() {
                 ) THEN
                     ALTER TABLE user_favorites
                     ADD CONSTRAINT user_favorites_user_track_unique UNIQUE(user_id, track_id);
+                END IF;
+            END $$;
+        `);
+
+        await db.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM pg_constraint
+                    WHERE conname = 'user_likes_unique'
+                ) THEN
+                    ALTER TABLE user_likes
+                    ADD CONSTRAINT user_likes_unique UNIQUE(liker_id, liked_user_id);
                 END IF;
             END $$;
         `);
@@ -333,11 +356,13 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
             SELECT t.*, 
                    a.name as artist_name,
                    al.title as album_title,
-                   al.cover_image_url as album_cover_image_url
+                   al.cover_image_url as album_cover_image_url,
+                   u.username as uploader_username
             FROM user_favorites uf
             JOIN tracks t ON uf.track_id = t.id
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
+            LEFT JOIN users u ON t.uploader_id = u.id
             WHERE uf.user_id = $1
             ORDER BY uf.created_at DESC
             LIMIT 100
@@ -363,6 +388,97 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Get profile error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/users/:id/summary', authenticateToken, async (req, res) => {
+    try {
+        const viewerId = req.user.id;
+        const { id } = req.params;
+
+        if (!isUuid(id)) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        const user = await db.get(
+            'SELECT id, username, avatar_url, bio FROM users WHERE id = $1',
+            [id]
+        );
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const likesCountRow = await db.get(
+            'SELECT COUNT(*)::int as count FROM user_likes WHERE liked_user_id = $1',
+            [id]
+        );
+        const likedByMeRow = await db.get(
+            'SELECT 1 as yes FROM user_likes WHERE liker_id = $1 AND liked_user_id = $2',
+            [viewerId, id]
+        );
+
+        res.json({
+            id: user.id,
+            username: user.username,
+            avatar_url: user.avatar_url,
+            bio: user.bio,
+            likes_count: likesCountRow ? (likesCountRow.count || 0) : 0,
+            liked_by_me: !!likedByMeRow
+        });
+    } catch (error) {
+        console.error('Get user summary error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/users/:id/like', authenticateToken, async (req, res) => {
+    try {
+        const likerId = req.user.id;
+        const { id: likedUserId } = req.params;
+
+        if (!isUuid(likedUserId)) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+        if (String(likerId) === String(likedUserId)) {
+            return res.status(400).json({ error: 'You cannot like yourself' });
+        }
+
+        const target = await db.get('SELECT id FROM users WHERE id = $1', [likedUserId]);
+        if (!target) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const existing = await db.get(
+            'SELECT id FROM user_likes WHERE liker_id = $1 AND liked_user_id = $2',
+            [likerId, likedUserId]
+        );
+
+        if (existing) {
+            await db.query(
+                'DELETE FROM user_likes WHERE liker_id = $1 AND liked_user_id = $2',
+                [likerId, likedUserId]
+            );
+        } else {
+            await db.query(
+                'INSERT INTO user_likes (liker_id, liked_user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                [likerId, likedUserId]
+            );
+        }
+
+        const likesCountRow = await db.get(
+            'SELECT COUNT(*)::int as count FROM user_likes WHERE liked_user_id = $1',
+            [likedUserId]
+        );
+
+        res.json({
+            success: true,
+            liked: !existing,
+            likes_count: likesCountRow ? (likesCountRow.count || 0) : 0
+        });
+    } catch (error) {
+        console.error('Toggle user like error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -436,10 +552,12 @@ app.get('/api/tracks', async (req, res) => {
             SELECT t.*,
                    a.name as artist_name,
                    al.title as album_title,
-                   al.cover_image_url as album_cover_image_url
+                   al.cover_image_url as album_cover_image_url,
+                   u.username as uploader_username
             FROM tracks t
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
+            LEFT JOIN users u ON t.uploader_id = u.id
         `;
 
         const params = [];
@@ -481,10 +599,12 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
             SELECT t.*,
                    a.name as artist_name,
                    al.title as album_title,
-                   al.cover_image_url as album_cover_image_url
+                   al.cover_image_url as album_cover_image_url,
+                   u.username as uploader_username
             FROM tracks t
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
+            LEFT JOIN users u ON t.uploader_id = u.id
             WHERE t.uploader_id = $1
             ORDER BY t.id DESC
             LIMIT $2 OFFSET $3
@@ -504,6 +624,44 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
     }
 });
 
+// Get tracks by uploader
+app.get('/api/tracks/user/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!isUuid(id)) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        const tracks = await db.getAll(`
+            SELECT t.*, 
+                   a.name as artist_name,
+                   al.title as album_title,
+                   al.cover_image_url as album_cover_image_url,
+                   u.username as uploader_username
+            FROM tracks t
+            JOIN artists a ON t.artist_id = a.id
+            LEFT JOIN albums al ON t.album_id = al.id
+            LEFT JOIN users u ON t.uploader_id = u.id
+            WHERE t.uploader_id = $1
+            ORDER BY t.id DESC
+            LIMIT 200
+        `, [id]);
+
+        const normalized = tracks.map((t) => {
+            const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
+            const coverUrl = t.cover_image_url || t.album_cover_image_url || null;
+            const { file_path, album_cover_image_url, ...rest } = t;
+            return { ...rest, audio_url: audioUrl, cover_image_url: coverUrl };
+        });
+
+        res.json(normalized);
+    } catch (error) {
+        console.error('Get user tracks error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Get track by ID
 app.get('/api/tracks/:id', async (req, res) => {
 
@@ -518,10 +676,12 @@ app.get('/api/tracks/:id', async (req, res) => {
             SELECT t.*,
                    a.name as artist_name, a.id as artist_id,
                    al.title as album_title, al.id as album_id,
-                   al.cover_image_url as album_cover_image_url
+                   al.cover_image_url as album_cover_image_url,
+                   u.username as uploader_username
             FROM tracks t
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
+            LEFT JOIN users u ON t.uploader_id = u.id
             WHERE t.id = $1
         `, [id]);
 
@@ -600,6 +760,8 @@ app.get('/api/search', async (req, res) => {
 app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }]), async (req, res) => {
     try {
         const { title, artist, genre } = req.body;
+        const rawAlbum = (req.body && typeof req.body.album === 'string') ? req.body.album : '';
+        const albumTitle = (rawAlbum || '').trim() || 'Single';
         const file = req.files && req.files.audioFile ? req.files.audioFile[0] : null;
         const cover = req.files && req.files.coverImage ? req.files.coverImage[0] : null;
         const userId = req.user.id;
@@ -627,11 +789,34 @@ app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', m
             artistId = artistResult.rows[0].id;
         }
 
+        // Create/find album row (optional) and store both album_id + plain album title.
+        // We keep the string column as the authoritative display value.
+        let albumId = null;
+        if (albumTitle && albumTitle !== 'Single') {
+            const albumExisting = await db.get(
+                'SELECT id FROM albums WHERE title = $1 AND artist_id = $2',
+                [albumTitle, artistId]
+            );
+            if (albumExisting && albumExisting.id) {
+                albumId = albumExisting.id;
+            } else {
+                const newAlbum = await db.insert('albums', {
+                    title: albumTitle,
+                    artist_id: artistId,
+                    release_date: new Date().toISOString().split('T')[0],
+                    cover_image_url: cover ? `/uploads/${path.basename(cover.path)}` : null,
+                    genre: genre || null
+                });
+                albumId = newAlbum.id;
+            }
+        }
+
         const result = await db.insert('tracks', {
             title,
             uploader_id: userId,
             artist_id: artistId,
-            album_id: null,
+            album_id: albumId,
+            album: albumTitle,
             genre,
             file_path: file.path,
             audio_url: `/uploads/${path.basename(file.path)}`,
@@ -666,6 +851,95 @@ app.get('/api/playlists/curated', async (req, res) => {
         res.json(playlists);
     } catch (error) {
         console.error('Get curated playlists error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/playlists/my', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const playlists = await db.getAll(`
+            SELECT id, name, description, cover_image_url, is_public, track_count, created_at
+            FROM playlists
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            LIMIT 200
+        `, [userId]);
+        res.json(playlists);
+    } catch (error) {
+        console.error('Get my playlists error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/playlists', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const rawName = req.body && typeof req.body.name === 'string' ? req.body.name : '';
+        const name = rawName.trim();
+        const description = req.body && typeof req.body.description === 'string' ? req.body.description : null;
+        const isPublic = !!(req.body && req.body.is_public);
+
+        if (!name) {
+            return res.status(400).json({ error: 'Playlist name is required' });
+        }
+
+        const created = await db.insert('playlists', {
+            user_id: userId,
+            name,
+            description,
+            is_public: isPublic,
+            track_count: 0
+        });
+
+        res.status(201).json(created);
+    } catch (error) {
+        console.error('Create playlist error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/playlists/:id/tracks', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const playlistId = req.params.id;
+        const trackId = req.body && typeof req.body.track_id === 'string' ? req.body.track_id : '';
+
+        if (!isUuid(playlistId)) {
+            return res.status(400).json({ error: 'Invalid playlist ID' });
+        }
+        if (!isUuid(trackId)) {
+            return res.status(400).json({ error: 'Invalid track ID' });
+        }
+
+        const playlist = await db.get('SELECT id, user_id FROM playlists WHERE id = $1', [playlistId]);
+        if (!playlist) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+        if (!playlist.user_id || String(playlist.user_id) !== String(userId)) {
+            return res.status(403).json({ error: 'Not allowed' });
+        }
+
+        const track = await db.get('SELECT id FROM tracks WHERE id = $1', [trackId]);
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const inserted = await db.get(
+            'INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES ($1, $2, NULL) ON CONFLICT (playlist_id, track_id) DO NOTHING RETURNING id',
+            [playlistId, trackId]
+        );
+
+        if (inserted && inserted.id) {
+            await db.query(
+                'UPDATE playlists SET track_count = (SELECT COUNT(*) FROM playlist_tracks WHERE playlist_id = $1), updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+                [playlistId]
+            );
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Add track to playlist error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

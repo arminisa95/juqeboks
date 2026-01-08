@@ -88,10 +88,12 @@
 
             var titleEl = document.getElementById('trackTitle');
             var artistEl = document.getElementById('artistName');
+            var albumEl = document.getElementById('albumTitle');
             var genreEl = document.getElementById('genre');
 
             formData.append('title', titleEl ? titleEl.value : '');
             formData.append('artist', artistEl ? artistEl.value : '');
+            formData.append('album', albumEl ? albumEl.value : '');
             formData.append('genre', genreEl ? genreEl.value : '');
 
             var submitBtn = uploadForm.querySelector('button[type="submit"]');

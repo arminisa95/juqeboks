@@ -82,25 +82,25 @@
     margin-bottom: 2rem;
 }
 
-.track-card {
+.tracks-grid .track-card {
     background: rgba(30, 25, 100, 0.5);
     border-radius: 10px;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.track-card:hover {
+.tracks-grid .track-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
-.track-cover {
+.tracks-grid .track-card .track-cover {
     position: relative;
     padding-top: 100%;
     background: #1a1540;
 }
 
-.track-cover img {
+.tracks-grid .track-card .track-cover img {
     position: absolute;
     top: 0;
     left: 0;
@@ -109,7 +109,7 @@
     object-fit: cover;
 }
 
-.track-overlay {
+.tracks-grid .track-card .track-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -123,11 +123,11 @@
     transition: opacity 0.3s ease;
 }
 
-.track-card:hover .track-overlay {
+.tracks-grid .track-card:hover .track-overlay {
     opacity: 1;
 }
 
-.play-btn {
+.tracks-grid .track-card .play-btn {
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -141,15 +141,15 @@
     transition: transform 0.3s ease;
 }
 
-.play-btn:hover {
+.tracks-grid .track-card .play-btn:hover {
     transform: scale(1.1);
 }
 
-.track-info {
+.tracks-grid .track-card .track-info {
     padding: 1rem;
 }
 
-.track-title {
+.tracks-grid .track-card .track-title {
     color: #fff;
     margin: 0 0 0.3rem;
     font-size: 1.1rem;
@@ -158,13 +158,13 @@
     text-overflow: ellipsis;
 }
 
-.track-artist {
+.tracks-grid .track-card .track-artist {
     color: #a0a0a0;
     margin: 0 0 0.5rem;
     font-size: 0.9rem;
 }
 
-.track-stats {
+.tracks-grid .track-card .track-stats {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -172,12 +172,12 @@
     font-size: 0.8rem;
 }
 
-.track-actions {
+.tracks-grid .track-card .track-actions {
     display: flex;
     gap: 0.8rem;
 }
 
-.action-btn {
+.tracks-grid .track-card .action-btn {
     background: none;
     border: none;
     color: #6a6a8a;
@@ -185,15 +185,15 @@
     transition: color 0.3s ease;
 }
 
-.delete-btn {
+.tracks-grid .track-card .delete-btn {
     color: rgba(247, 33, 147, 0.75);
 }
 
-.delete-btn:hover {
+.tracks-grid .track-card .delete-btn:hover {
     color: #F72193;
 }
 
-.action-btn:hover {
+.tracks-grid .track-card .action-btn:hover {
     color: #00ffd0;
 }
 
@@ -291,32 +291,32 @@
         gap: 1rem;
     }
     
-    .track-card {
+    .tracks-grid .track-card {
         border-radius: 8px;
     }
     
-    .track-info {
+    .tracks-grid .track-card .track-info {
         padding: 0.8rem;
     }
     
-    .track-title {
+    .tracks-grid .track-card .track-title {
         font-size: 1rem;
     }
     
-    .track-artist {
+    .tracks-grid .track-card .track-artist {
         font-size: 0.8rem;
     }
     
-    .track-stats {
+    .tracks-grid .track-card .track-stats {
         font-size: 0.7rem;
     }
     
-    .play-btn {
+    .tracks-grid .track-card .play-btn {
         width: 40px;
         height: 40px;
     }
     
-    .action-btn {
+    .tracks-grid .track-card .action-btn {
         font-size: 14px;
     }
     

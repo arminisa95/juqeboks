@@ -198,6 +198,11 @@
                 </div>
                 
                 <div class="form-group">
+                    <label for="albumTitle">Album (leave empty for Single)</label>
+                    <input type="text" id="albumTitle" class="form-control" placeholder="Single">
+                </div>
+                
+                <div class="form-group">
                     <label for="genre">Genre *</label>
                     <select id="genre" class="form-control" required>
                         <option value="">Select a genre</option>
@@ -327,6 +332,7 @@
                 // Add other form data
                 formData.append('title', document.getElementById('trackTitle').value);
                 formData.append('artist', document.getElementById('artistName').value);
+                formData.append('album', document.getElementById('albumTitle').value);
                 formData.append('genre', document.getElementById('genre').value);
                 
                 // Show loading state

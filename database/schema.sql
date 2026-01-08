@@ -61,6 +61,7 @@ CREATE TABLE tracks (
     uploader_id UUID REFERENCES users(id) ON DELETE SET NULL,
     artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
     album_id UUID REFERENCES albums(id) ON DELETE SET NULL,
+    album VARCHAR(200) DEFAULT 'Single',
     cover_image_url VARCHAR(500),
     audio_url VARCHAR(500),
     file_path VARCHAR(500) NOT NULL,

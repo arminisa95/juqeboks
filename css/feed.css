@@ -111,6 +111,12 @@
     padding: 0 1rem 1rem;
 }
 
+.left-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
 .like-btn {
     background: none;
     border: none;
