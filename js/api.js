@@ -38,7 +38,7 @@ function getApiBases() {
     });
 }
 
-async function apiFetchJson(path, options) {
+async function apiFetchJson(path, options, validateOkData) {
     var bases = getApiBases();
     var lastErr = null;
 
@@ -60,6 +60,10 @@ async function apiFetchJson(path, options) {
             }
 
             if (res.ok) {
+                if (typeof validateOkData === 'function' && !validateOkData(data)) {
+                    lastErr = new Error('Invalid response');
+                    continue;
+                }
                 try {
                     localStorage.setItem('juke_api_base', base);
                 } catch (_) {
@@ -119,6 +123,8 @@ async function loadLikedTrackIds() {
             headers: {
                 Authorization: `Bearer ${token}`
             }
+        }, function (d) {
+            return !!d && typeof d === 'object' && !Array.isArray(d);
         });
         const favorites = (profile && profile.favorites) ? profile.favorites : [];
         likedTrackIds = new Set(favorites.map((t) => t.id));
@@ -167,10 +173,20 @@ async function loadMyTracks() {
             headers: {
                 Authorization: `Bearer ${token}`
             }
+        }, function (d) {
+            return Array.isArray(d);
         });
         displayCollectionTracks(tracks);
     } catch (error) {
         console.error('Error loading my tracks:', error);
+
+        try {
+            const tracksGrid = document.getElementById('tracksGrid');
+            if (tracksGrid) {
+                tracksGrid.innerHTML = '<div class="empty-state">Failed to load your uploaded tracks. Please refresh and try again.</div>';
+            }
+        } catch (_) {
+        }
     }
 }
 
@@ -186,7 +202,9 @@ async function loadTracks() {
             return;
         }
 
-        const tracks = await apiFetchJson('/tracks', {});
+        const tracks = await apiFetchJson('/tracks', {}, function (d) {
+            return Array.isArray(d);
+        });
         displayFeedTracks(tracks);
     } catch (error) {
         console.error('Error loading tracks:', error);
@@ -210,6 +228,11 @@ function displayCollectionTracks(tracks) {
     if (!tracksGrid) return;
 
     tracksGrid.innerHTML = '';
+
+    if (!Array.isArray(tracks)) {
+        tracksGrid.innerHTML = '<div class="empty-state">Failed to load tracks.</div>';
+        return;
+    }
 
     if (!tracks || tracks.length === 0) {
         tracksGrid.innerHTML = '<div class="empty-state">No uploaded tracks yet.</div>';
