@@ -56,6 +56,10 @@ async function postAuthJson(path, payload, validateOkData) {
                     lastErr = new Error('Invalid response');
                     continue;
                 }
+                try {
+                    localStorage.setItem('juke_api_base', base);
+                } catch (_) {
+                }
                 return { ok: true, data: data };
             }
 
@@ -98,6 +102,11 @@ function logout() {
     localStorage.removeItem('juke_token');
     localStorage.removeItem('juke_user');
     currentUser = null;
+
+    try {
+        document.dispatchEvent(new Event('auth:changed'));
+    } catch (_) {
+    }
 
     if (document.body && document.body.dataset && document.body.dataset.spa) {
         window.location.hash = '#/login';
@@ -159,6 +168,10 @@ async function login(username, password) {
             currentUser = data.user;
 
             if (document.body && document.body.dataset && document.body.dataset.spa) {
+                try {
+                    document.dispatchEvent(new Event('auth:changed'));
+                } catch (_) {
+                }
                 window.location.hash = '#/feed';
             } else {
                 // Redirect to feed
@@ -256,6 +269,10 @@ async function register(username, email, password, firstName, lastName) {
             currentUser = data.user;
 
             if (document.body && document.body.dataset && document.body.dataset.spa) {
+                try {
+                    document.dispatchEvent(new Event('auth:changed'));
+                } catch (_) {
+                }
                 window.location.hash = '#/feed';
             } else {
                 // Redirect to feed

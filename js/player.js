@@ -1,5 +1,5 @@
 (function () {
-    var API_BASE = (function () {
+    var DEFAULT_API_BASE = (function () {
         try {
             if (window.location && window.location.origin) {
                 var host = String(window.location.hostname || '');
@@ -10,7 +10,18 @@
         }
         return 'https://juke-api.onrender.com/api';
     })();
-    var API_ORIGIN = API_BASE.replace(/\/api$/, '');
+
+    function getApiBase() {
+        try {
+            return localStorage.getItem('juke_api_base') || DEFAULT_API_BASE;
+        } catch (_) {
+            return DEFAULT_API_BASE;
+        }
+    }
+
+    function getApiOrigin() {
+        return getApiBase().replace(/\/api$/, '');
+    }
 
     var STORAGE_KEY = 'juke_player_state';
 
@@ -26,8 +37,25 @@
     function resolveAssetUrl(url) {
         if (!url) return null;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
-        if (url.startsWith('/')) return API_ORIGIN + url;
+        if (url.startsWith('/')) return getApiOrigin() + url;
         return url;
+    }
+
+    function isAuthed() {
+        try {
+            return !!localStorage.getItem('juke_token');
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function setPlayerVisible(visible) {
+        var el = document.querySelector('.music-player');
+        if (!el) return;
+        el.style.display = visible ? '' : 'none';
+        if (document.body) {
+            document.body.style.paddingBottom = visible ? '100px' : '';
+        }
     }
 
     function formatTime(seconds) {
@@ -284,7 +312,7 @@
     }
 
     async function fetchTrack(trackId) {
-        var res = await fetch(API_BASE + '/tracks/' + encodeURIComponent(trackId));
+        var res = await fetch(getApiBase() + '/tracks/' + encodeURIComponent(trackId));
         if (!res.ok) {
             throw new Error('Failed to load track');
         }
@@ -324,9 +352,16 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    function initOrUpdatePlayer() {
+        var el = document.querySelector('.music-player');
+        if (!isAuthed()) {
+            setPlayerVisible(false);
+            return;
+        }
+
+        setPlayerVisible(true);
         loadState();
-        var el = ensurePlayerElement();
+        el = ensurePlayerElement();
         var bound = bindPlayer(el);
 
         audio.addEventListener('error', function () {
@@ -360,5 +395,15 @@
                 });
             }
         }
+
+        return bound;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initOrUpdatePlayer();
+    });
+
+    document.addEventListener('auth:changed', function () {
+        initOrUpdatePlayer();
     });
 })();

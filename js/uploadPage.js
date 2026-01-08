@@ -101,7 +101,12 @@
                 submitBtn.textContent = 'Uploading...';
             }
 
-            var primaryBase = (typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE : null;
+            var storedBase = null;
+            try {
+                storedBase = localStorage.getItem('juke_api_base');
+            } catch (_) {
+            }
+            var primaryBase = storedBase || ((typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE : null);
             var fallbackBase = 'https://juke-api.onrender.com/api';
             var bases = [primaryBase, fallbackBase].filter(Boolean);
             bases = bases.filter(function (v, i, a) { return a.indexOf(v) === i; });
@@ -132,6 +137,10 @@
 
                     return safeJson(res).then(function (data) {
                         if (res.ok && data && data.success) {
+                            try {
+                                localStorage.setItem('juke_api_base', apiBase);
+                            } catch (_) {
+                            }
                             alert('Upload successful! Track ID: ' + data.track.id);
                             uploadForm.reset();
                             fileInfo.textContent = 'No files selected';

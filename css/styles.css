@@ -61,6 +61,21 @@ nav {
     margin-right: 50px;
 }
 
+.header-right .nav-buttons {
+    width: auto;
+    margin: 1px 20px;
+    gap: 10px;
+}
+
+.header-right .nav-buttons a {
+    min-width: 0;
+    padding: 0 4px;
+}
+
+.header-right .nav-buttons a.logout-link {
+    margin-left: -6px;
+}
+
 .nav-buttons {
     display: flex;
     border: none;

@@ -1,4 +1,4 @@
-var API_BASE = (function () {
+var DEFAULT_API_BASE = (function () {
     try {
         if (window.location && window.location.origin) {
             var host = String(window.location.hostname || '');
@@ -9,7 +9,26 @@ var API_BASE = (function () {
     }
     return 'https://juke-api.onrender.com/api';
 })();
+var API_BASE = (function () {
+    try {
+        return localStorage.getItem('juke_api_base') || DEFAULT_API_BASE;
+    } catch (_) {
+        return DEFAULT_API_BASE;
+    }
+})();
 var API_ORIGIN = API_BASE.replace(/\/api$/, '');
+
+function getApiBase() {
+    try {
+        return localStorage.getItem('juke_api_base') || DEFAULT_API_BASE;
+    } catch (_) {
+        return DEFAULT_API_BASE;
+    }
+}
+
+function getApiOrigin() {
+    return getApiBase().replace(/\/api$/, '');
+}
 
 function isSpaMode() {
     return !!(document.body && document.body.dataset && document.body.dataset.spa);
@@ -18,7 +37,7 @@ function isSpaMode() {
 function resolveAssetUrl(url, fallback) {
     if (!url) return fallback;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/')) return `${API_ORIGIN}${url}`;
+    if (url.startsWith('/')) return `${getApiOrigin()}${url}`;
     return url;
 }
 
@@ -103,7 +122,7 @@ async function loadLists() {
     setEmpty(likedEl, 'Loading...');
 
     try {
-        const profile = await fetchJson(`${API_BASE}/users/profile`, {
+        const profile = await fetchJson(`${getApiBase()}/users/profile`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -132,7 +151,7 @@ async function loadLists() {
     }
 
     try {
-        const curated = await fetchJson(`${API_BASE}/playlists/curated`);
+        const curated = await fetchJson(`${getApiBase()}/playlists/curated`);
         curatedEl.innerHTML = '';
 
         if (!curated || curated.length === 0) {

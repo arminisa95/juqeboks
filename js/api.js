@@ -1,5 +1,5 @@
 // JUKE API Integration
-var API_BASE = (function () {
+var DEFAULT_API_BASE = (function () {
     try {
         if (window.location && window.location.origin) {
             var host = String(window.location.hostname || '');
@@ -10,7 +10,76 @@ var API_BASE = (function () {
     }
     return 'https://juke-api.onrender.com/api';
 })();
+var API_BASE = (function () {
+    try {
+        return localStorage.getItem('juke_api_base') || DEFAULT_API_BASE;
+    } catch (_) {
+        return DEFAULT_API_BASE;
+    }
+})();
 var API_ORIGIN = API_BASE.replace(/\/api$/, '');
+
+function getApiBase() {
+    try {
+        return localStorage.getItem('juke_api_base') || DEFAULT_API_BASE;
+    } catch (_) {
+        return DEFAULT_API_BASE;
+    }
+}
+
+function getApiOrigin() {
+    return getApiBase().replace(/\/api$/, '');
+}
+
+function getApiBases() {
+    var bases = [getApiBase(), 'https://juke-api.onrender.com/api'];
+    return bases.filter(function (v, i, a) {
+        return !!v && a.indexOf(v) === i;
+    });
+}
+
+async function apiFetchJson(path, options) {
+    var bases = getApiBases();
+    var lastErr = null;
+
+    for (var i = 0; i < bases.length; i++) {
+        var base = bases[i];
+        try {
+            var res = await fetch(base + path, options || {});
+            var data = null;
+
+            try {
+                data = await res.json();
+            } catch (_) {
+                var text = '';
+                try {
+                    text = await res.text();
+                } catch (_) {
+                }
+                data = text ? { error: text } : null;
+            }
+
+            if (res.ok) {
+                try {
+                    localStorage.setItem('juke_api_base', base);
+                } catch (_) {
+                }
+                return data;
+            }
+
+            if (res.status === 401 || res.status === 403 || res.status === 404 || res.status === 405) {
+                lastErr = new Error((data && data.error) ? data.error : ('Request failed: ' + res.status));
+                continue;
+            }
+
+            throw new Error((data && data.error) ? data.error : ('Request failed: ' + res.status));
+        } catch (e) {
+            lastErr = e;
+        }
+    }
+
+    throw lastErr || new Error('Network error');
+}
 
 let likedTrackIds = new Set();
 
@@ -25,7 +94,7 @@ function getAuthToken() {
 function resolveAssetUrl(url, fallback) {
     if (!url) return fallback;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/')) return `${API_ORIGIN}${url}`;
+    if (url.startsWith('/')) return `${getApiOrigin()}${url}`;
     return url;
 }
 
@@ -46,7 +115,7 @@ async function loadLikedTrackIds() {
     }
 
     try {
-        const profile = await fetchJson(`${API_BASE}/users/profile`, {
+        const profile = await apiFetchJson('/users/profile', {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -94,7 +163,7 @@ async function loadMyTracks() {
 
         await loadLikedTrackIds();
 
-        const tracks = await fetchJson(`${API_BASE}/tracks/my`, {
+        const tracks = await apiFetchJson('/tracks/my', {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -117,7 +186,7 @@ async function loadTracks() {
             return;
         }
 
-        const tracks = await fetchJson(`${API_BASE}/tracks`);
+        const tracks = await apiFetchJson('/tracks', {});
         displayFeedTracks(tracks);
     } catch (error) {
         console.error('Error loading tracks:', error);
@@ -141,6 +210,11 @@ function displayCollectionTracks(tracks) {
     if (!tracksGrid) return;
 
     tracksGrid.innerHTML = '';
+
+    if (!tracks || tracks.length === 0) {
+        tracksGrid.innerHTML = '<div class="empty-state">No uploaded tracks yet.</div>';
+        return;
+    }
 
     tracks.forEach(track => {
         const card = createCollectionTrackCard(track);
@@ -241,7 +315,7 @@ async function deleteTrack(trackId, evt) {
     if (!ok) return;
 
     try {
-        await fetchJson(`${API_BASE}/tracks/${encodeURIComponent(trackId)}`, {
+        await fetchJson(`${getApiBase()}/tracks/${encodeURIComponent(trackId)}`, {
             method: 'DELETE',
             headers: {
                 Authorization: `Bearer ${token}`
@@ -256,6 +330,16 @@ async function deleteTrack(trackId, evt) {
 
 // Play track function
 function playTrack(trackId) {
+    const token = getAuthToken();
+    if (!token) {
+        if (isSpaMode()) {
+            window.location.hash = '#/login';
+        } else {
+            window.location.href = 'login.html';
+        }
+        return;
+    }
+
     if (window.JukePlayer && typeof window.JukePlayer.playTrackById === 'function') {
         window.JukePlayer.playTrackById(trackId);
         return;
@@ -276,7 +360,7 @@ function likeTrack(trackId) {
         return;
     }
 
-    fetch(`${API_BASE}/tracks/${trackId}/like`, {
+    fetch(`${getApiBase()}/tracks/${trackId}/like`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${token}`
