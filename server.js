@@ -196,6 +196,40 @@ async function initializeDatabase() {
     }
 }
 
+async function ensureAdminUser() {
+    try {
+        const adminUsername = 'admin';
+        const adminPassword = 'admin';
+        const adminEmail = 'admin@juke.local';
+
+        const existing = await db.get(
+            'SELECT id FROM users WHERE username = $1',
+            [adminUsername]
+        );
+
+        const passwordHash = await bcrypt.hash(adminPassword, 10);
+
+        if (!existing) {
+            await db.insert('users', {
+                username: adminUsername,
+                email: adminEmail,
+                password_hash: passwordHash,
+                first_name: 'Admin',
+                last_name: 'User',
+                is_admin: true
+            });
+            return;
+        }
+
+        await db.query(
+            'UPDATE users SET is_admin = true, password_hash = $2 WHERE id = $1',
+            [existing.id, passwordHash]
+        );
+    } catch (error) {
+        console.error('Admin bootstrap error:', error);
+    }
+}
+
 // JUKE Music Streaming Platform API Server v2
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -1050,7 +1084,8 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
 });
 
 // Initialize database and start server
-initializeDatabase().then(() => {
+initializeDatabase().then(async () => {
+    await ensureAdminUser();
     app.listen(PORT, '0.0.0.0', () => {
         console.log(` JUKE Music API Server running on port ${PORT}`);
         console.log(` API Base URL: http://localhost:${PORT}/api`);
