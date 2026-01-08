@@ -11,6 +11,68 @@ var API_BASE = (function () {
     return 'https://juke-api.onrender.com/api';
 })();
 
+function getAuthApiBases() {
+    var bases = [API_BASE, 'https://juke-api.onrender.com/api'];
+    return bases.filter(function (v, i, a) {
+        return !!v && a.indexOf(v) === i;
+    });
+}
+
+async function postAuthJson(path, payload, validateOkData) {
+    var bases = getAuthApiBases();
+    var lastErr = null;
+
+    for (var i = 0; i < bases.length; i++) {
+        var base = bases[i];
+        try {
+            var response = await fetch(base + path, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            var data = null;
+            try {
+                data = await response.json();
+            } catch (e) {
+                var text = '';
+                try {
+                    text = await response.text();
+                } catch (_) {
+                }
+
+                if (response.status === 404 || response.status === 405) {
+                    lastErr = e;
+                    continue;
+                }
+
+                data = text ? { error: text } : { error: 'Invalid response' };
+            }
+
+            if (response.ok) {
+                if (typeof validateOkData === 'function' && !validateOkData(data)) {
+                    lastErr = new Error('Invalid response');
+                    continue;
+                }
+                return { ok: true, data: data };
+            }
+
+            if (response.status === 404 || response.status === 405) {
+                lastErr = new Error((data && data.error) ? data.error : ('Request failed: ' + response.status));
+                continue;
+            }
+
+            return { ok: false, data: data };
+        } catch (e) {
+            lastErr = e;
+        }
+    }
+
+    throw lastErr || new Error('Network error');
+}
+
 // Store user session
 let currentUser = null;
 
@@ -83,17 +145,14 @@ function requireAuth() {
 // Login function
 async function login(username, password) {
     try {
-        const response = await fetch(`${API_BASE}/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, password })
-        });
+        const result = await postAuthJson(
+            '/auth/login',
+            { username, password },
+            function (data) { return !!(data && data.token && data.user); }
+        );
+        const data = result.data;
 
-        const data = await response.json();
-
-        if (response.ok) {
+        if (result.ok) {
             // Store token and user data
             localStorage.setItem('juke_token', data.token);
             localStorage.setItem('juke_user', JSON.stringify(data.user));
@@ -183,17 +242,14 @@ function setupProfilePage() {
 // Register function
 async function register(username, email, password, firstName, lastName) {
     try {
-        const response = await fetch(`${API_BASE}/auth/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, email, password, firstName, lastName })
-        });
+        const result = await postAuthJson(
+            '/auth/register',
+            { username, email, password, firstName, lastName },
+            function (data) { return !!(data && data.token && data.user); }
+        );
+        const data = result.data;
 
-        const data = await response.json();
-
-        if (response.ok) {
+        if (result.ok) {
             // Store token and user data
             localStorage.setItem('juke_token', data.token);
             localStorage.setItem('juke_user', JSON.stringify(data.user));
