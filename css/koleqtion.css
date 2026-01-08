@@ -185,6 +185,14 @@
     transition: color 0.3s ease;
 }
 
+.delete-btn {
+    color: rgba(247, 33, 147, 0.75);
+}
+
+.delete-btn:hover {
+    color: #F72193;
+}
+
 .action-btn:hover {
     color: #00ffd0;
 }

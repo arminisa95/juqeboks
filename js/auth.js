@@ -1,5 +1,15 @@
 // JUKE Authentication System
-var API_BASE = 'https://juke-api.onrender.com/api';
+var API_BASE = (function () {
+    try {
+        if (window.location && window.location.origin) {
+            var host = String(window.location.hostname || '');
+            if (host.endsWith('github.io')) return 'https://juke-api.onrender.com/api';
+            return window.location.origin.replace(/\/$/, '') + '/api';
+        }
+    } catch (_) {
+    }
+    return 'https://juke-api.onrender.com/api';
+})();
 
 // Store user session
 let currentUser = null;

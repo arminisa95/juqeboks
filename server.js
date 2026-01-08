@@ -643,6 +643,48 @@ app.post('/api/tracks/:id/like', authenticateToken, async (req, res) => {
     }
 });
 
+app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id: trackId } = req.params;
+
+        const track = await db.get(
+            'SELECT id, uploader_id, file_path, cover_image_url FROM tracks WHERE id = $1',
+            [trackId]
+        );
+
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        if (!track.uploader_id || String(track.uploader_id) !== String(userId)) {
+            return res.status(403).json({ error: 'Not allowed' });
+        }
+
+        await db.query('DELETE FROM tracks WHERE id = $1', [trackId]);
+
+        const candidates = [track.file_path, track.cover_image_url]
+            .filter(Boolean)
+            .map((p) => String(p));
+
+        candidates.forEach((p) => {
+            try {
+                const filename = path.basename(p);
+                const abs = path.join(uploadsDir, filename);
+                if (abs.startsWith(uploadsDir) && fs.existsSync(abs)) {
+                    fs.unlinkSync(abs);
+                }
+            } catch (_) {
+            }
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete track error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Initialize database and start server
 initializeDatabase().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
@@ -653,6 +695,7 @@ initializeDatabase().then(() => {
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
+    console.log(' Shutting down server...');
     console.log('🛑 Shutting down server...');
     process.exit(0);
 });

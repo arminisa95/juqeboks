@@ -1,5 +1,15 @@
 // JUKE API Integration
-var API_BASE = 'https://juke-api.onrender.com/api';
+var API_BASE = (function () {
+    try {
+        if (window.location && window.location.origin) {
+            var host = String(window.location.hostname || '');
+            if (host.endsWith('github.io')) return 'https://juke-api.onrender.com/api';
+            return window.location.origin.replace(/\/$/, '') + '/api';
+        }
+    } catch (_) {
+    }
+    return 'https://juke-api.onrender.com/api';
+})();
 var API_ORIGIN = API_BASE.replace(/\/api$/, '');
 
 let likedTrackIds = new Set();
@@ -48,6 +58,53 @@ async function loadLikedTrackIds() {
     }
 }
 
+function getCurrentUserId() {
+    try {
+        if (typeof getCurrentUser === 'function') {
+            const u = getCurrentUser();
+            return u && u.id ? u.id : null;
+        }
+    } catch (_) {
+        return null;
+    }
+    try {
+        const raw = localStorage.getItem('juke_user');
+        if (!raw) return null;
+        const u = JSON.parse(raw);
+        return u && u.id ? u.id : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+async function loadMyTracks() {
+    try {
+        const tracksGrid = document.getElementById('tracksGrid');
+        if (!tracksGrid) return;
+
+        const token = getAuthToken();
+        if (!token) {
+            if (isSpaMode()) {
+                window.location.hash = '#/login';
+            } else {
+                window.location.href = 'login.html';
+            }
+            return;
+        }
+
+        await loadLikedTrackIds();
+
+        const tracks = await fetchJson(`${API_BASE}/tracks/my`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        displayCollectionTracks(tracks);
+    } catch (error) {
+        console.error('Error loading my tracks:', error);
+    }
+}
+
 // Fetch all tracks for feed
 async function loadTracks() {
     try {
@@ -56,22 +113,7 @@ async function loadTracks() {
         await loadLikedTrackIds();
 
         if (tracksGrid) {
-            const token = getAuthToken();
-            if (!token) {
-                if (isSpaMode()) {
-                    window.location.hash = '#/login';
-                } else {
-                    window.location.href = 'login.html';
-                }
-                return;
-            }
-
-            const tracks = await fetchJson(`${API_BASE}/tracks/my`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            displayCollectionTracks(tracks);
+            await loadMyTracks();
             return;
         }
 
@@ -143,6 +185,8 @@ function createCollectionTrackCard(track) {
     const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
     const artistName = track.artist_name || 'Unknown Artist';
     const isLiked = likedTrackIds.has(track.id);
+    const currentUserId = getCurrentUserId();
+    const canDelete = !!currentUserId && !!track.uploader_id && String(track.uploader_id) === String(currentUserId);
 
     card.innerHTML = `
         <div class="track-cover">
@@ -162,12 +206,52 @@ function createCollectionTrackCard(track) {
                     <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="likeTrack('${track.id}')">
                         <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
                     </button>
+                    ${canDelete ? `
+                    <button class="action-btn delete-btn" onclick="deleteTrack('${track.id}', event);" aria-label="Delete track">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    ` : ''}
                 </div>
             </div>
         </div>
     `;
 
     return card;
+}
+
+async function deleteTrack(trackId, evt) {
+    try {
+        if (evt && typeof evt.stopPropagation === 'function') {
+            evt.stopPropagation();
+        }
+    } catch (_) {
+    }
+
+    const token = getAuthToken();
+    if (!token) {
+        if (isSpaMode()) {
+            window.location.hash = '#/login';
+        } else {
+            window.location.href = 'login.html';
+        }
+        return;
+    }
+
+    const ok = window.confirm('Delete this track?');
+    if (!ok) return;
+
+    try {
+        await fetchJson(`${API_BASE}/tracks/${encodeURIComponent(trackId)}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        await loadMyTracks();
+    } catch (e) {
+        console.error('Deleting track failed:', e);
+        alert('Delete failed. Please try again.');
+    }
 }
 
 // Play track function
@@ -223,5 +307,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 window.JukeApi = {
-    loadTracks
+    loadTracks,
+    loadMyTracks
 };
+
+window.deleteTrack = deleteTrack;

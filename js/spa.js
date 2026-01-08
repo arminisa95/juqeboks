@@ -102,7 +102,17 @@
 
                 if (typeof updateAuthUI === 'function') updateAuthUI();
 
-                if (route === '#/feed' || route === '#/disqo' || route === '#/koleqtion') {
+                if (route === '#/koleqtion') {
+                    if (window.JukeApi && typeof window.JukeApi.loadMyTracks === 'function') {
+                        window.JukeApi.loadMyTracks();
+                    } else if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
+                        window.JukeApi.loadTracks();
+                    } else if (typeof loadTracks === 'function') {
+                        loadTracks();
+                    }
+                }
+
+                if (route === '#/feed' || route === '#/disqo') {
                     if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
                         window.JukeApi.loadTracks();
                     } else if (typeof loadTracks === 'function') {
@@ -163,7 +173,17 @@
 
         if (typeof updateAuthUI === 'function') updateAuthUI();
 
-        if (route === '#/feed' || route === '#/disqo' || route === '#/koleqtion') {
+        if (route === '#/koleqtion') {
+            if (window.JukeApi && typeof window.JukeApi.loadMyTracks === 'function') {
+                window.JukeApi.loadMyTracks();
+            } else if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
+                window.JukeApi.loadTracks();
+            } else if (typeof loadTracks === 'function') {
+                loadTracks();
+            }
+        }
+
+        if (route === '#/feed' || route === '#/disqo') {
             if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
                 window.JukeApi.loadTracks();
             } else if (typeof loadTracks === 'function') {

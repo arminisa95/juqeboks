@@ -101,7 +101,8 @@
                 submitBtn.textContent = 'Uploading...';
             }
 
-            fetch('https://juke-api.onrender.com/api/upload', {
+            var apiBase = (typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE : 'https://juke-api.onrender.com/api';
+            fetch(apiBase + '/upload', {
                 method: 'POST',
                 headers: {
                     Authorization: 'Bearer ' + token
