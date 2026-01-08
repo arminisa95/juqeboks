@@ -101,34 +101,61 @@
                 submitBtn.textContent = 'Uploading...';
             }
 
-            var apiBase = (typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE : 'https://juke-api.onrender.com/api';
-            fetch(apiBase + '/upload', {
-                method: 'POST',
-                headers: {
-                    Authorization: 'Bearer ' + token
-                },
-                body: formData
-            })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data && data.success) {
-                        alert('Upload successful! Track ID: ' + data.track.id);
-                        uploadForm.reset();
-                        fileInfo.textContent = 'No files selected';
-                        if (coverInfo) coverInfo.textContent = 'No cover selected';
-                    } else {
-                        alert('Upload failed: ' + ((data && data.error) ? data.error : 'Unknown error'));
-                    }
-                })
-                .catch(function () {
+            var primaryBase = (typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE : null;
+            var fallbackBase = 'https://juke-api.onrender.com/api';
+            var bases = [primaryBase, fallbackBase].filter(Boolean);
+            bases = bases.filter(function (v, i, a) { return a.indexOf(v) === i; });
+
+            function safeJson(res) {
+                return res.json().catch(function () { return null; });
+            }
+
+            function tryUpload(baseIndex) {
+                if (baseIndex >= bases.length) {
                     alert('Upload failed. Please try again.');
-                })
-                .finally(function () {
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = originalText;
+                    return Promise.resolve();
+                }
+
+                var apiBase = bases[baseIndex];
+                return fetch(apiBase + '/upload', {
+                    method: 'POST',
+                    headers: {
+                        Authorization: 'Bearer ' + token
+                    },
+                    body: formData
+                }).then(function (res) {
+                    if (!res.ok) {
+                        if (res.status === 401 || res.status === 403 || res.status === 404) {
+                            return tryUpload(baseIndex + 1);
+                        }
                     }
+
+                    return safeJson(res).then(function (data) {
+                        if (res.ok && data && data.success) {
+                            alert('Upload successful! Track ID: ' + data.track.id);
+                            uploadForm.reset();
+                            fileInfo.textContent = 'No files selected';
+                            if (coverInfo) coverInfo.textContent = 'No cover selected';
+                            return;
+                        }
+
+                        var msg = (data && data.error) ? data.error : ('Request failed: ' + res.status);
+                        if (res.status === 401 || res.status === 403 || res.status === 404) {
+                            return tryUpload(baseIndex + 1);
+                        }
+                        alert('Upload failed: ' + msg);
+                    });
+                }).catch(function () {
+                    return tryUpload(baseIndex + 1);
                 });
+            }
+
+            tryUpload(0).finally(function () {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            });
         });
     }
 

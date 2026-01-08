@@ -240,6 +240,10 @@ function updateAuthUI() {
             usernameDisplay.textContent = '';
         }
     }
+
+    if (typeof setFloatingButtonDestination === 'function') {
+        setFloatingButtonDestination();
+    }
 }
 
 // Handle login form submission
