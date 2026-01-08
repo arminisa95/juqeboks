@@ -201,6 +201,10 @@ const generateToken = (user) => {
     );
 };
 
+const isUuid = (value) => {
+    return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+};
+
 // ==================== AUTHENTICATION ENDPOINTS ====================
 
 // Register new user
@@ -463,38 +467,6 @@ app.get('/api/tracks', async (req, res) => {
     }
 });
 
-// Get track by ID
-app.get('/api/tracks/:id', async (req, res) => {
-
-    try {
-        const { id } = req.params;
-
-        const track = await db.get(`
-            SELECT t.*,
-                   a.name as artist_name, a.id as artist_id,
-                   al.title as album_title, al.id as album_id,
-                   al.cover_image_url as album_cover_image_url
-            FROM tracks t
-            JOIN artists a ON t.artist_id = a.id
-            LEFT JOIN albums al ON t.album_id = al.id
-            WHERE t.id = $1
-        `, [id]);
-
-        if (!track) {
-            return res.status(404).json({ error: 'Track not found' });
-        }
-
-        const audioUrl = track.audio_url || (track.file_path ? `/uploads/${path.basename(track.file_path)}` : null);
-        const coverUrl = track.cover_image_url || track.album_cover_image_url || null;
-        const { file_path, album_cover_image_url, ...rest } = track;
-        res.json({ ...rest, audio_url: audioUrl, cover_image_url: coverUrl });
-
-    } catch (error) {
-        console.error('Get track error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
 // Get my tracks
 app.get('/api/tracks/my', authenticateToken, async (req, res) => {
 
@@ -528,6 +500,42 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
         res.json(normalized);
     } catch (error) {
         console.error('Get my tracks error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get track by ID
+app.get('/api/tracks/:id', async (req, res) => {
+
+    try {
+        const { id } = req.params;
+
+        if (!isUuid(id)) {
+            return res.status(400).json({ error: 'Invalid track ID' });
+        }
+
+        const track = await db.get(`
+            SELECT t.*,
+                   a.name as artist_name, a.id as artist_id,
+                   al.title as album_title, al.id as album_id,
+                   al.cover_image_url as album_cover_image_url
+            FROM tracks t
+            JOIN artists a ON t.artist_id = a.id
+            LEFT JOIN albums al ON t.album_id = al.id
+            WHERE t.id = $1
+        `, [id]);
+
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const audioUrl = track.audio_url || (track.file_path ? `/uploads/${path.basename(track.file_path)}` : null);
+        const coverUrl = track.cover_image_url || track.album_cover_image_url || null;
+        const { file_path, album_cover_image_url, ...rest } = track;
+        res.json({ ...rest, audio_url: audioUrl, cover_image_url: coverUrl });
+
+    } catch (error) {
+        console.error('Get track error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
