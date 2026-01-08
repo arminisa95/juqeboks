@@ -375,7 +375,17 @@ function createFeedTrackCard(track) {
     const uploaderName = track.uploader_username || '';
     const uploaderId = track.uploader_id || '';
     const currentUserId = getCurrentUserId();
+    let isAdmin = false;
+    try {
+        if (typeof getCurrentUser === 'function') {
+            const u = getCurrentUser();
+            isAdmin = !!(u && (u.isAdmin || u.is_admin));
+        }
+    } catch (_) {
+        isAdmin = false;
+    }
     const isLiked = likedTrackIds.has(track.id);
+    const canDelete = !!isAdmin || (!!currentUserId && !!uploaderId && String(uploaderId) === String(currentUserId));
 
     card.innerHTML = `
         <div class="album-cover">
@@ -397,6 +407,11 @@ function createFeedTrackCard(track) {
                 <button class="like-btn" onclick="addToPlaylist('${track.id}')" aria-label="Add to playlist">
                     <i class="fas fa-plus"></i>
                 </button>
+                ${canDelete ? `
+                <button class="like-btn" onclick="deleteTrack('${track.id}', event);" aria-label="Delete track">
+                    <i class="fas fa-trash"></i>
+                </button>
+                ` : ''}
             </div>
             <span class="duration">${track.genre || ''}</span>
         </div>
@@ -474,7 +489,7 @@ async function deleteTrack(trackId, evt) {
                 Authorization: `Bearer ${token}`
             }
         });
-        await loadMyTracks();
+        await loadTracks();
     } catch (e) {
         console.error('Deleting track failed:', e);
         alert('Delete failed. Please try again.');
