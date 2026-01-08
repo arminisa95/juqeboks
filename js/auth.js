@@ -45,6 +45,11 @@ function setFloatingButtonDestination() {
     const floatingButton = document.querySelector('a.floating-button');
     if (!floatingButton) return;
 
+    if (document.body && document.body.dataset && document.body.dataset.spa) {
+        floatingButton.href = getCurrentUser() ? '#/profile' : '#/login';
+        return;
+    }
+
     const base = getBasePath();
     if (getCurrentUser()) {
         floatingButton.href = `${base}/html/profile.html`;

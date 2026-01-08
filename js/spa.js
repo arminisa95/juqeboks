@@ -80,8 +80,10 @@
         var app = document.getElementById('app');
         if (!app) return;
 
-        var tokenPresent = localStorage.getItem('juke_token');
-        if (requiresAuth(route) && !tokenPresent) {
+        var authed = (typeof isLoggedIn === 'function')
+            ? isLoggedIn()
+            : !!localStorage.getItem('juke_token');
+        if (requiresAuth(route) && !authed) {
             window.location.hash = '#/login';
             return;
         }
