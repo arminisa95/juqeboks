@@ -520,7 +520,7 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
             WHERE t.uploader_id = $1
-            ORDER BY t.created_at DESC NULLS LAST
+            ORDER BY t.id DESC
             LIMIT $2 OFFSET $3
         `, [userId, limitNum, offsetNum]);
 
