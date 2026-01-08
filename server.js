@@ -302,6 +302,66 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+app.get('/api/users/profile', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const user = await db.get(
+            'SELECT id, username, email, first_name, last_name, avatar_url, bio FROM users WHERE id = $1',
+            [userId]
+        );
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const playlists = await db.getAll(`
+            SELECT id, name, description, cover_image_url, is_public, track_count, created_at
+            FROM playlists
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            LIMIT 50
+        `, [userId]);
+
+        const favorites = await db.getAll(`
+            SELECT t.id, t.title, t.duration_seconds, t.track_number, t.genre, t.play_count, t.like_count,
+                   t.uploader_id,
+                   t.audio_url,
+                   t.file_path,
+                   a.name as artist_name, al.title as album_title,
+                   COALESCE(t.cover_image_url, al.cover_image_url) as cover_image_url
+            FROM user_favorites uf
+            JOIN tracks t ON uf.track_id = t.id
+            JOIN artists a ON t.artist_id = a.id
+            LEFT JOIN albums al ON t.album_id = al.id
+            WHERE uf.user_id = $1
+            ORDER BY uf.created_at DESC
+            LIMIT 100
+        `, [userId]);
+
+        const normalizedFavorites = favorites.map((t) => {
+            const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
+            const { file_path, ...rest } = t;
+            return { ...rest, audio_url: audioUrl };
+        });
+
+        res.json({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            avatarUrl: user.avatar_url,
+            bio: user.bio,
+            playlists,
+            favorites: normalizedFavorites
+        });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // ==================== MUSIC ENDPOINTS ====================
 
 // Get all artists
@@ -442,6 +502,8 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
 
     try {
         const { limit = 50, offset = 0 } = req.query;
+        const limitNum = Math.max(1, Math.min(parseInt(limit, 10) || 50, 200));
+        const offsetNum = Math.max(0, parseInt(offset, 10) || 0);
         const userId = req.user.id;
 
         const tracks = await db.getAll(`
@@ -457,7 +519,7 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
             WHERE t.uploader_id = $1
             ORDER BY t.created_at DESC
             LIMIT $2 OFFSET $3
-        `, [userId, limit, offset]);
+        `, [userId, limitNum, offsetNum]);
 
         const normalized = tracks.map((t) => {
             const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
