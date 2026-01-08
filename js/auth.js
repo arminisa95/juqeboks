@@ -104,6 +104,13 @@ function logout() {
     currentUser = null;
 
     try {
+        if (window.JukePlayer && typeof window.JukePlayer.stop === 'function') {
+            window.JukePlayer.stop();
+        }
+    } catch (_) {
+    }
+
+    try {
         document.dispatchEvent(new Event('auth:changed'));
     } catch (_) {
     }

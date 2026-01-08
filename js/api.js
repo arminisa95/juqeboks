@@ -389,7 +389,7 @@ function createFeedTrackCard(track) {
 
     card.innerHTML = `
         <div class="album-cover">
-            <img src="${coverUrl}" alt="${track.title}">
+            <img src="${coverUrl}" alt="${track.title}" onclick="playTrack('${track.id}')">
             <button class="play-btn" onclick="playTrack('${track.id}')">
                 <i class="fas fa-play"></i>
             </button>
@@ -432,7 +432,7 @@ function createCollectionTrackCard(track) {
 
     card.innerHTML = `
         <div class="track-cover">
-            <img src="${coverUrl}" alt="${track.title}">
+            <img src="${coverUrl}" alt="${track.title}" onclick="playTrack('${track.id}')">
             <div class="track-overlay">
                 <button class="play-btn" onclick="playTrack('${track.id}')">
                     <i class="fas fa-play"></i>
@@ -629,6 +629,129 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.querySelector('.music-grid') || document.getElementById('tracksGrid')) {
         loadTracks();
     }
+});
+
+function debounce(fn, waitMs) {
+    var t = null;
+    return function () {
+        var ctx = this;
+        var args = arguments;
+        if (t) clearTimeout(t);
+        t = setTimeout(function () {
+            t = null;
+            fn.apply(ctx, args);
+        }, waitMs);
+    };
+}
+
+function setupGlobalSearch() {
+    var container = document.querySelector('.search-container');
+    var input = document.querySelector('.search-bar');
+    if (!container || !input) return;
+
+    if (container.dataset.bound === 'true') return;
+    container.dataset.bound = 'true';
+
+    container.style.position = 'relative';
+
+    var results = document.createElement('div');
+    results.className = 'search-results';
+    results.style.display = 'none';
+    container.appendChild(results);
+
+    function hide() {
+        results.style.display = 'none';
+        results.innerHTML = '';
+    }
+
+    function showLoading() {
+        results.style.display = '';
+        results.innerHTML = '<div class="search-results__item search-results__item--muted">Searching…</div>';
+    }
+
+    function renderTracks(tracks) {
+        if (!Array.isArray(tracks) || tracks.length === 0) {
+            results.style.display = '';
+            results.innerHTML = '<div class="search-results__item search-results__item--muted">No results</div>';
+            return;
+        }
+
+        results.style.display = '';
+        results.innerHTML = tracks.slice(0, 10).map(function (t) {
+            var coverFallback = isSpaMode() ? 'images/juke.png' : '../images/juke.png';
+            var cover = resolveAssetUrl(t.cover_image_url, coverFallback);
+            var title = (t && t.title) ? String(t.title) : 'Unknown';
+            var artist = (t && t.artist_name) ? String(t.artist_name) : '';
+            return (
+                '<button type="button" class="search-results__item" data-track-id="' + String(t.id) + '">' +
+                '  <img class="search-results__cover" src="' + cover + '" alt="">' +
+                '  <span class="search-results__meta">' +
+                '    <span class="search-results__title">' + title.replace(/</g, '&lt;') + '</span>' +
+                '    <span class="search-results__subtitle">' + artist.replace(/</g, '&lt;') + '</span>' +
+                '  </span>' +
+                '  <span class="search-results__play"><i class="fas fa-play"></i></span>' +
+                '</button>'
+            );
+        }).join('');
+    }
+
+    var doSearch = debounce(async function () {
+        var q = String(input.value || '').trim();
+        if (!q) {
+            hide();
+            return;
+        }
+
+        showLoading();
+        try {
+            var data = await apiFetchJson('/search?q=' + encodeURIComponent(q) + '&type=tracks&limit=10', {}, function (d) {
+                return !!d && typeof d === 'object' && (Array.isArray(d.tracks) || Array.isArray(d));
+            });
+
+            var tracks = Array.isArray(data) ? data : (data && data.tracks ? data.tracks : []);
+            renderTracks(tracks);
+        } catch (e) {
+            results.style.display = '';
+            results.innerHTML = '<div class="search-results__item search-results__item--muted">Search failed</div>';
+        }
+    }, 200);
+
+    input.addEventListener('input', function () {
+        doSearch();
+    });
+
+    input.addEventListener('focus', function () {
+        if (String(input.value || '').trim()) doSearch();
+    });
+
+    document.addEventListener('click', function (e) {
+        try {
+            if (!container.contains(e.target)) hide();
+        } catch (_) {
+            hide();
+        }
+    });
+
+    results.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest('.search-results__item[data-track-id]') : null;
+        if (!btn) return;
+        var id = btn.getAttribute('data-track-id');
+        if (!id) return;
+        try {
+            input.blur();
+        } catch (_) {
+        }
+        hide();
+        playTrack(id);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    setupGlobalSearch();
+});
+
+document.addEventListener('spa:navigate', function () {
+    setupGlobalSearch();
 });
 
 window.JukeApi = {

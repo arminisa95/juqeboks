@@ -198,7 +198,8 @@ main {
 
 @media (max-width: 768px) {
     .music-player {
-        height: 116px;
+        height: auto;
+        min-height: 116px;
         padding: 8px 12px;
         padding-right: 12px;
         flex-wrap: wrap;
@@ -248,7 +249,8 @@ main {
 
 @media (max-width: 420px) {
     .music-player {
-        height: 124px;
+        height: auto;
+        min-height: 124px;
     }
 
     .music-player .now-playing-cover {
