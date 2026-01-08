@@ -30,6 +30,13 @@ function getApiOrigin() {
     return getApiBase().replace(/\/api$/, '');
 }
 
+function getApiBases() {
+    var bases = [getApiBase(), 'https://juke-api.onrender.com/api'];
+    return bases.filter(function (v, i, a) {
+        return !!v && a.indexOf(v) === i;
+    });
+}
+
 function isSpaMode() {
     return !!(document.body && document.body.dataset && document.body.dataset.spa);
 }
@@ -45,13 +52,51 @@ function getAuthToken() {
     return localStorage.getItem('juke_token');
 }
 
-async function fetchJson(url, options = {}) {
-    const response = await fetch(url, options);
-    if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || `Request failed: ${response.status}`);
+async function apiFetchJson(path, options, validateOkData) {
+    var bases = getApiBases();
+    var lastErr = null;
+
+    for (var i = 0; i < bases.length; i++) {
+        var base = bases[i];
+        try {
+            var res = await fetch(base + path, options || {});
+            var data = null;
+
+            try {
+                data = await res.json();
+            } catch (_) {
+                var text = '';
+                try {
+                    text = await res.text();
+                } catch (_) {
+                }
+                data = text ? { error: text } : null;
+            }
+
+            if (res.ok) {
+                if (typeof validateOkData === 'function' && !validateOkData(data)) {
+                    lastErr = new Error('Invalid response from ' + (base + path));
+                    continue;
+                }
+                try {
+                    localStorage.setItem('juke_api_base', base);
+                } catch (_) {
+                }
+                return data;
+            }
+
+            if (res.status === 401 || res.status === 403 || res.status === 404 || res.status === 405) {
+                lastErr = new Error(((data && data.error) ? data.error : ('Request failed: ' + res.status)) + ' (' + (base + path) + ')');
+                continue;
+            }
+
+            throw new Error(((data && data.error) ? data.error : ('Request failed: ' + res.status)) + ' (' + (base + path) + ')');
+        } catch (e) {
+            lastErr = e;
+        }
     }
-    return response.json();
+
+    throw lastErr || new Error('Network error');
 }
 
 function setEmpty(el, text) {
@@ -60,7 +105,8 @@ function setEmpty(el, text) {
 }
 
 function renderPlaylistCard(p) {
-    const coverUrl = resolveAssetUrl(p.cover_image_url, '../images/juke.png');
+    const coverFallback = isSpaMode() ? 'images/juke.png' : '../images/juke.png';
+    const coverUrl = resolveAssetUrl(p.cover_image_url, coverFallback);
     const owner = p.owner_username ? `by ${p.owner_username}` : '';
 
     const div = document.createElement('div');
@@ -82,7 +128,8 @@ function renderPlaylistCard(p) {
 }
 
 function renderTrackCard(t) {
-    const coverUrl = resolveAssetUrl(t.cover_image_url, '../images/juke.png');
+    const coverFallback = isSpaMode() ? 'images/juke.png' : '../images/juke.png';
+    const coverUrl = resolveAssetUrl(t.cover_image_url, coverFallback);
 
     const div = document.createElement('div');
     div.className = 'card';
@@ -122,10 +169,12 @@ async function loadLists() {
     setEmpty(likedEl, 'Loading...');
 
     try {
-        const profile = await fetchJson(`${getApiBase()}/users/profile`, {
+        const profile = await apiFetchJson('/users/profile', {
             headers: {
                 Authorization: `Bearer ${token}`
             }
+        }, function (d) {
+            return !!d && typeof d === 'object' && !Array.isArray(d);
         });
 
         myPlaylistsEl.innerHTML = '';
@@ -151,7 +200,9 @@ async function loadLists() {
     }
 
     try {
-        const curated = await fetchJson(`${getApiBase()}/playlists/curated`);
+        const curated = await apiFetchJson('/playlists/curated', {}, function (d) {
+            return Array.isArray(d);
+        });
         curatedEl.innerHTML = '';
 
         if (!curated || curated.length === 0) {

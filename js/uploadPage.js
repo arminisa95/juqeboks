@@ -11,6 +11,26 @@
         if (uploadForm.dataset.bound === 'true') return;
         uploadForm.dataset.bound = 'true';
 
+        try {
+            if (window.location && String(window.location.hostname || '').includes('github.io')) {
+                var existingNote = document.getElementById('uploadEphemeralNote');
+                if (!existingNote) {
+                    var note = document.createElement('div');
+                    note.id = 'uploadEphemeralNote';
+                    note.style.margin = '0 0 1rem';
+                    note.style.padding = '0.75rem 1rem';
+                    note.style.border = '1px solid rgba(255,255,255,0.15)';
+                    note.style.borderRadius = '10px';
+                    note.style.background = 'rgba(0,0,0,0.15)';
+                    note.style.color = '#dbd8d8';
+                    note.style.fontSize = '0.95rem';
+                    note.innerHTML = 'Note: uploads are currently stored on the server and may not be permanent. If a track disappears later, please re-upload it.';
+                    uploadForm.parentNode.insertBefore(note, uploadForm);
+                }
+            }
+        } catch (_) {
+        }
+
         dropZone.addEventListener('click', function () {
             fileInput.click();
         });
