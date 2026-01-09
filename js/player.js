@@ -339,6 +339,9 @@
                         liked = !!window.isTrackLiked(state.trackId);
                     }
                     likeIcon.className = liked ? 'fas fa-heart' : 'far fa-heart';
+                    if (likeBtn && likeBtn.classList) {
+                        likeBtn.classList.toggle('liked', !!liked);
+                    }
                 }
             } catch (_) {
             }

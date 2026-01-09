@@ -611,7 +611,7 @@ margin-left: 120px;
     .login-container,
     .register-container,
     .profile-container {
-        border-radius: 12px !important;
+        border-radius: 4px !important;
     }
 
     /* Smaller elements get smaller radius */
@@ -620,7 +620,7 @@ margin-left: 120px;
     .card-cover,
     .story-avatar,
     .comment-avatar {
-        border-radius: 8px;
+        border-radius: 3px;
     }
 
     /* Buttons and inputs */
@@ -631,14 +631,14 @@ margin-left: 120px;
     .btn,
     .search-bar,
     .form-control {
-        border-radius: 8px;
+        border-radius: 3px;
     }
 
     /* Pills and tags */
     .tab,
     .genre-tag,
     .badge {
-        border-radius: 12px;
+        border-radius: 4px;
     }
 
     /* ========================================

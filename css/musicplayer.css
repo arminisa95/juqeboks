@@ -13,7 +13,7 @@ MUSIC PLAYER - Enhanced Modern Design
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px 12px 0 0;
+    border-radius: 6px 6px 0 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -33,7 +33,7 @@ MUSIC PLAYER - Enhanced Modern Design
     width: 356px;
     height: 200px;
     background: rgba(25, 25, 25, 0.95);
-    border-radius: 10px;
+    border-radius: 6px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
@@ -94,7 +94,7 @@ MUSIC PLAYER - Enhanced Modern Design
 .music-player .now-playing-cover {
     width: 60px;
     height: 60px;
-    border-radius: 8px;
+    border-radius: 4px;
     object-fit: cover;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transition: transform 0.3s ease;
@@ -119,7 +119,6 @@ MUSIC PLAYER - Enhanced Modern Design
     font-size: 0.9rem;
     margin: 0;
     white-space: nowrap;
-
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -129,7 +128,6 @@ MUSIC PLAYER - Enhanced Modern Design
     font-size: 0.8rem;
     margin: 2px 0 0;
     white-space: nowrap;
-
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -154,10 +152,38 @@ MUSIC PLAYER - Enhanced Modern Design
     border: none;
     color: #a0a0a0;
     font-size: 1rem;
-
     cursor: pointer;
     transition: color 0.2s ease;
     padding: 8px;
+}
+
+.music-player .like-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.music-player .like-btn i {
+    font-size: 1.45rem;
+    color: rgba(255, 255, 255, 0.55);
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.music-player .like-btn:hover i {
+    transform: scale(1.06);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.music-player .like-btn.liked i {
+    color: #F72193;
+}
+
+.music-player .like-btn i.fas {
+    color: #F72193;
 }
 
 .music-player .control-btn:hover {
@@ -169,7 +195,6 @@ MUSIC PLAYER - Enhanced Modern Design
     height: 40px;
     border-radius: 50%;
     background: white;
-
     color: #111;
     display: flex;
     align-items: center;
@@ -200,7 +225,6 @@ MUSIC PLAYER - Enhanced Modern Design
     height: 4px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
-
     cursor: pointer;
     position: relative;
 }
@@ -210,7 +234,6 @@ MUSIC PLAYER - Enhanced Modern Design
     top: 0;
     left: 0;
     height: 100%;
-
     width: 0%;
     background: rgba(255, 255, 255, 0.7);
     border-radius: 2px;
@@ -239,6 +262,11 @@ MUSIC PLAYER - Enhanced Modern Design
     cursor: pointer;
     padding: 0;
     line-height: 1;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .music-player .volume-btn:hover {
@@ -247,6 +275,8 @@ MUSIC PLAYER - Enhanced Modern Design
 
 .music-player .volume-slider-container {
     width: 100px;
+    display: flex;
+    align-items: center;
 }
 
 .music-player .volume-slider {
@@ -254,11 +284,11 @@ MUSIC PLAYER - Enhanced Modern Design
     height: 4px;
     -webkit-appearance: none;
     appearance: none;
-
     background: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
     outline: none;
     cursor: pointer;
+    margin: 0;
 }
 
 .music-player .volume-slider::-webkit-slider-thumb {
