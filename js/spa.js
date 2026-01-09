@@ -130,11 +130,27 @@
                     }
                 }
 
-                if (route === '#/feed' || route === '#/disqo') {
+                if (route === '#/feed') {
                     if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
                         window.JukeApi.loadTracks();
                     } else if (typeof loadTracks === 'function') {
                         loadTracks();
+                    }
+                }
+                
+                if (route === '#/disqo') {
+                    if (window.JukeApi && typeof window.JukeApi.loadDisqoPage === 'function') {
+                        window.JukeApi.loadDisqoPage();
+                    } else if (typeof loadDisqoPage === 'function') {
+                        loadDisqoPage();
+                    }
+                }
+                
+                if (route === '#/koleqtion') {
+                    if (window.JukeApi && typeof window.JukeApi.setupKoleqtionTabs === 'function') {
+                        window.JukeApi.setupKoleqtionTabs();
+                    } else if (typeof setupKoleqtionTabs === 'function') {
+                        setupKoleqtionTabs();
                     }
                 }
 
@@ -208,11 +224,27 @@
             }
         }
 
-        if (route === '#/feed' || route === '#/disqo') {
+        if (route === '#/feed') {
             if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
                 window.JukeApi.loadTracks();
             } else if (typeof loadTracks === 'function') {
                 loadTracks();
+            }
+        }
+        
+        if (route === '#/disqo') {
+            if (window.JukeApi && typeof window.JukeApi.loadDisqoPage === 'function') {
+                window.JukeApi.loadDisqoPage();
+            } else if (typeof loadDisqoPage === 'function') {
+                loadDisqoPage();
+            }
+        }
+        
+        if (route === '#/koleqtion') {
+            if (window.JukeApi && typeof window.JukeApi.setupKoleqtionTabs === 'function') {
+                window.JukeApi.setupKoleqtionTabs();
+            } else if (typeof setupKoleqtionTabs === 'function') {
+                setupKoleqtionTabs();
             }
         }
 

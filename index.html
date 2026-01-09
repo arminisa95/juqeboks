@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="css/feed.css">
     <link rel="stylesheet" href="css/koleqtion.css">
     <link rel="stylesheet" href="css/lists.css">
+    <link rel="stylesheet" href="css/disqo.css">
     <link rel="stylesheet" href="css/upload.css">
     <link rel="stylesheet" href="css/login.css">
     <link rel="stylesheet" href="css/register.css">
@@ -67,9 +68,50 @@
 
     <template id="tpl-disqo">
         <section class="music-feed">
-            <div class="feed-container">
-                <h2 class="feed-title">#Disqo</h2>
-                <div class="music-grid"></div>
+            <div class="disqo-container">
+                <div class="disqo-featured" id="disqoFeatured"></div>
+                
+                <div class="disqo-section">
+                    <div class="disqo-section-header">
+                        <h2 class="disqo-section-title">Browse by Genre</h2>
+                    </div>
+                    <div class="genre-grid" id="genreGrid">
+                        <div class="genre-card" data-genre="electronic">
+                            <div class="genre-card-title">Electronic</div>
+                        </div>
+                        <div class="genre-card" data-genre="hiphop">
+                            <div class="genre-card-title">Hip Hop</div>
+                        </div>
+                        <div class="genre-card" data-genre="rock">
+                            <div class="genre-card-title">Rock</div>
+                        </div>
+                        <div class="genre-card" data-genre="pop">
+                            <div class="genre-card-title">Pop</div>
+                        </div>
+                        <div class="genre-card" data-genre="jazz">
+                            <div class="genre-card-title">Jazz</div>
+                        </div>
+                        <div class="genre-card" data-genre="rnb">
+                            <div class="genre-card-title">R&B</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="disqo-section">
+                    <div class="disqo-section-header">
+                        <h2 class="disqo-section-title">Made For You</h2>
+                        <a href="#" class="disqo-section-link">See all</a>
+                    </div>
+                    <div class="recommendations-row" id="recommendationsRow"></div>
+                </div>
+                
+                <div class="disqo-section">
+                    <div class="disqo-section-header">
+                        <h2 class="disqo-section-title">New Releases</h2>
+                        <a href="#" class="disqo-section-link">See all</a>
+                    </div>
+                    <div class="album-grid" id="newReleasesGrid"></div>
+                </div>
             </div>
         </section>
     </template>

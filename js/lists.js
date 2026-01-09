@@ -334,30 +334,80 @@ async function openPlaylist(playlist) {
         }
 
         ui.playlistTracks.innerHTML = '';
+        
+        const controlsDiv = document.createElement('div');
+        controlsDiv.className = 'playlist-controls';
+        controlsDiv.innerHTML = `
+            <button class="playlist-play-btn" type="button" aria-label="Play all"><i class="fas fa-play"></i></button>
+            <button class="playlist-control-btn" type="button" data-action="shuffle" aria-label="Shuffle"><i class="fas fa-random"></i></button>
+            <button class="playlist-control-btn" type="button" data-action="repeat" aria-label="Repeat"><i class="fas fa-redo"></i></button>
+            <button class="playlist-control-btn" type="button" data-action="queue" aria-label="Add to queue"><i class="fas fa-list"></i></button>
+        `;
+        ui.playlistTracks.appendChild(controlsDiv);
+        
+        const playAllBtn = controlsDiv.querySelector('.playlist-play-btn');
+        if (playAllBtn && tracks.length > 0) {
+            playAllBtn.addEventListener('click', function() {
+                if (typeof window.playTrack === 'function') {
+                    window.playTrack(tracks[0].id);
+                }
+            });
+        }
+        
+        const shuffleBtn = controlsDiv.querySelector('[data-action="shuffle"]');
+        if (shuffleBtn) {
+            shuffleBtn.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        }
+        
+        const repeatBtn = controlsDiv.querySelector('[data-action="repeat"]');
+        if (repeatBtn) {
+            repeatBtn.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        }
+        
         tracks.forEach(function (t, idx) {
             const row = document.createElement('div');
             row.className = 'lists-track-row';
             const safeTitle = (t && t.title) ? String(t.title) : 'Untitled';
             const safeArtist = (t && t.artist_name) ? String(t.artist_name) : '';
-            const pos = Number.isFinite(Number(t.position)) ? Number(t.position) : (idx + 1);
+            const pos = idx + 1;
+            const coverUrl = (t.cover_image_url) ? t.cover_image_url : 'images/juke.png';
 
             row.innerHTML = `
-                <button class="lists-track-play" type="button" data-track-id="${t.id}" aria-label="Play">▶</button>
+                <div class="lists-track-num">${pos}</div>
+                <div class="lists-track-play-hover"><i class="fas fa-play"></i></div>
+                <img class="lists-track-cover" src="${coverUrl}" alt="">
                 <div class="lists-track-meta">
                     <div class="lists-track-title">${safeTitle}</div>
                     <div class="lists-track-artist">${safeArtist}</div>
                 </div>
-                <div class="lists-track-pos">${pos}</div>
+                <div class="lists-track-actions">
+                    <button class="lists-track-action" type="button" aria-label="Like"><i class="far fa-heart"></i></button>
+                    <button class="lists-track-action" type="button" aria-label="More"><i class="fas fa-ellipsis-h"></i></button>
+                </div>
+                <div class="lists-track-duration">3:45</div>
             `;
 
-            const btn = row.querySelector('.lists-track-play');
-            if (btn) {
-                btn.addEventListener('click', function () {
-                    try {
-                        if (typeof window.playTrack === 'function') {
-                            window.playTrack(t.id);
-                        }
-                    } catch (_) {
+            row.addEventListener('click', function (e) {
+                if (e.target.closest('.lists-track-action')) return;
+                try {
+                    if (typeof window.playTrack === 'function') {
+                        window.playTrack(t.id);
+                    }
+                } catch (_) {}
+            });
+            
+            const likeBtn = row.querySelector('.lists-track-action');
+            if (likeBtn) {
+                likeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    this.classList.toggle('liked');
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.className = this.classList.contains('liked') ? 'fas fa-heart' : 'far fa-heart';
                     }
                 });
             }

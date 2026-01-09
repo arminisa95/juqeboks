@@ -1,12 +1,80 @@
-/*MUSIC FEED
+/*MUSIC FEED - Instagram-like Professional Design
 +++++++++++++++++++++++++++++++++++
 */
 
+/* Stories Bar */
+.stories-bar {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    max-width: 680px;
+    margin: 0 auto 8px;
+}
+
+.stories-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.story-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.story-item:hover {
+    transform: scale(1.05);
+}
+
+.story-avatar {
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    padding: 3px;
+    background: linear-gradient(135deg, #F72193, #00ffd0, #F72193);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+.story-avatar.no-story {
+    background: rgba(255, 255, 255, 0.15);
+    animation: none;
+}
+
+.story-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgb(16, 10, 86);
+}
+
+.story-username {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.72rem;
+    font-weight: 500;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
 /* Music Feed Section */
 .music-feed {
-    padding: 2rem 1rem;
+    padding: 1rem 1rem 2rem;
     margin-bottom: 80px;
-    /* Space for fixed footer */
 }
 
 .feed-container {
@@ -16,30 +84,44 @@
 
 .feed-title {
     color: #fff;
-    margin-bottom: 1.5rem;
-    font-size: 1.8rem;
-    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.6rem;
+    font-weight: 700;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+    background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .music-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 24px;
     padding: 0;
     max-width: 680px;
     margin: 0 auto;
 }
 
 .music-card {
-    background: rgba(30, 25, 100, 0.20);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
+    background: rgba(20, 16, 80, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.3s ease;
 }
 
 .music-card:hover {
-    border-color: rgba(0, 255, 208, 0.18);
+    transform: translateY(-2px);
+    border-color: rgba(247, 33, 147, 0.25);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 
 .post-header {
@@ -233,4 +315,208 @@
     .music-grid {
         gap: 12px;
     }
+    
+    .stories-bar {
+        padding: 12px 0 16px;
+        gap: 12px;
+    }
+    
+    .story-avatar {
+        width: 56px;
+        height: 56px;
+    }
+    
+    .story-username {
+        font-size: 0.68rem;
+        max-width: 60px;
+    }
+}
+
+/* Double-tap like animation */
+.double-tap-heart {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: 80px;
+    color: #F72193;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    text-shadow: 0 4px 20px rgba(247, 33, 147, 0.5);
+}
+
+.double-tap-heart.animate {
+    animation: doubleTapLike 0.8s cubic-bezier(0.17, 0.89, 0.32, 1.28);
+}
+
+@keyframes doubleTapLike {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+    }
+    15% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+    }
+    30% {
+        transform: translate(-50%, -50%) scale(0.95);
+        opacity: 1;
+    }
+    45% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    80% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.3);
+        opacity: 0;
+    }
+}
+
+/* Like button animation */
+.post-action.like-btn.liked {
+    color: #F72193;
+}
+
+.post-action.like-btn.liked i {
+    animation: likePopIn 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.28);
+}
+
+@keyframes likePopIn {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+/* Save button */
+.post-action.save-btn.saved {
+    color: #00ffd0;
+}
+
+/* Share button hover */
+.post-action.share-btn:hover {
+    color: #00ffd0;
+}
+
+/* Comments list */
+.post-comments-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+
+.post-comments-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.post-comments-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px;
+}
+
+.comment-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #F72193 0%, #00ffd0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.comment-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-username {
+    color: #00ffd0;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+}
+
+.comment-text {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.88rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.comment-time {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.72rem;
+    margin-top: 4px;
+}
+
+/* Skeleton loading */
+.skeleton {
+    background: linear-gradient(90deg, 
+        rgba(255,255,255,0.05) 25%, 
+        rgba(255,255,255,0.1) 50%, 
+        rgba(255,255,255,0.05) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+    background: rgba(20, 16, 80, 0.65);
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 14px;
+}
+
+.skeleton-header {
+    height: 48px;
+    margin-bottom: 12px;
+}
+
+.skeleton-media {
+    height: 400px;
+    margin-bottom: 12px;
+}
+
+.skeleton-actions {
+    height: 40px;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255,255,255,0.5);
+    font-size: 1rem;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.4;
 }
