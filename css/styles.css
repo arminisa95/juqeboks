@@ -485,6 +485,28 @@ footer a:hover {
         padding: 0 3px;
     }
 
+    .header-right {
+        margin-right: 0;
+    }
+
+    .header-right .nav-buttons a.logout-link {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 3000;
+        min-width: 0;
+        padding: 6px 10px;
+        border: 1px solid rgba(247, 33, 147, 0.55);
+        background: rgba(0, 0, 0, 0.45);
+        color: #F72193 !important;
+        backdrop-filter: blur(10px);
+    }
+
+    .header-right .nav-buttons a.logout-link:hover {
+        transform: none;
+        opacity: 1;
+    }
+
     .search-container {
         margin: 5px 10px;
         width: calc(100% - 20px);
