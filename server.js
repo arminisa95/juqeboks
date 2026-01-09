@@ -869,15 +869,13 @@ app.get('/api/tracks', async (req, res) => {
     }
 });
 
-// Get my tracks
-app.get('/api/tracks/my', authenticateToken, async (req, res) => {
-
+// Get newest tracks
+app.get('/api/tracks/new', async (req, res) => {
     try {
-        const { limit = 50, offset = 0 } = req.query;
+        const { limit = 20, offset = 0 } = req.query;
 
-        const limitNum = Math.max(1, Math.min(parseInt(limit, 10) || 50, 200));
+        const limitNum = Math.max(1, Math.min(parseInt(limit, 10) || 20, 100));
         const offsetNum = Math.max(0, parseInt(offset, 10) || 0);
-        const userId = req.user.id;
 
         const tracks = await db.getAll(`
             SELECT t.*,
@@ -889,12 +887,12 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
             LEFT JOIN users u ON t.uploader_id = u.id
-            WHERE t.uploader_id = $1
-            ORDER BY t.id DESC
-            LIMIT $2 OFFSET $3
-        `, [userId, limitNum, offsetNum]);
+            WHERE COALESCE(t.is_available, true) = true
+            ORDER BY t.created_at DESC
+            LIMIT $1 OFFSET $2
+        `, [limitNum, offsetNum]);
 
-        const normalized = tracks.map((t) => {
+        const normalized = (tracks || []).map((t) => {
             const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
             const coverUrl = t.cover_image_url || t.album_cover_image_url || null;
             const { file_path, album_cover_image_url, ...rest } = t;
@@ -903,7 +901,7 @@ app.get('/api/tracks/my', authenticateToken, async (req, res) => {
 
         res.json(normalized);
     } catch (error) {
-        console.error('Get my tracks error:', error);
+        console.error('Get newest tracks error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

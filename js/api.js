@@ -325,12 +325,80 @@ async function loadTracks() {
             return;
         }
 
+        const feedGrid = document.querySelector('.music-grid');
+        if (feedGrid) {
+            await loadFeedStream(true);
+            return;
+        }
+
         const tracks = await apiFetchJson('/tracks', {}, function (d) {
             return Array.isArray(d);
         });
         displayFeedTracks(tracks);
     } catch (error) {
         console.error('Error loading tracks:', error);
+    }
+}
+
+var feedState = {
+    offset: 0,
+    limit: 10,
+    loading: false,
+    done: false,
+    bound: false
+};
+
+async function loadFeedStream(reset) {
+    const grid = document.querySelector('.music-grid');
+    if (!grid) return;
+
+    if (reset) {
+        feedState.offset = 0;
+        feedState.done = false;
+        grid.innerHTML = '';
+    }
+
+    if (feedState.loading || feedState.done) return;
+    feedState.loading = true;
+
+    try {
+        await loadLikedTrackIds();
+    } catch (_) {
+    }
+
+    try {
+        const tracks = await apiFetchJson('/tracks/new?limit=' + feedState.limit + '&offset=' + feedState.offset, {}, function (d) {
+            return Array.isArray(d);
+        });
+
+        if (!Array.isArray(tracks) || tracks.length === 0) {
+            feedState.done = true;
+            return;
+        }
+
+        tracks.forEach(function (t) {
+            grid.appendChild(createFeedPostCard(t));
+        });
+
+        feedState.offset += tracks.length;
+    } catch (e) {
+        console.error('Feed stream load failed:', e);
+    } finally {
+        feedState.loading = false;
+    }
+
+    if (!feedState.bound) {
+        feedState.bound = true;
+        window.addEventListener('scroll', function () {
+            try {
+                if (feedState.loading || feedState.done) return;
+                var nearBottom = (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 900);
+                if (nearBottom) {
+                    loadFeedStream(false);
+                }
+            } catch (_) {
+            }
+        });
     }
 }
 
@@ -341,7 +409,7 @@ function displayFeedTracks(tracks) {
     musicGrid.innerHTML = '';
 
     tracks.forEach(track => {
-        const trackCard = createFeedTrackCard(track);
+        const trackCard = createFeedPostCard(track);
         musicGrid.appendChild(trackCard);
     });
 }
@@ -369,24 +437,16 @@ function displayCollectionTracks(tracks) {
     }
 
     tracks.forEach(track => {
-        const card = createFeedTrackCard(track);
+        const card = createFeedPostCard(track);
         tracksGrid.appendChild(card);
     });
 }
 
-function createFeedTrackCard(track) {
+function createFeedPostCard(track) {
     const card = document.createElement('div');
     card.className = 'music-card';
 
     const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
-    const isVideoCover = (function () {
-        try {
-            const u = String(coverUrl || '').toLowerCase().split('?')[0].split('#')[0];
-            return u.endsWith('.mp4') || u.endsWith('.webm') || u.endsWith('.mov') || u.endsWith('.m4v');
-        } catch (_) {
-            return false;
-        }
-    })();
     const artistName = track.artist_name || 'Unknown Artist';
     const uploaderName = track.uploader_username || '';
     const uploaderId = track.uploader_id || '';
@@ -404,43 +464,63 @@ function createFeedTrackCard(track) {
     const canDelete = !!isAdmin || (!!currentUserId && !!uploaderId && String(uploaderId) === String(currentUserId));
 
     const safeTitle = (track && track.title) ? String(track.title) : '';
-    const coverMedia = isVideoCover
-        ? `<video class="cover-media" src="${coverUrl}" muted loop playsinline preload="metadata"></video>`
-        : `<img class="cover-media" src="${coverUrl}" alt="${safeTitle}">`;
+    const safeArtist = (artistName && typeof artistName === 'string') ? artistName : '';
+    const coverMedia = `<img class="post-media" src="${coverUrl}" alt="${safeTitle}">`;
+    const uploaderLine = (uploaderName && uploaderId && String(uploaderId) !== String(currentUserId || ''))
+        ? `<a href="#/koleqtion/${uploaderId}" class="uploader-link">@${uploaderName}</a>`
+        : (uploaderName ? `<span class="uploader-link">@${uploaderName}</span>` : '');
 
     card.innerHTML = `
-        <div class="album-cover" data-track-id="${track.id}">
+        <div class="post-header">
+            <div class="post-header-left">
+                <div class="post-title">${safeTitle}</div>
+                <div class="post-subtitle">${safeArtist}</div>
+            </div>
+            <div class="post-header-right">${uploaderLine}</div>
+        </div>
+
+        <div class="post-media-wrap" data-track-id="${track.id}">
             ${coverMedia}
-            <button class="play-btn" type="button" aria-label="Play" data-track-id="${track.id}">
+            <button class="post-play" type="button" aria-label="Play" data-track-id="${track.id}">
                 <i class="fas fa-play"></i>
             </button>
         </div>
-        <div class="track-info">
-            <div class="track-title">${safeTitle}</div>
-            <div class="artist-name">${artistName}</div>
-            ${uploaderName && uploaderId && String(uploaderId) !== String(currentUserId || '') ? `<div class="artist-name"><a href="#/koleqtion/${uploaderId}" class="uploader-link">@${uploaderName}</a></div>` : ''}
-        </div>
-        <div class="track-actions">
-            <div class="left-actions">
-                <button class="like-btn ${isLiked ? 'liked' : ''}" data-track-id="${track.id}" type="button" onclick="likeTrack('${track.id}')">
+
+        <div class="post-actions">
+            <div class="post-actions-left">
+                <button class="post-action like-btn ${isLiked ? 'liked' : ''}" data-track-id="${track.id}" type="button" onclick="likeTrack('${track.id}')" aria-label="Like">
                     <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
                 </button>
-                <button class="like-btn" type="button" onclick="addToPlaylist('${track.id}')" aria-label="Add to playlist">
+                <button class="post-action post-comment-toggle" type="button" aria-expanded="false" aria-label="Comments">
+                    <i class="far fa-comment"></i>
+                </button>
+                <button class="post-action" type="button" onclick="addToPlaylist('${track.id}')" aria-label="Add to playlist">
                     <i class="fas fa-plus"></i>
                 </button>
                 ${canDelete ? `
-                <button class="like-btn" type="button" onclick="deleteTrack('${track.id}', event);" aria-label="Delete track">
+                <button class="post-action" type="button" onclick="deleteTrack('${track.id}', event);" aria-label="Delete track">
                     <i class="fas fa-trash"></i>
                 </button>
                 ` : ''}
             </div>
-            <span class="duration">${track.genre || ''}</span>
+            <div class="post-actions-right">
+                <span class="post-meta">${track.genre || ''}</span>
+            </div>
+        </div>
+
+        <div class="post-comments" style="display:none;">
+            <div class="post-comments-title">Comments</div>
+            <div class="post-comments-empty">No comments yet.</div>
+            <div class="post-comment-compose">
+                <input type="text" class="post-comment-input" placeholder="Write a comment…" disabled>
+                <button type="button" class="post-comment-send" disabled>Send</button>
+            </div>
         </div>
     `;
 
     try {
-        const cover = card.querySelector('.album-cover');
-        const play = card.querySelector('.play-btn');
+        const cover = card.querySelector('.post-media-wrap');
+        const play = card.querySelector('.post-play');
         if (cover && !cover.dataset.bound) {
             cover.dataset.bound = '1';
             cover.addEventListener('click', function (e) {
@@ -457,12 +537,15 @@ function createFeedTrackCard(track) {
                 playTrack(String(track.id));
             });
         }
-        const vid = card.querySelector('video.cover-media');
-        if (vid) {
-            try {
-                vid.play().catch(function () { });
-            } catch (_) {
-            }
+        const toggle = card.querySelector('.post-comment-toggle');
+        const comments = card.querySelector('.post-comments');
+        if (toggle && comments && !toggle.dataset.bound) {
+            toggle.dataset.bound = '1';
+            toggle.addEventListener('click', function () {
+                const open = comments.style.display !== 'none';
+                comments.style.display = open ? 'none' : '';
+                toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+            });
         }
     } catch (_) {
     }
@@ -721,19 +804,11 @@ function setupGlobalSearch() {
     }
 
     function showLoading() {
-        try {
-            container.classList.add('search-loading');
-        } catch (_) {
-        }
         results.style.display = '';
         results.innerHTML = '<div class="search-results__item search-results__item--muted">Searching…</div>';
     }
 
     function renderTracks(tracks) {
-        try {
-            container.classList.remove('search-loading');
-        } catch (_) {
-        }
         if (!Array.isArray(tracks) || tracks.length === 0) {
             results.style.display = '';
             results.innerHTML = '<div class="search-results__item search-results__item--muted">No results</div>';
@@ -763,10 +838,6 @@ function setupGlobalSearch() {
         var q = String(input.value || '').trim();
         if (!q) {
             hide();
-            try {
-                container.classList.remove('search-loading');
-            } catch (_) {
-            }
             return;
         }
 
@@ -779,10 +850,6 @@ function setupGlobalSearch() {
             var tracks = Array.isArray(data) ? data : (data && data.tracks ? data.tracks : []);
             renderTracks(tracks);
         } catch (e) {
-            try {
-                container.classList.remove('search-loading');
-            } catch (_) {
-            }
             results.style.display = '';
             results.innerHTML = '<div class="search-results__item search-results__item--muted">Search failed</div>';
         }

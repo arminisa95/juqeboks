@@ -23,60 +23,86 @@
 
 .music-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: 1fr;
+    gap: 18px;
     padding: 0;
+    max-width: 680px;
+    margin: 0 auto;
 }
 
 .music-card {
     background: rgba(30, 25, 100, 0.20);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
 }
 
 .music-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(0, 255, 208, 0.22);
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+    border-color: rgba(0, 255, 208, 0.18);
 }
 
-.album-cover {
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 14px 10px;
+}
+
+.post-title {
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.post-subtitle {
+    margin-top: 3px;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.92rem;
+}
+
+.post-header-right {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.uploader-link {
+    color: rgba(0, 255, 208, 0.9);
+    text-decoration: none;
+}
+
+.uploader-link:hover {
+    color: #F72193;
+}
+
+.post-media-wrap {
     position: relative;
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
+    width: 100%;
     background: rgba(0, 0, 0, 0.2);
 }
 
-.album-cover .cover-media {
-    position: absolute;
-    top: 0;
-    left: 0;
+.post-media {
+    display: block;
     width: 100%;
-    height: 100%;
+    height: auto;
+    max-height: 78vh;
     object-fit: cover;
-    transform: scale(1.01);
-    transition: transform 0.35s ease;
 }
 
-.album-cover video.cover-media {
-    pointer-events: none;
-}
-
-.music-card:hover .album-cover .cover-media {
-    transform: scale(1.05);
-}
-
-.play-btn {
+.post-play {
     position: absolute;
-    inset: auto 10px 10px auto;
-    width: 44px;
-    height: 44px;
+    inset: auto 12px 12px auto;
+    width: 46px;
+    height: 46px;
     border-radius: 14px;
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: white;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -86,75 +112,99 @@
     transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
 
-.music-card:hover .play-btn {
+.music-card:hover .post-play {
     opacity: 1;
     transform: translateY(0);
 }
 
-.play-btn:hover {
+.post-play:hover {
     background: rgba(0, 255, 208, 0.12);
-    border-color: rgba(0, 255, 208, 0.32);
+    border-color: rgba(0, 255, 208, 0.30);
 }
 
-.track-info {
-    padding: 10px 12px 8px;
-}
-
-.track-title {
-    color: #fff;
-    font-size: 1rem;
-    margin-bottom: 0.3rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.artist-name {
-    color: #dbd8d8;
-    font-size: 0.9rem;
-    opacity: 0.8;
-}
-
-.track-actions {
+.post-actions {
     display: flex;
     justify-content: space-between;
+    gap: 12px;
     align-items: center;
-    padding: 0 12px 12px;
+    padding: 10px 12px 12px;
 }
 
-.left-actions {
+.post-actions-left {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 10px;
 }
 
-.like-btn {
+.post-action {
     background: none;
     border: none;
     color: #dbd8d8;
     cursor: pointer;
-    font-size: 1.1rem;
-    transition: color 0.2s ease;
+    font-size: 1.05rem;
+    padding: 6px;
+    border-radius: 10px;
 }
 
-.like-btn:hover {
-    color: #F72193;
+.post-action:hover {
+    background: rgba(255, 255, 255, 0.06);
 }
 
-.like-btn.liked {
-    color: #F72193;
-}
-
-.duration {
-    color: #a0a0a0;
+.post-meta {
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
+}
+
+.post-comments {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.10);
+}
+
+.post-comments-title {
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.post-comments-empty {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.92rem;
+    margin-bottom: 10px;
+}
+
+.post-comment-compose {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.post-comment-input {
+    flex: 1;
+    height: 36px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.22);
+    color: #fff;
+    padding: 0 12px;
+    outline: none;
+}
+
+.post-comment-send {
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 255, 208, 0.25);
+    background: rgba(0, 255, 208, 0.10);
+    color: #fff;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .music-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 14px;
+        max-width: 560px;
     }
 
     .feed-title {
@@ -164,6 +214,6 @@
 
 @media (max-width: 480px) {
     .music-grid {
-        grid-template-columns: 1fr;
+        gap: 12px;
     }
 }
