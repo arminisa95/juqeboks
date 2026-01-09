@@ -592,63 +592,63 @@ margin-left: 120px;
 }
 }
 
-/* ========================================
-   GLOBAL ROUNDED DESIGN SYSTEM
-   ======================================== */
+    /* ========================================
+       GLOBAL ROUNDED DESIGN SYSTEM
+       ======================================== */
 
-/* Rounded containers - apply softer corners globally */
-.music-card,
-.track-card,
-.card,
-.playlist-card,
-.album-card,
-.genre-card,
-.recommendation-card,
-.lists-panel,
-.lists-nav,
-.library-container,
-.upload-container,
-.login-container,
-.register-container,
-.profile-container {
-    border-radius: 20px !important;
-}
+    /* Rounded containers - apply softer corners globally */
+    .music-card,
+    .track-card,
+    .card,
+    .playlist-card,
+    .album-card,
+    .genre-card,
+    .recommendation-card,
+    .lists-panel,
+    .lists-nav,
+    .library-container,
+    .upload-container,
+    .login-container,
+    .register-container,
+    .profile-container {
+        border-radius: 12px !important;
+    }
 
-/* Smaller elements get smaller radius */
-.post-media-wrap,
-.track-cover,
-.card-cover,
-.story-avatar,
-.comment-avatar {
-    border-radius: 16px;
-}
+    /* Smaller elements get smaller radius */
+    .post-media-wrap,
+    .track-cover,
+    .card-cover,
+    .story-avatar,
+    .comment-avatar {
+        border-radius: 8px;
+    }
 
-/* Buttons and inputs */
-button,
-input,
-select,
-textarea,
-.btn,
-.search-bar,
-.form-control {
-    border-radius: 12px;
-}
+    /* Buttons and inputs */
+    button,
+    input,
+    select,
+    textarea,
+    .btn,
+    .search-bar,
+    .form-control {
+        border-radius: 8px;
+    }
 
-/* Pills and tags */
-.tab,
-.genre-tag,
-.badge {
-    border-radius: 20px;
-}
+    /* Pills and tags */
+    .tab,
+    .genre-tag,
+    .badge {
+        border-radius: 12px;
+    }
 
-/* ========================================
-   DECORATIVE SIDE LINES
-   ======================================== */
+    /* ========================================
+       DECORATIVE SIDE LINES
+       ======================================== */
 
-/* Feed container with side lines */
-.feed-container {
-    position: relative;
-}
+    /* Feed container with side lines */
+    .feed-container {
+        position: relative;
+    }
 
 .feed-container::before,
 .feed-container::after {

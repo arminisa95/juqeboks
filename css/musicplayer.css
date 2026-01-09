@@ -13,7 +13,7 @@ MUSIC PLAYER - Enhanced Modern Design
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px 24px 0 0;
+    border-radius: 12px 12px 0 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -33,7 +33,7 @@ MUSIC PLAYER - Enhanced Modern Design
     width: 356px;
     height: 200px;
     background: rgba(25, 25, 25, 0.95);
-    border-radius: 16px;
+    border-radius: 10px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
@@ -94,7 +94,7 @@ MUSIC PLAYER - Enhanced Modern Design
 .music-player .now-playing-cover {
     width: 60px;
     height: 60px;
-    border-radius: 12px;
+    border-radius: 8px;
     object-fit: cover;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transition: transform 0.3s ease;
