@@ -40,15 +40,16 @@
 
 .cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1rem;
 }
 
 .card {
-    background: rgba(30, 25, 100, 0.5);
-    border-radius: 10px;
+    background: rgba(30, 25, 100, 0.42);
+    border-radius: 14px;
     overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .playlist-card {
@@ -62,7 +63,8 @@
 
 .card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 255, 208, 0.18);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
 }
 
 .card-cover {
@@ -117,23 +119,24 @@
 }
 
 .lists-shell {
-    max-width: 1200px;
+    max-width: 1240px;
     margin: 1.5rem auto;
     padding: 0 1rem;
     display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: 1rem;
+    grid-template-columns: 280px 1fr;
+    gap: 1.25rem;
     align-items: start;
 }
 
 .lists-nav {
     position: sticky;
     top: 90px;
-    background: rgba(30, 25, 100, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(30, 25, 100, 0.55), rgba(0, 0, 0, 0.25));
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 16px;
     padding: 1rem;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
 }
 
 .lists-nav-title {
@@ -160,15 +163,15 @@
 .lists-nav-item {
     width: 100%;
     text-align: left;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(0, 0, 0, 0.22);
     color: #fff;
-    border-radius: 12px;
-    padding: 0.75rem 0.85rem;
+    border-radius: 14px;
+    padding: 0.8rem 0.9rem;
     font-weight: 600;
     letter-spacing: 0.2px;
     cursor: pointer;
-    transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .lists-nav-item:hover {
@@ -180,7 +183,7 @@
 .lists-nav-item.active {
     background: linear-gradient(180deg, rgba(0, 255, 208, 0.18), rgba(247, 33, 147, 0.10));
     border-color: rgba(0, 255, 208, 0.35);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
 }
 
 .lists-nav-item:focus {
@@ -199,11 +202,12 @@
 }
 
 .lists-panel {
-    background: rgba(30, 25, 100, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 1rem;
-    backdrop-filter: blur(10px);
+    background: linear-gradient(180deg, rgba(30, 25, 100, 0.30), rgba(0, 0, 0, 0.18));
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 16px;
+    padding: 1.1rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
 }
 
 .lists-panel-header {
@@ -245,18 +249,24 @@
     grid-template-columns: 44px 1fr auto;
     gap: 0.75rem;
     align-items: center;
-    padding: 0.75rem 0.75rem;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(0, 0, 0, 0.16);
+    padding: 0.8rem 0.8rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(0, 0, 0, 0.18);
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.lists-track-row:hover {
+    background: rgba(0, 255, 208, 0.06);
+    border-color: rgba(0, 255, 208, 0.18);
 }
 
 .lists-track-play {
     width: 44px;
     height: 36px;
-    border-radius: 10px;
-    border: 1px solid rgba(0, 255, 208, 0.35);
-    background: rgba(0, 255, 208, 0.12);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 255, 208, 0.38);
+    background: rgba(0, 255, 208, 0.14);
     color: #fff;
     cursor: pointer;
 }

@@ -508,7 +508,7 @@ function createFeedPostCard(track) {
             </div>
         </div>
 
-        <div class="post-comments" style="display:none;">
+        <div class="post-comments">
             <div class="post-comments-title">Comments</div>
             <div class="post-comments-empty">No comments yet.</div>
             <div class="post-comment-compose">
@@ -542,8 +542,8 @@ function createFeedPostCard(track) {
         if (toggle && comments && !toggle.dataset.bound) {
             toggle.dataset.bound = '1';
             toggle.addEventListener('click', function () {
-                const open = comments.style.display !== 'none';
-                comments.style.display = open ? 'none' : '';
+                const open = card.classList.contains('comments-open');
+                card.classList.toggle('comments-open', !open);
                 toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
             });
         }
