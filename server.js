@@ -906,6 +906,44 @@ app.get('/api/tracks/new', async (req, res) => {
     }
 });
 
+// Get my tracks
+app.get('/api/tracks/my', authenticateToken, async (req, res) => {
+    try {
+        const { limit = 50, offset = 0 } = req.query;
+
+        const limitNum = Math.max(1, Math.min(parseInt(limit, 10) || 50, 200));
+        const offsetNum = Math.max(0, parseInt(offset, 10) || 0);
+        const userId = req.user.id;
+
+        const tracks = await db.getAll(`
+            SELECT t.*,
+                   a.name as artist_name,
+                   al.title as album_title,
+                   al.cover_image_url as album_cover_image_url,
+                   u.username as uploader_username
+            FROM tracks t
+            JOIN artists a ON t.artist_id = a.id
+            LEFT JOIN albums al ON t.album_id = al.id
+            LEFT JOIN users u ON t.uploader_id = u.id
+            WHERE t.uploader_id = $1
+            ORDER BY t.created_at DESC
+            LIMIT $2 OFFSET $3
+        `, [userId, limitNum, offsetNum]);
+
+        const normalized = (tracks || []).map((t) => {
+            const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
+            const coverUrl = t.cover_image_url || t.album_cover_image_url || null;
+            const { file_path, album_cover_image_url, ...rest } = t;
+            return { ...rest, audio_url: audioUrl, cover_image_url: coverUrl };
+        });
+
+        res.json(normalized);
+    } catch (error) {
+        console.error('Get my tracks error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Get tracks by uploader
 app.get('/api/tracks/user/:id', authenticateToken, async (req, res) => {
     try {
