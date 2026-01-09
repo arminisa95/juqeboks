@@ -163,6 +163,20 @@ MUSIC PLAYER
     width: 25%;
 }
 
+.music-player .volume-btn {
+    background: none;
+    border: none;
+    color: #a0a0a0;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.music-player .volume-btn:hover {
+    color: white;
+}
+
 .music-player .volume-slider-container {
     width: 100px;
 }
@@ -192,47 +206,54 @@ MUSIC PLAYER
 
 /* Add margin to main content to prevent it from being hidden behind the player */
 main {
-    margin-bottom: 100px;
-    /* Adjust this value based on your player's height */
+margin-bottom: 100px;
+/* Adjust this value based on your player's height */
 }
 
 @media (max-width: 768px) {
-    .music-player {
-        height: auto;
-        min-height: 116px;
-        padding: 8px 12px;
-        padding-right: 12px;
-        flex-wrap: wrap;
-        align-items: flex-start;
-        gap: 8px;
-        opacity: 0.9;
-        padding-bottom: calc(8px + env(safe-area-inset-bottom));
-    }
+.music-player {
+height: auto;
+min-height: 116px;
+padding: 8px 12px;
+padding-right: 12px;
+flex-wrap: wrap;
+align-items: flex-start;
+gap: 8px;
+opacity: 0.9;
+padding-bottom: calc(8px + env(safe-area-inset-bottom));
+}
 
-    .music-player .now-playing {
-        width: 100%;
-        min-width: 0;
-    }
+.music-player .now-playing {
+width: 100%;
+min-width: 0;
+}
 
-    .music-player .player-controls {
-        width: 100%;
-        max-width: none;
-    }
+.music-player .player-controls {
+width: 100%;
+max-width: none;
+}
 
-    .music-player .volume-controls {
-        display: none;
-    }
+.music-player .volume-controls {
+display: flex;
+width: auto;
+margin-left: auto;
+gap: 10px;
+align-items: center;
+}
 
-    .music-player .control-buttons {
-        gap: 12px;
-        margin-bottom: 6px;
-    }
+.music-player .volume-slider-container {
+display: none;
+}
 
-    .music-player .control-btn {
-        padding: 10px;
-        font-size: 1.1rem;
-    }
+.music-player .control-buttons {
+gap: 12px;
+margin-bottom: 6px;
+}
 
+.music-player .control-btn {
+padding: 10px;
+font-size: 1.1rem;
+}
     .music-player .play-btn.large {
         width: 44px;
         height: 44px;

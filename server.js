@@ -804,6 +804,58 @@ app.get('/api/tracks/:id', async (req, res) => {
     }
 });
 
+app.post('/api/tracks/:id/like', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id: trackId } = req.params;
+
+        if (!isUuid(trackId)) {
+            return res.status(400).json({ error: 'Invalid track ID' });
+        }
+
+        const track = await db.get('SELECT id FROM tracks WHERE id = $1', [trackId]);
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const existing = await db.get(
+            'SELECT id FROM user_favorites WHERE user_id = $1 AND track_id = $2',
+            [userId, trackId]
+        );
+
+        if (existing) {
+            await db.query(
+                'DELETE FROM user_favorites WHERE user_id = $1 AND track_id = $2',
+                [userId, trackId]
+            );
+        } else {
+            await db.query(
+                'INSERT INTO user_favorites (user_id, track_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                [userId, trackId]
+            );
+        }
+
+        const likeCountRow = await db.get(
+            'SELECT COUNT(*)::int as count FROM user_favorites WHERE track_id = $1',
+            [trackId]
+        );
+
+        try {
+            await db.query('UPDATE tracks SET like_count = $2 WHERE id = $1', [trackId, likeCountRow ? (likeCountRow.count || 0) : 0]);
+        } catch (_) {
+        }
+
+        res.json({
+            success: true,
+            liked: !existing,
+            like_count: likeCountRow ? (likeCountRow.count || 0) : 0
+        });
+    } catch (error) {
+        console.error('Like track error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Search for music
 app.get('/api/search', async (req, res) => {
     try {

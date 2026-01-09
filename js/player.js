@@ -96,7 +96,8 @@
         audioUrl: null,
         isPlaying: false,
         currentTime: 0,
-        volume: 0.7
+        volume: 0.7,
+        muted: false
     };
 
     function stopPlayback(resetState) {
@@ -145,10 +146,12 @@
             audioUrl: parsed.audioUrl || null,
             isPlaying: !!parsed.isPlaying,
             currentTime: Number.isFinite(parsed.currentTime) ? parsed.currentTime : 0,
-            volume: Number.isFinite(parsed.volume) ? parsed.volume : 0.7
+            volume: Number.isFinite(parsed.volume) ? parsed.volume : 0.7,
+            muted: !!parsed.muted
         };
 
         audio.volume = state.volume;
+        audio.muted = !!state.muted;
         if (state.audioUrl) {
             state.audioUrl = resolveAssetUrl(state.audioUrl);
             audio.src = state.audioUrl;
@@ -164,7 +167,8 @@
             audioUrl: state.audioUrl,
             isPlaying: state.isPlaying,
             currentTime: audio.currentTime || state.currentTime || 0,
-            volume: audio.volume
+            volume: audio.volume,
+            muted: !!audio.muted
         }));
     }
 
@@ -220,7 +224,9 @@
                 </div>
 
                 <div class="volume-controls">
-                    <i class="fas fa-volume-up"></i>
+                    <button class="volume-btn" type="button" aria-label="Mute/Unmute">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
                     <div class="volume-slider-container">
                         <input type="range" class="volume-slider" min="0" max="100" value="70">
                     </div>
@@ -249,7 +255,15 @@
         var durationEl = el.querySelector('.duration');
         var progressBar = el.querySelector('.progress-bar');
         var progressEl = el.querySelector('.progress');
+        var volumeBtn = el.querySelector('.volume-btn');
+        var volumeIcon = volumeBtn ? volumeBtn.querySelector('i') : null;
         var volumeSlider = el.querySelector('.volume-slider');
+
+        function syncMuteUi() {
+            if (volumeIcon) {
+                volumeIcon.className = audio.muted ? 'fas fa-volume-xmark' : 'fas fa-volume-up';
+            }
+        }
 
         async function togglePlay() {
             if (!state.audioUrl) return;
@@ -297,6 +311,8 @@
             if (volumeSlider) {
                 volumeSlider.value = String(Math.round(audio.volume * 100));
             }
+
+            syncMuteUi();
 
             if (playIcon) {
                 playIcon.className = state.isPlaying ? 'fas fa-pause' : 'fas fa-play';
@@ -348,7 +364,21 @@
                     if (!Number.isFinite(v)) return;
                     audio.volume = Math.max(0, Math.min(1, v / 100));
                     state.volume = audio.volume;
+                    if (audio.volume > 0) {
+                        audio.muted = false;
+                        state.muted = false;
+                    }
                     saveState();
+                    render();
+                });
+            }
+
+            if (volumeBtn) {
+                volumeBtn.addEventListener('click', function () {
+                    audio.muted = !audio.muted;
+                    state.muted = !!audio.muted;
+                    saveState();
+                    render();
                 });
             }
 
