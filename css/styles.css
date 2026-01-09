@@ -137,6 +137,10 @@ a:hover {
     opacity: 0.8;
 }
 
+.search-container.search-loading {
+    opacity: 0.95;
+}
+
 .search-bar {
     flex: 1;
     padding: 0px 20px;

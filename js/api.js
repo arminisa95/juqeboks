@@ -379,6 +379,14 @@ function createFeedTrackCard(track) {
     card.className = 'music-card';
 
     const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
+    const isVideoCover = (function () {
+        try {
+            const u = String(coverUrl || '').toLowerCase().split('?')[0].split('#')[0];
+            return u.endsWith('.mp4') || u.endsWith('.webm') || u.endsWith('.mov') || u.endsWith('.m4v');
+        } catch (_) {
+            return false;
+        }
+    })();
     const artistName = track.artist_name || 'Unknown Artist';
     const uploaderName = track.uploader_username || '';
     const uploaderId = track.uploader_id || '';
@@ -395,28 +403,33 @@ function createFeedTrackCard(track) {
     const isLiked = likedTrackIds.has(track.id);
     const canDelete = !!isAdmin || (!!currentUserId && !!uploaderId && String(uploaderId) === String(currentUserId));
 
+    const safeTitle = (track && track.title) ? String(track.title) : '';
+    const coverMedia = isVideoCover
+        ? `<video class="cover-media" src="${coverUrl}" muted loop playsinline preload="metadata"></video>`
+        : `<img class="cover-media" src="${coverUrl}" alt="${safeTitle}">`;
+
     card.innerHTML = `
-        <div class="album-cover">
-            <img src="${coverUrl}" alt="${track.title}" onclick="playTrack('${track.id}')">
-            <button class="play-btn" onclick="playTrack('${track.id}')">
+        <div class="album-cover" data-track-id="${track.id}">
+            ${coverMedia}
+            <button class="play-btn" type="button" aria-label="Play" data-track-id="${track.id}">
                 <i class="fas fa-play"></i>
             </button>
         </div>
         <div class="track-info">
-            <div class="track-title">${track.title}</div>
+            <div class="track-title">${safeTitle}</div>
             <div class="artist-name">${artistName}</div>
             ${uploaderName && uploaderId && String(uploaderId) !== String(currentUserId || '') ? `<div class="artist-name"><a href="#/koleqtion/${uploaderId}" class="uploader-link">@${uploaderName}</a></div>` : ''}
         </div>
         <div class="track-actions">
             <div class="left-actions">
-                <button class="like-btn ${isLiked ? 'liked' : ''}" data-track-id="${track.id}" onclick="likeTrack('${track.id}')">
+                <button class="like-btn ${isLiked ? 'liked' : ''}" data-track-id="${track.id}" type="button" onclick="likeTrack('${track.id}')">
                     <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
                 </button>
-                <button class="like-btn" onclick="addToPlaylist('${track.id}')" aria-label="Add to playlist">
+                <button class="like-btn" type="button" onclick="addToPlaylist('${track.id}')" aria-label="Add to playlist">
                     <i class="fas fa-plus"></i>
                 </button>
                 ${canDelete ? `
-                <button class="like-btn" onclick="deleteTrack('${track.id}', event);" aria-label="Delete track">
+                <button class="like-btn" type="button" onclick="deleteTrack('${track.id}', event);" aria-label="Delete track">
                     <i class="fas fa-trash"></i>
                 </button>
                 ` : ''}
@@ -424,6 +437,35 @@ function createFeedTrackCard(track) {
             <span class="duration">${track.genre || ''}</span>
         </div>
     `;
+
+    try {
+        const cover = card.querySelector('.album-cover');
+        const play = card.querySelector('.play-btn');
+        if (cover && !cover.dataset.bound) {
+            cover.dataset.bound = '1';
+            cover.addEventListener('click', function (e) {
+                try {
+                    if (e && e.target && e.target.closest && e.target.closest('button')) return;
+                } catch (_) {
+                }
+                playTrack(String(track.id));
+            });
+        }
+        if (play && !play.dataset.bound) {
+            play.dataset.bound = '1';
+            play.addEventListener('click', function () {
+                playTrack(String(track.id));
+            });
+        }
+        const vid = card.querySelector('video.cover-media');
+        if (vid) {
+            try {
+                vid.play().catch(function () { });
+            } catch (_) {
+            }
+        }
+    } catch (_) {
+    }
 
     return card;
 }
@@ -679,11 +721,19 @@ function setupGlobalSearch() {
     }
 
     function showLoading() {
+        try {
+            container.classList.add('search-loading');
+        } catch (_) {
+        }
         results.style.display = '';
         results.innerHTML = '<div class="search-results__item search-results__item--muted">Searching…</div>';
     }
 
     function renderTracks(tracks) {
+        try {
+            container.classList.remove('search-loading');
+        } catch (_) {
+        }
         if (!Array.isArray(tracks) || tracks.length === 0) {
             results.style.display = '';
             results.innerHTML = '<div class="search-results__item search-results__item--muted">No results</div>';
@@ -713,6 +763,10 @@ function setupGlobalSearch() {
         var q = String(input.value || '').trim();
         if (!q) {
             hide();
+            try {
+                container.classList.remove('search-loading');
+            } catch (_) {
+            }
             return;
         }
 
@@ -725,6 +779,10 @@ function setupGlobalSearch() {
             var tracks = Array.isArray(data) ? data : (data && data.tracks ? data.tracks : []);
             renderTracks(tracks);
         } catch (e) {
+            try {
+                container.classList.remove('search-loading');
+            } catch (_) {
+            }
             results.style.display = '';
             results.innerHTML = '<div class="search-results__item search-results__item--muted">Search failed</div>';
         }
