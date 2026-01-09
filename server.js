@@ -677,9 +677,15 @@ app.post('/api/playlists/:id/tracks', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Track not found' });
         }
 
+        const nextPosRow = await db.get(
+            'SELECT COALESCE(MAX(position), 0)::int + 1 as pos FROM playlist_tracks WHERE playlist_id = $1',
+            [playlistId]
+        );
+        const nextPos = nextPosRow && Number.isFinite(nextPosRow.pos) ? nextPosRow.pos : 1;
+
         await db.query(
-            'INSERT INTO playlist_tracks (playlist_id, track_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-            [playlistId, trackId]
+            'INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+            [playlistId, trackId, nextPos]
         );
 
         const countRow = await db.get(
