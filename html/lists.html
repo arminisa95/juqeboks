@@ -46,39 +46,61 @@
     </header>
 
     <main>
-        <div class="lists-container">
-            <div class="lists-header">
-                <h1>U_lists</h1>
-                <div class="lists-subtitle">Playlists, curated picks, and liked tracks</div>
-            </div>
-
-            <div class="lists-section">
-                <h2 class="section-title">Your Playlists</h2>
-                <div id="myPlaylists" class="cards-grid"></div>
-            </div>
-
-            <div class="lists-section">
-                <h2 class="section-title">Curated</h2>
-                <div id="curatedPlaylists" class="cards-grid"></div>
-            </div>
-
-            <div class="lists-section">
-                <h2 class="section-title">Liked Tracks</h2>
-                <div id="likedTracks" class="cards-grid"></div>
-            </div>
-        </div>
-
-        <div id="playlistExplorer" class="playlist-explorer" style="display:none;">
-            <div class="folder-window" role="dialog" aria-modal="true" aria-label="Playlist">
-                <div class="folder-titlebar">
-                    <div id="playlistExplorerTitle" class="folder-title">Playlist</div>
-                    <button id="playlistExplorerClose" class="folder-close" type="button" aria-label="Close">X</button>
+        <div class="lists-shell" id="listsShell">
+            <aside class="lists-nav" aria-label="Lists directories">
+                <div class="lists-nav-title">U_lists</div>
+                <div class="lists-nav-subtitle">Directories</div>
+                <div class="lists-nav-items" role="tablist">
+                    <button class="lists-nav-item" type="button" role="tab" data-view="liked">_liked</button>
+                    <button class="lists-nav-item" type="button" role="tab" data-view="lists">_lists</button>
+                    <button class="lists-nav-item" type="button" role="tab" data-view="curry">_curry</button>
+                    <button class="lists-nav-item" type="button" role="tab" data-view="random">random</button>
                 </div>
-                <div class="folder-toolbar">
-                    <div class="folder-status" id="playlistExplorerStatus"></div>
+                <div class="lists-nav-footer">Switch with ↑/↓, open with Enter</div>
+            </aside>
+
+            <section class="lists-content" aria-label="Lists content">
+                <div class="lists-panel" id="listsPanelLiked" data-panel="liked" role="tabpanel">
+                    <div class="lists-panel-header">
+                        <div class="lists-panel-title">_liked</div>
+                        <div class="lists-panel-hint">Your liked tracks</div>
+                    </div>
+                    <div id="likedTracks" class="cards-grid"></div>
                 </div>
-                <div id="playlistExplorerTracks" class="folder-tracks"></div>
-            </div>
+
+                <div class="lists-panel" id="listsPanelLists" data-panel="lists" role="tabpanel">
+                    <div class="lists-panel-header">
+                        <div class="lists-panel-title">_lists</div>
+                        <div class="lists-panel-hint">Your playlists</div>
+                    </div>
+                    <div id="myPlaylists" class="cards-grid"></div>
+                </div>
+
+                <div class="lists-panel" id="listsPanelCurry" data-panel="curry" role="tabpanel">
+                    <div class="lists-panel-header">
+                        <div class="lists-panel-title">_curry</div>
+                        <div class="lists-panel-hint">Curated picks</div>
+                    </div>
+                    <div id="curatedPlaylists" class="cards-grid"></div>
+                </div>
+
+                <div class="lists-panel" id="listsPanelRandom" data-panel="random" role="tabpanel">
+                    <div class="lists-panel-header">
+                        <div class="lists-panel-title">random</div>
+                        <div class="lists-panel-hint">Public playlists, shuffled</div>
+                    </div>
+                    <div id="randomPlaylists" class="cards-grid"></div>
+                </div>
+
+                <div class="lists-panel" id="listsPanelPlaylist" data-panel="playlist" role="tabpanel" style="display:none;">
+                    <div class="lists-panel-header">
+                        <button class="lists-back" type="button" id="playlistBack">Back</button>
+                        <div class="lists-panel-title" id="playlistTitle">Playlist</div>
+                        <div class="lists-panel-hint" id="playlistStatus"></div>
+                    </div>
+                    <div id="playlistTracks" class="lists-tracklist"></div>
+                </div>
+            </section>
         </div>
     </main>
 

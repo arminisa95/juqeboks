@@ -104,22 +104,46 @@ function setEmpty(el, text) {
     el.innerHTML = `<div class="empty-state">${text}</div>`;
 }
 
-function ensurePlaylistExplorer() {
-    const existing = document.getElementById('playlistExplorer');
-    if (existing) return existing;
-    return null;
+function getListsUi() {
+    return {
+        shell: document.getElementById('listsShell'),
+        navItems: Array.from(document.querySelectorAll('.lists-nav-item')),
+        panels: Array.from(document.querySelectorAll('.lists-panel[data-panel]')),
+        playlistPanel: document.getElementById('listsPanelPlaylist'),
+        playlistTitle: document.getElementById('playlistTitle'),
+        playlistStatus: document.getElementById('playlistStatus'),
+        playlistTracks: document.getElementById('playlistTracks'),
+        playlistBack: document.getElementById('playlistBack')
+    };
 }
 
-function showPlaylistExplorer() {
-    const el = ensurePlaylistExplorer();
-    if (!el) return;
-    el.style.display = '';
-}
+function showPanel(panelName) {
+    const ui = getListsUi();
+    if (!ui || !ui.panels || ui.panels.length === 0) return;
 
-function hidePlaylistExplorer() {
-    const el = ensurePlaylistExplorer();
-    if (!el) return;
-    el.style.display = 'none';
+    ui.panels.forEach(function (p) {
+        if (!p) return;
+        const name = p.getAttribute('data-panel');
+        if (name === panelName) {
+            p.style.display = '';
+        } else {
+            p.style.display = 'none';
+        }
+    });
+
+    ui.navItems.forEach(function (btn) {
+        if (!btn) return;
+        const v = btn.getAttribute('data-view');
+        if (v === panelName) {
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
+            btn.tabIndex = 0;
+        } else {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+            btn.tabIndex = -1;
+        }
+    });
 }
 
 async function openPlaylist(playlist) {
@@ -133,18 +157,18 @@ async function openPlaylist(playlist) {
         return;
     }
 
-    const explorer = ensurePlaylistExplorer();
-    if (!explorer) {
-        return;
-    }
+    const ui = getListsUi();
+    if (!ui || !ui.playlistPanel) return;
 
-    const titleEl = explorer.querySelector('#playlistExplorerTitle');
-    const tracksEl = explorer.querySelector('#playlistExplorerTracks');
-    const statusEl = explorer.querySelector('#playlistExplorerStatus');
-    if (titleEl) titleEl.textContent = (playlist && playlist.name) ? playlist.name : 'Playlist';
-    if (statusEl) statusEl.textContent = 'Loading...';
-    if (tracksEl) tracksEl.innerHTML = '';
-    showPlaylistExplorer();
+    if (ui.playlistTitle) ui.playlistTitle.textContent = (playlist && playlist.name) ? playlist.name : 'Playlist';
+    if (ui.playlistStatus) ui.playlistStatus.textContent = 'Loading...';
+    if (ui.playlistTracks) ui.playlistTracks.innerHTML = '';
+
+    try {
+        ui.playlistPanel.style.display = '';
+    } catch (_) {
+    }
+    showPanel('playlist');
 
     try {
         const tracks = await apiFetchJson(`/playlists/${encodeURIComponent(playlist.id)}/tracks`, {
@@ -155,52 +179,94 @@ async function openPlaylist(playlist) {
             return Array.isArray(d);
         });
 
-        if (statusEl) statusEl.textContent = '';
-        if (!tracksEl) return;
+        if (ui.playlistStatus) ui.playlistStatus.textContent = '';
+        if (!ui.playlistTracks) return;
 
         if (!tracks || tracks.length === 0) {
-            tracksEl.innerHTML = '<div class="empty-state">No tracks in this playlist yet.</div>';
+            ui.playlistTracks.innerHTML = '<div class="empty-state">No tracks in this playlist yet.</div>';
             return;
         }
 
-        tracks.forEach(function (t) {
+        ui.playlistTracks.innerHTML = '';
+        tracks.forEach(function (t, idx) {
             const row = document.createElement('div');
-            row.className = 'folder-track-row';
+            row.className = 'lists-track-row';
             const safeTitle = (t && t.title) ? String(t.title) : 'Untitled';
             const safeArtist = (t && t.artist_name) ? String(t.artist_name) : '';
+            const pos = Number.isFinite(Number(t.position)) ? Number(t.position) : (idx + 1);
+
             row.innerHTML = `
-                <button class="folder-play-btn" type="button" data-track-id="${t.id}">Play</button>
-                <div class="folder-track-meta">
-                    <div class="folder-track-title">${safeTitle}</div>
-                    <div class="folder-track-artist">${safeArtist}</div>
+                <button class="lists-track-play" type="button" data-track-id="${t.id}" aria-label="Play">▶</button>
+                <div class="lists-track-meta">
+                    <div class="lists-track-title">${safeTitle}</div>
+                    <div class="lists-track-artist">${safeArtist}</div>
                 </div>
+                <div class="lists-track-pos">${pos}</div>
             `;
-            row.querySelector('.folder-play-btn').addEventListener('click', function () {
-                try {
-                    if (typeof window.playTrack === 'function') {
-                        window.playTrack(t.id);
+
+            const btn = row.querySelector('.lists-track-play');
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    try {
+                        if (typeof window.playTrack === 'function') {
+                            window.playTrack(t.id);
+                        }
+                    } catch (_) {
                     }
-                } catch (_) {
-                }
-            });
-            tracksEl.appendChild(row);
+                });
+            }
+
+            ui.playlistTracks.appendChild(row);
         });
     } catch (e) {
         console.error(e);
-        if (statusEl) statusEl.textContent = 'Failed to load tracks.';
-        if (tracksEl) tracksEl.innerHTML = '';
+        if (ui.playlistStatus) ui.playlistStatus.textContent = 'Failed to load tracks.';
+        if (ui.playlistTracks) ui.playlistTracks.innerHTML = '';
     }
 }
 
-function bindPlaylistExplorerUi() {
-    const explorer = ensurePlaylistExplorer();
-    if (!explorer) return;
+function bindListsNavigatorUi() {
+    const ui = getListsUi();
+    if (!ui || !ui.navItems || ui.navItems.length === 0) return;
 
-    const closeBtn = explorer.querySelector('#playlistExplorerClose');
-    if (closeBtn && !closeBtn.dataset.bound) {
-        closeBtn.dataset.bound = '1';
-        closeBtn.addEventListener('click', function () {
-            hidePlaylistExplorer();
+    ui.navItems.forEach(function (btn) {
+        if (!btn || btn.dataset.bound) return;
+        btn.dataset.bound = '1';
+
+        btn.addEventListener('click', function () {
+            const v = btn.getAttribute('data-view');
+            if (!v) return;
+            showPanel(v);
+        });
+
+        btn.addEventListener('keydown', function (e) {
+            if (!e) return;
+            const key = e.key;
+            if (key === 'Enter' || key === ' ') {
+                e.preventDefault();
+                const v = btn.getAttribute('data-view');
+                if (!v) return;
+                showPanel(v);
+                return;
+            }
+
+            if (key !== 'ArrowDown' && key !== 'ArrowUp') return;
+            e.preventDefault();
+            const idx = ui.navItems.indexOf(btn);
+            if (idx < 0) return;
+            const next = key === 'ArrowDown' ? idx + 1 : idx - 1;
+            const wrap = (next + ui.navItems.length) % ui.navItems.length;
+            try {
+                ui.navItems[wrap].focus();
+            } catch (_) {
+            }
+        });
+    });
+
+    if (ui.playlistBack && !ui.playlistBack.dataset.bound) {
+        ui.playlistBack.dataset.bound = '1';
+        ui.playlistBack.addEventListener('click', function () {
+            showPanel('lists');
         });
     }
 }
@@ -233,14 +299,12 @@ function renderPlaylistCard(p) {
     `;
 
     div.addEventListener('click', function () {
-        bindPlaylistExplorerUi();
         openPlaylist(p);
     });
     div.addEventListener('keydown', function (e) {
         if (!e) return;
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            bindPlaylistExplorerUi();
             openPlaylist(p);
         }
     });
@@ -283,12 +347,15 @@ async function loadLists() {
     const myPlaylistsEl = document.getElementById('myPlaylists');
     const curatedEl = document.getElementById('curatedPlaylists');
     const likedEl = document.getElementById('likedTracks');
+    const randomEl = document.getElementById('randomPlaylists');
 
-    bindPlaylistExplorerUi();
+    bindListsNavigatorUi();
+    showPanel('liked');
 
     setEmpty(myPlaylistsEl, 'Loading...');
     setEmpty(curatedEl, 'Loading...');
     setEmpty(likedEl, 'Loading...');
+    setEmpty(randomEl, 'Loading...');
 
     try {
         const profile = await apiFetchJson('/users/profile', {
@@ -335,6 +402,25 @@ async function loadLists() {
     } catch (e) {
         console.error(e);
         setEmpty(curatedEl, 'Failed to load curated playlists.');
+    }
+
+    try {
+        const random = await apiFetchJson('/playlists/public', {}, function (d) {
+            return Array.isArray(d);
+        });
+        randomEl.innerHTML = '';
+
+        if (!random || random.length === 0) {
+            setEmpty(randomEl, 'No public playlists available yet.');
+        } else {
+            const shuffled = random.slice().sort(function () {
+                return Math.random() - 0.5;
+            });
+            shuffled.forEach((p) => randomEl.appendChild(renderPlaylistCard(p)));
+        }
+    } catch (e) {
+        console.error(e);
+        setEmpty(randomEl, 'Failed to load public playlists.');
     }
 }
 

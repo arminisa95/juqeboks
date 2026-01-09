@@ -650,6 +650,24 @@ app.get('/api/playlists/curated', async (req, res) => {
     }
 });
 
+app.get('/api/playlists/public', async (req, res) => {
+    try {
+        const publicPlaylists = await db.getAll(`
+            SELECT p.id, p.name, p.description, p.cover_image_url, p.is_public, p.track_count, p.created_at,
+                   u.username as owner_username
+            FROM playlists p
+            LEFT JOIN users u ON p.user_id = u.id
+            WHERE p.is_public = true
+            ORDER BY p.created_at DESC
+            LIMIT 200
+        `);
+        res.json(publicPlaylists || []);
+    } catch (error) {
+        console.error('Get public playlists error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.post('/api/playlists/:id/tracks', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;

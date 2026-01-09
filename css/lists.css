@@ -116,112 +116,203 @@
     padding: 0.5rem 0;
 }
 
-.playlist-explorer {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.lists-shell {
+    max-width: 1200px;
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.lists-nav {
+    position: sticky;
+    top: 90px;
+    background: rgba(30, 25, 100, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
     padding: 1rem;
-    z-index: 9999;
+    backdrop-filter: blur(10px);
 }
 
-.folder-window {
-    width: min(920px, 96vw);
-    height: min(560px, 78vh);
-    background: #c0c0c0;
-    border: 2px solid #fff;
-    border-right-color: #404040;
-    border-bottom-color: #404040;
-    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.35);
-    display: flex;
-    flex-direction: column;
+.lists-nav-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #00ffd0, #F72193);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.folder-titlebar {
-    background: linear-gradient(90deg, #000080, #1084d0);
+.lists-nav-subtitle {
+    margin-top: 0.35rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+}
+
+.lists-nav-items {
+    margin-top: 0.9rem;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.lists-nav-item {
+    width: 100%;
+    text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.18);
     color: #fff;
-    padding: 6px 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-family: Tahoma, Verdana, Arial, sans-serif;
-    font-size: 14px;
+    border-radius: 12px;
+    padding: 0.75rem 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
 }
 
-.folder-title {
+.lists-nav-item:hover {
+    transform: translateY(-1px);
+    background: rgba(0, 255, 208, 0.08);
+    border-color: rgba(0, 255, 208, 0.25);
+}
+
+.lists-nav-item.active {
+    background: linear-gradient(180deg, rgba(0, 255, 208, 0.18), rgba(247, 33, 147, 0.10));
+    border-color: rgba(0, 255, 208, 0.35);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.lists-nav-item:focus {
+    outline: 2px solid rgba(0, 255, 208, 0.75);
+    outline-offset: 2px;
+}
+
+.lists-nav-footer {
+    margin-top: 1rem;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.lists-content {
+    min-height: 60vh;
+}
+
+.lists-panel {
+    background: rgba(30, 25, 100, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+}
+
+.lists-panel-header {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.lists-panel-title {
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.lists-panel-hint {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.92rem;
+    text-align: right;
+}
+
+.lists-back {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.25);
+    color: #fff;
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+}
+
+.lists-tracklist {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.lists-track-row {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.75rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.16);
+}
+
+.lists-track-play {
+    width: 44px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 255, 208, 0.35);
+    background: rgba(0, 255, 208, 0.12);
+    color: #fff;
+    cursor: pointer;
+}
+
+.lists-track-meta {
+    min-width: 0;
+}
+
+.lists-track-title {
+    color: #fff;
     font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.folder-close {
-    width: 28px;
-    height: 22px;
-    background: #c0c0c0;
-    border: 2px solid #fff;
-    border-right-color: #404040;
-    border-bottom-color: #404040;
-    font-weight: 700;
-    cursor: pointer;
+.lists-track-artist {
+    margin-top: 0.1rem;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.folder-toolbar {
-    background: #dcdcdc;
-    border-top: 1px solid #fff;
-    border-bottom: 1px solid #808080;
-    padding: 6px 8px;
-    font-family: Tahoma, Verdana, Arial, sans-serif;
-    font-size: 12px;
-    color: #111;
-}
-
-.folder-tracks {
-    background: #fff;
-    border-top: 1px solid #808080;
-    padding: 8px;
-    overflow: auto;
-    flex: 1;
-}
-
-.folder-track-row {
-    display: grid;
-    grid-template-columns: 76px 1fr;
-    gap: 10px;
-    align-items: center;
-    padding: 8px 6px;
-    border-bottom: 1px solid #e6e6e6;
-}
-
-.folder-play-btn {
-    height: 28px;
-    background: #c0c0c0;
-    border: 2px solid #fff;
-    border-right-color: #404040;
-    border-bottom-color: #404040;
-    font-family: Tahoma, Verdana, Arial, sans-serif;
-    font-size: 12px;
-    cursor: pointer;
-}
-
-.folder-track-title {
-    font-family: Tahoma, Verdana, Arial, sans-serif;
-    font-size: 13px;
-    color: #111;
-    font-weight: 700;
-}
-
-.folder-track-artist {
-    font-family: Tahoma, Verdana, Arial, sans-serif;
-    font-size: 12px;
-    color: #444;
-    margin-top: 2px;
+.lists-track-pos {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.9rem;
+    text-align: right;
 }
 
 @media (max-width: 768px) {
+    .lists-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .lists-nav {
+        position: static;
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .lists-nav-items {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.6rem;
+    }
+
     .cards-grid {
         grid-template-columns: 1fr;
+    }
+
+    .lists-panel-header {
+        grid-template-columns: 1fr;
+    }
+
+    .lists-panel-hint {
+        text-align: left;
     }
 }
