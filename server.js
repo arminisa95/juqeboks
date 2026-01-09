@@ -727,7 +727,7 @@ app.get('/api/playlists/:id/tracks', authenticateToken, async (req, res) => {
             LEFT JOIN albums al ON t.album_id = al.id
             LEFT JOIN users u ON t.uploader_id = u.id
             WHERE pt.playlist_id = $1
-            ORDER BY pt.added_at DESC
+            ORDER BY pt.id DESC
             LIMIT 500
         `, [playlistId]);
 
@@ -741,7 +741,7 @@ app.get('/api/playlists/:id/tracks', authenticateToken, async (req, res) => {
         res.json(normalized);
     } catch (error) {
         console.error('Get playlist tracks error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error', detail: error && error.message ? String(error.message) : 'Unknown error' });
     }
 });
 
