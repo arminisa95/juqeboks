@@ -5,6 +5,8 @@
         var fileInfo = document.getElementById('fileInfo');
         var coverInput = document.getElementById('coverInput');
         var coverInfo = document.getElementById('coverInfo');
+        var videoInput = document.getElementById('videoInput');
+        var videoInfo = document.getElementById('videoInfo');
         var uploadForm = document.getElementById('uploadForm');
 
         if (!dropZone || !fileInput || !fileInfo || !uploadForm) return;
@@ -47,6 +49,17 @@
                     return;
                 }
                 coverInfo.textContent = 'Selected: ' + files[0].name;
+            });
+        }
+
+        if (videoInput && videoInfo) {
+            videoInput.addEventListener('change', function (e) {
+                var files = e.target.files;
+                if (!files || files.length === 0) {
+                    videoInfo.textContent = 'No video selected';
+                    return;
+                }
+                videoInfo.textContent = 'Selected: ' + files[0].name + ' (' + Math.round(files[0].size / 1024 / 1024) + ' MB)';
             });
         }
 
@@ -104,6 +117,10 @@
 
             if (coverInput && coverInput.files && coverInput.files[0]) {
                 formData.append('coverImage', coverInput.files[0]);
+            }
+
+            if (videoInput && videoInput.files && videoInput.files[0]) {
+                formData.append('videoFile', videoInput.files[0]);
             }
 
             var titleEl = document.getElementById('trackTitle');
@@ -167,6 +184,7 @@
                             uploadForm.reset();
                             fileInfo.textContent = 'No files selected';
                             if (coverInfo) coverInfo.textContent = 'No cover selected';
+                            if (videoInfo) videoInfo.textContent = 'No video selected';
                             return;
                         }
 

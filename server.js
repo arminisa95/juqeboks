@@ -1319,13 +1319,14 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
-app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }]), async (req, res) => {
+app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }, { name: 'videoFile', maxCount: 1 }]), async (req, res) => {
     try {
         const { title, artist, genre } = req.body;
         const rawAlbum = (req.body && typeof req.body.album === 'string') ? req.body.album : '';
         const albumTitle = (rawAlbum || '').trim() || 'Single';
         const file = req.files && req.files.audioFile ? req.files.audioFile[0] : null;
         const cover = req.files && req.files.coverImage ? req.files.coverImage[0] : null;
+        const video = req.files && req.files.videoFile ? req.files.videoFile[0] : null;
         const userId = req.user.id;
 
         if (!file) {
@@ -1376,6 +1377,7 @@ app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', m
         const s3 = getS3Client();
         let audioUrl = `/uploads/${path.basename(file.path)}`;
         let coverUrl = cover ? `/uploads/${path.basename(cover.path)}` : null;
+        let videoUrl = video ? `/uploads/${path.basename(video.path)}` : null;
         let filePathValue = file.path;
         let metadata = {};
 
@@ -1392,12 +1394,22 @@ app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', m
                 metadata.cover_key = coverObj.key;
             }
 
+            if (video) {
+                const videoObj = await uploadFileToS3(s3, video, 'tracks/videos');
+                videoUrl = videoObj.url;
+                metadata.video_key = videoObj.key;
+            }
+
             try {
                 if (file && file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
             } catch (_) {
             }
             try {
                 if (cover && cover.path && fs.existsSync(cover.path)) fs.unlinkSync(cover.path);
+            } catch (_) {
+            }
+            try {
+                if (video && video.path && fs.existsSync(video.path)) fs.unlinkSync(video.path);
             } catch (_) {
             }
         }
@@ -1412,6 +1424,7 @@ app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', m
             file_path: filePathValue,
             audio_url: audioUrl,
             cover_image_url: coverUrl,
+            video_url: videoUrl,
             metadata,
             duration_seconds: 0,
             release_date: new Date().toISOString().split('T')[0],

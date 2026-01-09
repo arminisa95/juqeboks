@@ -97,10 +97,12 @@
         artist: '-',
         coverUrl: null,
         audioUrl: null,
+        videoUrl: null,
         isPlaying: false,
         currentTime: 0,
         volume: 0.7,
-        muted: false
+        muted: false,
+        showVideo: false
     };
 
     function stopPlayback(resetState) {
@@ -186,6 +188,12 @@
         var hasControls = el.querySelector('#play') && el.querySelector('.progress-bar') && el.querySelector('.volume-slider');
         if (!hasControls) {
             el.innerHTML = `
+                <div class="player-video-container" id="playerVideoContainer">
+                    <video id="playerVideo" playsinline></video>
+                    <button class="player-video-toggle" id="closeVideo" aria-label="Close video">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
                 <div class="now-playing">
                     <div class="track-info">
                         <img src="${getImageUrl('images/juke.png')}" alt="Now Playing" class="now-playing-cover">
@@ -215,6 +223,9 @@
                         </button>
                         <button class="control-btn" id="repeat" aria-label="Repeat">
                             <i class="fas fa-redo"></i>
+                        </button>
+                        <button class="control-btn" id="videoToggle" aria-label="Toggle video" style="display:none;">
+                            <i class="fas fa-video"></i>
                         </button>
                     </div>
                     <div class="progress-container">
@@ -436,6 +447,21 @@
                 });
             }
 
+            var videoToggleBtn = el.querySelector('#videoToggle');
+            if (videoToggleBtn) {
+                videoToggleBtn.addEventListener('click', function () {
+                    toggleVideo();
+                });
+            }
+            
+            var closeVideoBtn = el.querySelector('#closeVideo');
+            if (closeVideoBtn) {
+                closeVideoBtn.addEventListener('click', function () {
+                    state.showVideo = false;
+                    updateVideoToggleVisibility();
+                });
+            }
+
             try {
                 if (el && el.dataset) el.dataset.jukePlayerBound = 'true';
             } catch (_) {
@@ -505,7 +531,11 @@
         state.artist = track.artist_name || 'Unknown Artist';
         state.coverUrl = resolveAssetUrl(track.cover_image_url) || getImageUrl('images/juke.png');
         state.audioUrl = audioUrl;
+        state.videoUrl = track.video_url ? resolveAssetUrl(track.video_url) : null;
         state.currentTime = 0;
+        state.showVideo = false;
+        
+        updateVideoToggleVisibility();
 
         try {
             if (historyIndex >= 0 && historyIndex < history.length - 1) {
@@ -535,6 +565,54 @@
 
         if (window.JukePlayer && typeof window.JukePlayer.render === 'function') {
             window.JukePlayer.render();
+        }
+    }
+
+    function updateVideoToggleVisibility() {
+        var videoToggle = document.getElementById('videoToggle');
+        var videoContainer = document.getElementById('playerVideoContainer');
+        var videoEl = document.getElementById('playerVideo');
+        var coverEl = document.querySelector('.now-playing-cover');
+        
+        if (videoToggle) {
+            videoToggle.style.display = state.videoUrl ? '' : 'none';
+        }
+        
+        if (videoContainer && videoEl) {
+            if (state.showVideo && state.videoUrl) {
+                videoContainer.classList.add('active');
+                videoEl.src = state.videoUrl;
+                videoEl.currentTime = audio.currentTime || 0;
+                if (state.isPlaying) videoEl.play().catch(function(){});
+            } else {
+                videoContainer.classList.remove('active');
+                videoEl.pause();
+                videoEl.removeAttribute('src');
+            }
+        }
+        
+        if (coverEl) {
+            coverEl.classList.toggle('has-video', !!state.videoUrl);
+        }
+    }
+    
+    function toggleVideo() {
+        state.showVideo = !state.showVideo;
+        updateVideoToggleVisibility();
+    }
+    
+    function syncVideoWithAudio() {
+        var videoEl = document.getElementById('playerVideo');
+        if (!videoEl || !state.showVideo || !state.videoUrl) return;
+        
+        if (Math.abs(videoEl.currentTime - audio.currentTime) > 0.5) {
+            videoEl.currentTime = audio.currentTime;
+        }
+        
+        if (state.isPlaying && videoEl.paused) {
+            videoEl.play().catch(function(){});
+        } else if (!state.isPlaying && !videoEl.paused) {
+            videoEl.pause();
         }
     }
 

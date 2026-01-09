@@ -591,3 +591,152 @@ margin-top: 180px;
 margin-left: 120px;
 }
 }
+
+/* ========================================
+   GLOBAL ROUNDED DESIGN SYSTEM
+   ======================================== */
+
+/* Rounded containers - apply softer corners globally */
+.music-card,
+.track-card,
+.card,
+.playlist-card,
+.album-card,
+.genre-card,
+.recommendation-card,
+.lists-panel,
+.lists-nav,
+.library-container,
+.upload-container,
+.login-container,
+.register-container,
+.profile-container {
+    border-radius: 20px !important;
+}
+
+/* Smaller elements get smaller radius */
+.post-media-wrap,
+.track-cover,
+.card-cover,
+.story-avatar,
+.comment-avatar {
+    border-radius: 16px;
+}
+
+/* Buttons and inputs */
+button,
+input,
+select,
+textarea,
+.btn,
+.search-bar,
+.form-control {
+    border-radius: 12px;
+}
+
+/* Pills and tags */
+.tab,
+.genre-tag,
+.badge {
+    border-radius: 20px;
+}
+
+/* ========================================
+   DECORATIVE SIDE LINES
+   ======================================== */
+
+/* Feed container with side lines */
+.feed-container {
+    position: relative;
+}
+
+.feed-container::before,
+.feed-container::after {
+    content: '';
+    position: fixed;
+    top: 80px;
+    bottom: 100px;
+    width: 1px;
+    background: linear-gradient(180deg, 
+        transparent 0%, 
+        rgba(247, 33, 147, 0.3) 10%, 
+        rgba(247, 33, 147, 0.15) 50%,
+        rgba(0, 255, 208, 0.15) 80%,
+        transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.feed-container::before {
+    left: calc(50% - 360px);
+}
+
+.feed-container::after {
+    right: calc(50% - 360px);
+}
+
+/* Library/Koleqtion side lines */
+.library-container {
+    position: relative;
+}
+
+.library-container::before,
+.library-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, 
+        rgba(0, 255, 208, 0.2) 0%, 
+        rgba(247, 33, 147, 0.15) 50%,
+        rgba(0, 255, 208, 0.1) 100%);
+    pointer-events: none;
+}
+
+.library-container::before {
+    left: -20px;
+}
+
+.library-container::after {
+    right: -20px;
+}
+
+/* Disqo container lines */
+.disqo-container {
+    position: relative;
+}
+
+.disqo-container::before,
+.disqo-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, 
+        rgba(247, 33, 147, 0.2) 0%, 
+        rgba(0, 255, 208, 0.15) 50%,
+        transparent 100%);
+    pointer-events: none;
+}
+
+.disqo-container::before {
+    left: -16px;
+}
+
+.disqo-container::after {
+    right: -16px;
+}
+
+/* Hide side lines on mobile */
+@media (max-width: 768px) {
+    .feed-container::before,
+    .feed-container::after,
+    .library-container::before,
+    .library-container::after,
+    .disqo-container::before,
+    .disqo-container::after {
+        display: none;
+    }
+}
