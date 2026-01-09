@@ -104,13 +104,120 @@ function setEmpty(el, text) {
     el.innerHTML = `<div class="empty-state">${text}</div>`;
 }
 
+function ensurePlaylistExplorer() {
+    const existing = document.getElementById('playlistExplorer');
+    if (existing) return existing;
+    return null;
+}
+
+function showPlaylistExplorer() {
+    const el = ensurePlaylistExplorer();
+    if (!el) return;
+    el.style.display = '';
+}
+
+function hidePlaylistExplorer() {
+    const el = ensurePlaylistExplorer();
+    if (!el) return;
+    el.style.display = 'none';
+}
+
+async function openPlaylist(playlist) {
+    const token = getAuthToken();
+    if (!token) {
+        if (isSpaMode()) {
+            window.location.hash = '#/login';
+        } else {
+            window.location.href = 'login.html';
+        }
+        return;
+    }
+
+    const explorer = ensurePlaylistExplorer();
+    if (!explorer) {
+        return;
+    }
+
+    const titleEl = explorer.querySelector('#playlistExplorerTitle');
+    const tracksEl = explorer.querySelector('#playlistExplorerTracks');
+    const statusEl = explorer.querySelector('#playlistExplorerStatus');
+    if (titleEl) titleEl.textContent = (playlist && playlist.name) ? playlist.name : 'Playlist';
+    if (statusEl) statusEl.textContent = 'Loading...';
+    if (tracksEl) tracksEl.innerHTML = '';
+    showPlaylistExplorer();
+
+    try {
+        const tracks = await apiFetchJson(`/playlists/${encodeURIComponent(playlist.id)}/tracks`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }, function (d) {
+            return Array.isArray(d);
+        });
+
+        if (statusEl) statusEl.textContent = '';
+        if (!tracksEl) return;
+
+        if (!tracks || tracks.length === 0) {
+            tracksEl.innerHTML = '<div class="empty-state">No tracks in this playlist yet.</div>';
+            return;
+        }
+
+        tracks.forEach(function (t) {
+            const row = document.createElement('div');
+            row.className = 'folder-track-row';
+            const safeTitle = (t && t.title) ? String(t.title) : 'Untitled';
+            const safeArtist = (t && t.artist_name) ? String(t.artist_name) : '';
+            row.innerHTML = `
+                <button class="folder-play-btn" type="button" data-track-id="${t.id}">Play</button>
+                <div class="folder-track-meta">
+                    <div class="folder-track-title">${safeTitle}</div>
+                    <div class="folder-track-artist">${safeArtist}</div>
+                </div>
+            `;
+            row.querySelector('.folder-play-btn').addEventListener('click', function () {
+                try {
+                    if (typeof window.playTrack === 'function') {
+                        window.playTrack(t.id);
+                    }
+                } catch (_) {
+                }
+            });
+            tracksEl.appendChild(row);
+        });
+    } catch (e) {
+        console.error(e);
+        if (statusEl) statusEl.textContent = 'Failed to load tracks.';
+        if (tracksEl) tracksEl.innerHTML = '';
+    }
+}
+
+function bindPlaylistExplorerUi() {
+    const explorer = ensurePlaylistExplorer();
+    if (!explorer) return;
+
+    const closeBtn = explorer.querySelector('#playlistExplorerClose');
+    if (closeBtn && !closeBtn.dataset.bound) {
+        closeBtn.dataset.bound = '1';
+        closeBtn.addEventListener('click', function () {
+            hidePlaylistExplorer();
+        });
+    }
+}
+
 function renderPlaylistCard(p) {
     const coverFallback = isSpaMode() ? 'images/juke.png' : '../images/juke.png';
     const coverUrl = resolveAssetUrl(p.cover_image_url, coverFallback);
     const owner = p.owner_username ? `by ${p.owner_username}` : '';
 
     const div = document.createElement('div');
-    div.className = 'card';
+    div.className = 'card playlist-card';
+    div.tabIndex = 0;
+    div.setAttribute('role', 'button');
+    try {
+        div.dataset.playlistId = p.id;
+    } catch (_) {
+    }
     div.innerHTML = `
         <div class="card-cover">
             <img src="${coverUrl}" alt="${p.name}">
@@ -124,6 +231,19 @@ function renderPlaylistCard(p) {
             </div>
         </div>
     `;
+
+    div.addEventListener('click', function () {
+        bindPlaylistExplorerUi();
+        openPlaylist(p);
+    });
+    div.addEventListener('keydown', function (e) {
+        if (!e) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            bindPlaylistExplorerUi();
+            openPlaylist(p);
+        }
+    });
     return div;
 }
 
@@ -163,6 +283,8 @@ async function loadLists() {
     const myPlaylistsEl = document.getElementById('myPlaylists');
     const curatedEl = document.getElementById('curatedPlaylists');
     const likedEl = document.getElementById('likedTracks');
+
+    bindPlaylistExplorerUi();
 
     setEmpty(myPlaylistsEl, 'Loading...');
     setEmpty(curatedEl, 'Loading...');

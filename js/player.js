@@ -88,6 +88,9 @@
     var audio = new Audio();
     audio.preload = 'metadata';
 
+    var history = [];
+    var historyIndex = -1;
+
     var state = {
         trackId: null,
         title: 'Not Playing',
@@ -251,6 +254,10 @@
         var artistEl = el.querySelector('.now-playing-artist');
         var playBtn = el.querySelector('#play');
         var playIcon = playBtn ? playBtn.querySelector('i') : null;
+        var prevBtn = el.querySelector('#prev');
+        var nextBtn = el.querySelector('#next');
+        var likeBtn = el.querySelector('.like-btn');
+        var likeIcon = likeBtn ? likeBtn.querySelector('i') : null;
         var currentTimeEl = el.querySelector('.current-time');
         var durationEl = el.querySelector('.duration');
         var progressBar = el.querySelector('.progress-bar');
@@ -314,6 +321,17 @@
 
             syncMuteUi();
 
+            try {
+                if (likeIcon) {
+                    var liked = false;
+                    if (state.trackId && typeof window.isTrackLiked === 'function') {
+                        liked = !!window.isTrackLiked(state.trackId);
+                    }
+                    likeIcon.className = liked ? 'fas fa-heart' : 'far fa-heart';
+                }
+            } catch (_) {
+            }
+
             if (playIcon) {
                 playIcon.className = state.isPlaying ? 'fas fa-pause' : 'fas fa-play';
             }
@@ -335,6 +353,42 @@
             if (playBtn) {
                 playBtn.addEventListener('click', async function () {
                     togglePlay();
+                });
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function () {
+                    try {
+                        if (historyIndex > 0) {
+                            historyIndex -= 1;
+                            playTrackById(history[historyIndex]);
+                        }
+                    } catch (_) {
+                    }
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function () {
+                    try {
+                        if (historyIndex >= 0 && historyIndex < history.length - 1) {
+                            historyIndex += 1;
+                            playTrackById(history[historyIndex]);
+                        }
+                    } catch (_) {
+                    }
+                });
+            }
+
+            if (likeBtn) {
+                likeBtn.addEventListener('click', function () {
+                    try {
+                        if (!state.trackId) return;
+                        if (typeof window.likeTrack === 'function') {
+                            window.likeTrack(state.trackId);
+                        }
+                    } catch (_) {
+                    }
                 });
             }
 
@@ -387,6 +441,16 @@
             } catch (_) {
             }
         }
+
+        window.addEventListener('tracks:liked-changed', function (e) {
+            try {
+                if (!e || !e.detail) return;
+                if (!state.trackId) return;
+                if (String(e.detail.trackId) !== String(state.trackId)) return;
+                render();
+            } catch (_) {
+            }
+        });
 
         audio.addEventListener('loadedmetadata', function () {
             if (state.currentTime && state.currentTime > 0 && Number.isFinite(audio.duration)) {
@@ -442,6 +506,17 @@
         state.coverUrl = resolveAssetUrl(track.cover_image_url) || getImageUrl('images/juke.png');
         state.audioUrl = audioUrl;
         state.currentTime = 0;
+
+        try {
+            if (historyIndex >= 0 && historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+            if (!history.length || String(history[history.length - 1]) !== String(track.id)) {
+                history.push(track.id);
+            }
+            historyIndex = history.length - 1;
+        } catch (_) {
+        }
 
         audio.src = audioUrl;
         audio.currentTime = 0;

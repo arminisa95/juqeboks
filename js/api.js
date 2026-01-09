@@ -87,6 +87,14 @@ async function apiFetchJson(path, options, validateOkData) {
 
 let likedTrackIds = new Set();
 
+window.isTrackLiked = function (trackId) {
+    try {
+        return likedTrackIds.has(trackId);
+    } catch (_) {
+        return false;
+    }
+};
+
 function isSpaMode() {
     return !!(document.body && document.body.dataset && document.body.dataset.spa);
 }
@@ -542,11 +550,17 @@ async function likeTrack(trackId) {
         if (data && data.liked === false) likedTrackIds.delete(trackId);
 
         try {
+            window.dispatchEvent(new CustomEvent('tracks:liked-changed', {
+                detail: { trackId: trackId, liked: !!(data && data.liked) }
+            }));
+        } catch (_) {
+        }
+
+        try {
             document.querySelectorAll(`.like-btn[data-track-id="${CSS.escape(String(trackId))}"]`).forEach((btn) => {
-                btn.classList.toggle('liked', !!data.liked);
                 const icon = btn.querySelector('i');
                 if (icon) {
-                    icon.className = (data.liked ? 'fas' : 'far') + ' fa-heart';
+                    icon.className = data.liked ? 'fas fa-heart' : 'far fa-heart';
                 }
             });
         } catch (_) {

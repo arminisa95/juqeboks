@@ -51,6 +51,15 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.playlist-card {
+    cursor: pointer;
+}
+
+.playlist-card:focus {
+    outline: 2px solid rgba(0, 255, 208, 0.8);
+    outline-offset: 2px;
+}
+
 .card:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
@@ -105,6 +114,110 @@
     color: #a0a0a0;
     font-size: 0.95rem;
     padding: 0.5rem 0;
+}
+
+.playlist-explorer {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 9999;
+}
+
+.folder-window {
+    width: min(920px, 96vw);
+    height: min(560px, 78vh);
+    background: #c0c0c0;
+    border: 2px solid #fff;
+    border-right-color: #404040;
+    border-bottom-color: #404040;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+}
+
+.folder-titlebar {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    color: #fff;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 14px;
+}
+
+.folder-title {
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.folder-close {
+    width: 28px;
+    height: 22px;
+    background: #c0c0c0;
+    border: 2px solid #fff;
+    border-right-color: #404040;
+    border-bottom-color: #404040;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.folder-toolbar {
+    background: #dcdcdc;
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #808080;
+    padding: 6px 8px;
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 12px;
+    color: #111;
+}
+
+.folder-tracks {
+    background: #fff;
+    border-top: 1px solid #808080;
+    padding: 8px;
+    overflow: auto;
+    flex: 1;
+}
+
+.folder-track-row {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 6px;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.folder-play-btn {
+    height: 28px;
+    background: #c0c0c0;
+    border: 2px solid #fff;
+    border-right-color: #404040;
+    border-bottom-color: #404040;
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.folder-track-title {
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 13px;
+    color: #111;
+    font-weight: 700;
+}
+
+.folder-track-artist {
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 12px;
+    color: #444;
+    margin-top: 2px;
 }
 
 @media (max-width: 768px) {
