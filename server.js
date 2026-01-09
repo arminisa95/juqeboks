@@ -589,6 +589,162 @@ app.post('/api/users/:id/like', authenticateToken, async (req, res) => {
 
 // ==================== MUSIC ENDPOINTS ====================
 
+app.get('/api/playlists/my', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const playlists = await db.getAll(`
+            SELECT id, name, description, cover_image_url, is_public, track_count, created_at
+            FROM playlists
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            LIMIT 100
+        `, [userId]);
+
+        res.json(playlists || []);
+    } catch (error) {
+        console.error('Get my playlists error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/playlists', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const body = (req && req.body && typeof req.body === 'object') ? req.body : {};
+        const name = (typeof body.name === 'string') ? body.name.trim() : '';
+        const description = (typeof body.description === 'string') ? body.description.trim() : null;
+        const isPublic = !!(body.is_public || body.isPublic);
+
+        if (!name) {
+            return res.status(400).json({ error: 'Playlist name is required' });
+        }
+
+        const created = await db.insert('playlists', {
+            user_id: userId,
+            name,
+            description,
+            is_public: isPublic,
+            track_count: 0
+        });
+
+        res.json(created);
+    } catch (error) {
+        console.error('Create playlist error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/playlists/curated', async (req, res) => {
+    try {
+        const curated = await db.getAll(`
+            SELECT id, name, description, cover_image_url, is_public, track_count, created_at
+            FROM playlists
+            WHERE is_public = true
+            ORDER BY track_count DESC, created_at DESC
+            LIMIT 50
+        `);
+        res.json(curated || []);
+    } catch (error) {
+        console.error('Get curated playlists error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/playlists/:id/tracks', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id: playlistId } = req.params;
+        const body = (req && req.body && typeof req.body === 'object') ? req.body : {};
+        const trackId = body.track_id || body.trackId;
+
+        if (!isUuid(playlistId)) {
+            return res.status(400).json({ error: 'Invalid playlist ID' });
+        }
+        if (!isUuid(trackId)) {
+            return res.status(400).json({ error: 'Invalid track ID' });
+        }
+
+        const playlist = await db.get('SELECT id, user_id FROM playlists WHERE id = $1', [playlistId]);
+        if (!playlist) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+        if (!playlist.user_id || String(playlist.user_id) !== String(userId)) {
+            return res.status(403).json({ error: 'Not allowed' });
+        }
+
+        const track = await db.get('SELECT id FROM tracks WHERE id = $1', [trackId]);
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        await db.query(
+            'INSERT INTO playlist_tracks (playlist_id, track_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+            [playlistId, trackId]
+        );
+
+        const countRow = await db.get(
+            'SELECT COUNT(*)::int as count FROM playlist_tracks WHERE playlist_id = $1',
+            [playlistId]
+        );
+        const count = countRow ? (countRow.count || 0) : 0;
+        await db.query('UPDATE playlists SET track_count = $2 WHERE id = $1', [playlistId, count]);
+
+        res.json({ success: true, track_count: count });
+    } catch (error) {
+        console.error('Add track to playlist error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/playlists/:id/tracks', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id: playlistId } = req.params;
+
+        if (!isUuid(playlistId)) {
+            return res.status(400).json({ error: 'Invalid playlist ID' });
+        }
+
+        const playlist = await db.get('SELECT id, user_id, is_public FROM playlists WHERE id = $1', [playlistId]);
+        if (!playlist) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+
+        const canView = !!playlist.is_public || (playlist.user_id && String(playlist.user_id) === String(userId));
+        if (!canView) {
+            return res.status(403).json({ error: 'Not allowed' });
+        }
+
+        const tracks = await db.getAll(`
+            SELECT t.*, 
+                   a.name as artist_name,
+                   al.title as album_title,
+                   al.cover_image_url as album_cover_image_url,
+                   u.username as uploader_username
+            FROM playlist_tracks pt
+            JOIN tracks t ON pt.track_id = t.id
+            JOIN artists a ON t.artist_id = a.id
+            LEFT JOIN albums al ON t.album_id = al.id
+            LEFT JOIN users u ON t.uploader_id = u.id
+            WHERE pt.playlist_id = $1
+            ORDER BY pt.added_at DESC
+            LIMIT 500
+        `, [playlistId]);
+
+        const normalized = (tracks || []).map((t) => {
+            const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
+            const coverUrl = t.cover_image_url || t.album_cover_image_url || null;
+            const { file_path, album_cover_image_url, ...rest } = t;
+            return { ...rest, audio_url: audioUrl, cover_image_url: coverUrl };
+        });
+
+        res.json(normalized);
+    } catch (error) {
+        console.error('Get playlist tracks error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Get all artists
 app.get('/api/artists', async (req, res) => {
     try {
