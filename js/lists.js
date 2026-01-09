@@ -104,6 +104,59 @@ function setEmpty(el, text) {
     el.innerHTML = `<div class="empty-state">${text}</div>`;
 }
 
+function safeJsonString(v) {
+    try {
+        return JSON.stringify(v);
+    } catch (_) {
+        return 'null';
+    }
+}
+
+function ensureLikedPlaylistsHost(likedEl) {
+    if (!likedEl) return null;
+    var host = likedEl.querySelector('.liked-playlists-host');
+    if (host) return host;
+    host = document.createElement('div');
+    host.className = 'liked-playlists-host';
+    likedEl.insertAdjacentElement('beforebegin', host);
+    return host;
+}
+
+async function loadLikedPlaylistsInto(likedTracksEl) {
+    const token = getAuthToken();
+    if (!token) return;
+    if (!likedTracksEl) return;
+
+    var host = ensureLikedPlaylistsHost(likedTracksEl);
+    if (!host) return;
+    host.innerHTML = '<div class="lists-subsection-title">Liked playlists</div><div class="cards-grid" id="likedPlaylistsGrid"></div>';
+    var grid = host.querySelector('#likedPlaylistsGrid');
+    if (!grid) return;
+
+    try {
+        const liked = await apiFetchJson('/playlists/liked', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }, function (d) {
+            return Array.isArray(d);
+        });
+
+        grid.innerHTML = '';
+        if (!liked || liked.length === 0) {
+            grid.innerHTML = '<div class="empty-state">No liked playlists yet.</div>';
+            return;
+        }
+
+        liked.forEach(function (p) {
+            grid.appendChild(renderPlaylistCard(p));
+        });
+    } catch (e) {
+        console.error(e);
+        grid.innerHTML = '<div class="empty-state">Failed to load liked playlists.</div>';
+    }
+}
+
 function getListsUi() {
     return {
         shell: document.getElementById('listsShell'),
@@ -163,6 +216,99 @@ async function openPlaylist(playlist) {
     if (ui.playlistTitle) ui.playlistTitle.textContent = (playlist && playlist.name) ? playlist.name : 'Playlist';
     if (ui.playlistStatus) ui.playlistStatus.textContent = 'Loading...';
     if (ui.playlistTracks) ui.playlistTracks.innerHTML = '';
+
+    try {
+        const header = ui.playlistPanel.querySelector('.lists-panel-header');
+        if (header) {
+            let actions = header.querySelector('.playlist-actions');
+            if (!actions) {
+                actions = document.createElement('div');
+                actions.className = 'playlist-actions';
+                header.appendChild(actions);
+            }
+            actions.innerHTML = `
+                <button class="playlist-action-btn" type="button" data-action="like">Like</button>
+                <button class="playlist-action-btn" type="button" data-action="comment">Comment</button>
+                <button class="playlist-action-btn danger" type="button" data-action="delete">Delete</button>
+            `;
+
+            const likeBtn = actions.querySelector('[data-action="like"]');
+            const commentBtn = actions.querySelector('[data-action="comment"]');
+            const delBtn = actions.querySelector('[data-action="delete"]');
+
+            if (likeBtn && !likeBtn.dataset.bound) {
+                likeBtn.dataset.bound = '1';
+                likeBtn.addEventListener('click', async function () {
+                    try {
+                        if (!playlist || !playlist.id) return;
+                        const data = await apiFetchJson(`/playlists/${encodeURIComponent(playlist.id)}/like`, {
+                            method: 'POST',
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
+                        }, function (d) {
+                            return !!d && typeof d === 'object' && typeof d.liked === 'boolean';
+                        });
+                        likeBtn.textContent = (data && data.liked) ? 'Liked' : 'Like';
+                    } catch (e) {
+                        console.error(e);
+                        if (ui.playlistStatus) ui.playlistStatus.textContent = 'Like failed.';
+                    }
+                });
+            }
+
+            if (commentBtn && !commentBtn.dataset.bound) {
+                commentBtn.dataset.bound = '1';
+                commentBtn.addEventListener('click', async function () {
+                    try {
+                        if (!playlist || !playlist.id) return;
+                        const text = window.prompt('Comment on this playlist:');
+                        if (!text) return;
+                        await apiFetchJson(`/playlists/${encodeURIComponent(playlist.id)}/comments`, {
+                            method: 'POST',
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: safeJsonString({ body: text })
+                        }, function (d) {
+                            return !!d && typeof d === 'object';
+                        });
+                        if (ui.playlistStatus) ui.playlistStatus.textContent = 'Comment posted.';
+                    } catch (e) {
+                        console.error(e);
+                        if (ui.playlistStatus) ui.playlistStatus.textContent = 'Comment failed.';
+                    }
+                });
+            }
+
+            if (delBtn && !delBtn.dataset.bound) {
+                delBtn.dataset.bound = '1';
+                delBtn.addEventListener('click', async function () {
+                    try {
+                        if (!playlist || !playlist.id) return;
+                        const ok = window.confirm('Delete this playlist?');
+                        if (!ok) return;
+                        await apiFetchJson(`/playlists/${encodeURIComponent(playlist.id)}`, {
+                            method: 'DELETE',
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
+                        }, function (d) {
+                            return !!d && typeof d === 'object' && (d.success === true || d.success === undefined);
+                        });
+                        if (ui.playlistStatus) ui.playlistStatus.textContent = 'Deleted.';
+                        showPanel('lists');
+                        loadLists();
+                    } catch (e) {
+                        console.error(e);
+                        if (ui.playlistStatus) ui.playlistStatus.textContent = 'Delete failed.';
+                    }
+                });
+            }
+        }
+    } catch (_) {
+    }
 
     try {
         ui.playlistPanel.style.display = '';
@@ -381,6 +527,11 @@ async function loadLists() {
             setEmpty(likedEl, 'No liked tracks yet.');
         } else {
             favorites.forEach((t) => likedEl.appendChild(renderTrackCard(t)));
+        }
+
+        try {
+            await loadLikedPlaylistsInto(likedEl);
+        } catch (_) {
         }
     } catch (e) {
         console.error(e);

@@ -210,6 +210,21 @@ async function initializeDatabase() {
                 liked_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS playlist_likes (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                playlist_id UUID NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS playlist_comments (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                playlist_id UUID NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                body TEXT NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
         `;
 
         await db.query(schema);
@@ -247,6 +262,20 @@ async function initializeDatabase() {
                 ) THEN
                     ALTER TABLE user_likes
                     ADD CONSTRAINT user_likes_unique UNIQUE(liker_id, liked_user_id);
+                END IF;
+            END $$;
+        `);
+
+        await db.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM pg_constraint
+                    WHERE conname = 'playlist_likes_unique'
+                ) THEN
+                    ALTER TABLE playlist_likes
+                    ADD CONSTRAINT playlist_likes_unique UNIQUE(user_id, playlist_id);
                 END IF;
             END $$;
         `);
@@ -664,6 +693,170 @@ app.get('/api/playlists/public', async (req, res) => {
         res.json(publicPlaylists || []);
     } catch (error) {
         console.error('Get public playlists error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/playlists/liked', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const playlists = await db.getAll(`
+            SELECT p.id, p.name, p.description, p.cover_image_url, p.is_public, p.track_count, p.created_at,
+                   u.username as owner_username
+            FROM playlist_likes pl
+            JOIN playlists p ON pl.playlist_id = p.id
+            LEFT JOIN users u ON p.user_id = u.id
+            WHERE pl.user_id = $1
+            ORDER BY pl.created_at DESC
+            LIMIT 100
+        `, [userId]);
+        res.json(playlists || []);
+    } catch (error) {
+        console.error('Get liked playlists error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/playlists/:id/like', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id: playlistId } = req.params;
+
+        if (!isUuid(playlistId)) {
+            return res.status(400).json({ error: 'Invalid playlist ID' });
+        }
+
+        const playlist = await db.get('SELECT id, user_id, is_public FROM playlists WHERE id = $1', [playlistId]);
+        if (!playlist) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+
+        const canView = !!playlist.is_public || (playlist.user_id && String(playlist.user_id) === String(userId));
+        if (!canView) {
+            return res.status(403).json({ error: 'Not allowed' });
+        }
+
+        const existing = await db.get(
+            'SELECT id FROM playlist_likes WHERE user_id = $1 AND playlist_id = $2',
+            [userId, playlistId]
+        );
+
+        if (existing) {
+            await db.query('DELETE FROM playlist_likes WHERE user_id = $1 AND playlist_id = $2', [userId, playlistId]);
+        } else {
+            await db.query('INSERT INTO playlist_likes (user_id, playlist_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [userId, playlistId]);
+        }
+
+        const likeCountRow = await db.get(
+            'SELECT COUNT(*)::int as count FROM playlist_likes WHERE playlist_id = $1',
+            [playlistId]
+        );
+
+        res.json({
+            success: true,
+            liked: !existing,
+            like_count: likeCountRow ? (likeCountRow.count || 0) : 0
+        });
+    } catch (error) {
+        console.error('Like playlist error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/playlists/:id/comments', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id: playlistId } = req.params;
+
+        if (!isUuid(playlistId)) {
+            return res.status(400).json({ error: 'Invalid playlist ID' });
+        }
+
+        const playlist = await db.get('SELECT id, user_id, is_public FROM playlists WHERE id = $1', [playlistId]);
+        if (!playlist) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+
+        const canView = !!playlist.is_public || (playlist.user_id && String(playlist.user_id) === String(userId));
+        if (!canView) {
+            return res.status(403).json({ error: 'Not allowed' });
+        }
+
+        const comments = await db.getAll(`
+            SELECT pc.id, pc.playlist_id, pc.user_id, pc.body, pc.created_at,
+                   u.username as username
+            FROM playlist_comments pc
+            LEFT JOIN users u ON pc.user_id = u.id
+            WHERE pc.playlist_id = $1
+            ORDER BY pc.created_at DESC
+            LIMIT 100
+        `, [playlistId]);
+        res.json(comments || []);
+    } catch (error) {
+        console.error('Get playlist comments error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/playlists/:id/comments', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id: playlistId } = req.params;
+        const body = (req && req.body && typeof req.body === 'object') ? req.body : {};
+        const text = (typeof body.body === 'string') ? body.body.trim() : '';
+
+        if (!isUuid(playlistId)) {
+            return res.status(400).json({ error: 'Invalid playlist ID' });
+        }
+        if (!text) {
+            return res.status(400).json({ error: 'Comment is required' });
+        }
+
+        const playlist = await db.get('SELECT id, user_id, is_public FROM playlists WHERE id = $1', [playlistId]);
+        if (!playlist) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+
+        const canView = !!playlist.is_public || (playlist.user_id && String(playlist.user_id) === String(userId));
+        if (!canView) {
+            return res.status(403).json({ error: 'Not allowed' });
+        }
+
+        const created = await db.insert('playlist_comments', {
+            playlist_id: playlistId,
+            user_id: userId,
+            body: text
+        });
+        res.json(created);
+    } catch (error) {
+        console.error('Create playlist comment error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.delete('/api/playlists/:id', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const isAdmin = !!(req.user && req.user.is_admin);
+        const { id: playlistId } = req.params;
+
+        if (!isUuid(playlistId)) {
+            return res.status(400).json({ error: 'Invalid playlist ID' });
+        }
+
+        const playlist = await db.get('SELECT id, user_id FROM playlists WHERE id = $1', [playlistId]);
+        if (!playlist) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+
+        if (!isAdmin && (!playlist.user_id || String(playlist.user_id) !== String(userId))) {
+            return res.status(403).json({ error: 'Not allowed' });
+        }
+
+        await db.query('DELETE FROM playlists WHERE id = $1', [playlistId]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete playlist error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

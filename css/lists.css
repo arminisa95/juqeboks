@@ -274,10 +274,47 @@
     width: 44px;
     height: 36px;
     border-radius: 8px;
-    border: 1px solid rgba(0, 255, 208, 0.38);
-    background: rgba(0, 255, 208, 0.14);
+    border: 1px solid rgba(247, 33, 147, 0.65);
+    background: rgba(247, 33, 147, 0.16);
     color: #fff;
     cursor: pointer;
+}
+
+.lists-track-play:hover {
+    background: rgba(247, 33, 147, 0.22);
+}
+
+.lists-subsection-title {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0.25rem 0 0.75rem;
+}
+
+.playlist-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.playlist-action-btn {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.18);
+    color: #fff;
+    border-radius: 8px;
+    padding: 0.45rem 0.6rem;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.playlist-action-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.playlist-action-btn.danger {
+    border-color: rgba(247, 33, 147, 0.45);
+    color: #F72193;
 }
 
 .lists-track-meta {
