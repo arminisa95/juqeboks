@@ -735,6 +735,40 @@ async function loadLists() {
     }
 }
 
+async function createPlaylist(name) {
+    try {
+        const token = getAuthToken();
+        if (!token) {
+            alert('Please login to create a playlist');
+            return;
+        }
+
+        const response = await apiFetchJson('/playlists', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                name: name,
+                description: ''
+            })
+        });
+
+        if (response && response.id) {
+            console.log('Playlist created successfully:', response);
+            // Reload the lists to show the new playlist
+            loadLists();
+        } else {
+            console.error('Failed to create playlist:', response);
+            alert('Failed to create playlist');
+        }
+    } catch (error) {
+        console.error('Error creating playlist:', error);
+        alert('Error creating playlist');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (isSpaMode()) return;
     if (typeof isLoggedIn === 'function' && !isLoggedIn()) {
@@ -747,15 +781,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add event listener for add playlist button
     const addPlaylistBtn = document.getElementById('addPlaylistBtn');
     if (addPlaylistBtn) {
+        console.log('Add playlist button found, binding click event');
         addPlaylistBtn.addEventListener('click', () => {
+            console.log('Add playlist button clicked');
             const name = prompt('Enter playlist name:');
             if (!name || !name.trim()) return;
             
-            createPlaylist(name.trim());
+            console.log('Creating playlist:', name.trim());
+            if (typeof createPlaylist === 'function') {
+                createPlaylist(name.trim());
+            } else {
+                console.error('createPlaylist function not found');
+            }
         });
+    } else {
+        console.log('Add playlist button not found');
     }
 });
 
 window.JukeLists = {
-    loadLists
+    loadLists,
+    createPlaylist
 };
+
+window.createPlaylist = createPlaylist;

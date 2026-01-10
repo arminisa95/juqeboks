@@ -534,13 +534,13 @@
 
 /* Lists Add Button */
 .lists-add-btn {
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: rgba(0, 180, 150, 0.92);
     border: none;
     color: #fff;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     cursor: pointer;
     display: flex;
     align-items: center;

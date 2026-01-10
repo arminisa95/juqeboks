@@ -269,14 +269,21 @@
             setTimeout(() => {
                 const addPlaylistBtn = document.getElementById('addPlaylistBtn');
                 if (addPlaylistBtn) {
+                    console.log('SPA: Add playlist button found, binding click event');
                     addPlaylistBtn.addEventListener('click', () => {
+                        console.log('SPA: Add playlist button clicked');
                         const name = prompt('Enter playlist name:');
                         if (!name || !name.trim()) return;
                         
+                        console.log('SPA: Creating playlist:', name.trim());
                         if (typeof createPlaylist === 'function') {
                             createPlaylist(name.trim());
+                        } else {
+                            console.error('SPA: createPlaylist function not found');
                         }
                     });
+                } else {
+                    console.log('SPA: Add playlist button not found');
                 }
                 
                 // Ensure lists panel is shown by default
