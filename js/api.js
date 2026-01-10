@@ -578,6 +578,44 @@ async function renderStoriesBar() {
 
                 var activeTrackId = null;
 
+                function getActiveIndex() {
+                    try {
+                        if (!u || !Array.isArray(u.tracks) || !activeTrackId) return -1;
+                        var idStr = String(activeTrackId);
+                        return (u.tracks || []).findIndex(function (x) { return x && String(x.id) === idStr; });
+                    } catch (_) {
+                        return -1;
+                    }
+                }
+
+                function playStoryTrack(trackObj) {
+                    try {
+                        if (!trackObj) return;
+                        if (window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
+                            window.JukePlayer.playTrack(trackObj, { autoShowVideo: !!trackObj.video_url });
+                            return;
+                        }
+                        if (trackObj && trackObj.id && typeof playTrack === 'function') {
+                            playTrack(String(trackObj.id));
+                        }
+                    } catch (_) {
+                    }
+                }
+
+                function goToIndex(nextIndex) {
+                    try {
+                        if (!u || !Array.isArray(u.tracks)) return;
+                        var idx = Number(nextIndex);
+                        if (!isFinite(idx)) return;
+                        if (idx < 0 || idx >= (u.tracks || []).length) return;
+                        var t = (u.tracks || [])[idx];
+                        if (!t) return;
+                        setActiveTrack(t);
+                        playStoryTrack(t);
+                    } catch (_) {
+                    }
+                }
+
                 function findTrackById(trackId) {
                     try {
                         var idStr = String(trackId);
@@ -616,6 +654,15 @@ async function renderStoriesBar() {
                         var dateTxt = formatTrackDateShort(track);
                         var videoUrl = track && track.video_url ? resolveAssetUrl(track.video_url, '') : '';
 
+                        var idx = -1;
+                        try {
+                            idx = getActiveIndex();
+                        } catch (_) {
+                            idx = -1;
+                        }
+                        var hasPrev = !!(idx > 0);
+                        var hasNext = !!(idx >= 0 && u && u.tracks && (idx < (u.tracks.length - 1)));
+
                         var mediaEl = '';
                         if (videoUrl) {
                             mediaEl = '<video src="' + String(videoUrl).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" playsinline muted autoplay loop></video>';
@@ -624,7 +671,11 @@ async function renderStoriesBar() {
                         }
 
                         mediaHost.innerHTML = '' +
-                            '<div class="juke-story-media-frame">' + mediaEl + '</div>' +
+                            '<div class="juke-story-media-frame">' +
+                            '  <button type="button" class="juke-story-nav juke-story-nav-prev" data-juke-story-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
+                            '  <button type="button" class="juke-story-nav juke-story-nav-next" data-juke-story-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
+                            mediaEl +
+                            '</div>' +
                             '<div class="juke-story-media-meta">' +
                             '  <div style="min-width:0;flex:1;">' +
                             '    <div class="juke-story-media-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
@@ -648,14 +699,7 @@ async function renderStoriesBar() {
                     var initial = (u && u.tracks && u.tracks[0]) ? u.tracks[0] : null;
                     if (initial) {
                         setActiveTrack(initial);
-                        try {
-                            if (window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
-                                window.JukePlayer.playTrack(initial, { autoShowVideo: !!initial.video_url });
-                            } else if (initial && initial.id && typeof playTrack === 'function') {
-                                playTrack(String(initial.id));
-                            }
-                        } catch (_) {
-                        }
+                        playStoryTrack(initial);
                     }
                 } catch (_) {
                 }
@@ -789,6 +833,43 @@ async function renderStoriesBar() {
                     var target = e && e.target ? e.target : null;
                     if (!target) return;
 
+                    var navBtn = null;
+                    try {
+                        navBtn = target.closest ? target.closest('[data-juke-story-nav]') : null;
+                    } catch (_) {
+                        navBtn = null;
+                    }
+                    if (navBtn) {
+                        try {
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                        } catch (_) {
+                        }
+                        try {
+                            if (navBtn.disabled) return;
+                        } catch (_) {
+                        }
+                        var dir = null;
+                        try {
+                            dir = navBtn.getAttribute('data-juke-story-nav');
+                        } catch (_) {
+                            dir = null;
+                        }
+                        var curIdx = -1;
+                        try {
+                            curIdx = getActiveIndex();
+                        } catch (_) {
+                            curIdx = -1;
+                        }
+                        if (dir === 'prev') {
+                            goToIndex(curIdx - 1);
+                            return;
+                        }
+                        if (dir === 'next') {
+                            goToIndex(curIdx + 1);
+                            return;
+                        }
+                    }
+
                     try {
                         if (target.getAttribute && target.getAttribute('data-juke-stories-close') === '1') {
                             close();
@@ -834,20 +915,16 @@ async function renderStoriesBar() {
                             } catch (_) {
                             }
                             try {
-                                if (window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
-                                    var trackObj = null;
-                                    try {
-                                        trackObj = tt2 || findTrackById(tid);
-                                    } catch (_) {
-                                        trackObj = null;
-                                    }
-                                    if (trackObj) {
-                                        window.JukePlayer.playTrack(trackObj, { autoShowVideo: !!trackObj.video_url });
-                                    } else if (typeof playTrack === 'function') {
-                                        playTrack(String(tid));
-                                    }
-                                } else if (typeof playTrack === 'function') {
-                                    playTrack(String(tid));
+                                var trackObj = null;
+                                try {
+                                    trackObj = tt2 || findTrackById(tid);
+                                } catch (_) {
+                                    trackObj = null;
+                                }
+                                if (trackObj) {
+                                    playStoryTrack(trackObj);
+                                } else {
+                                    playStoryTrack({ id: tid });
                                 }
                             } catch (_) {
                             }

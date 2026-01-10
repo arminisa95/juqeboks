@@ -191,6 +191,22 @@
     z-index:2500;
 }
 
+@media (min-width: 769px) {
+    .juke-stories-tray-root{
+        z-index: 950;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        padding-bottom: 18px;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 90px;
+        box-sizing: border-box;
+    }
+}
+
 .juke-stories-tray-backdrop{
     position:absolute;
     inset:0;
@@ -198,6 +214,12 @@
     backdrop-filter:blur(6px);
     opacity: 0;
     transition: opacity 0.22s ease;
+}
+
+@media (min-width: 769px) {
+    .juke-stories-tray-backdrop{
+        bottom: 90px;
+    }
 }
 
 .juke-stories-tray-sheet{
@@ -217,26 +239,22 @@
     transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+@media (min-width: 769px) {
+    .juke-stories-tray-sheet{
+        position: relative;
+        left: auto;
+        bottom: auto;
+        transform: translateY(24px);
+        width: min(720px, calc(100vw - 36px));
+        max-height: min(calc(100vh - 140px), 720px);
+    }
+    .juke-stories-tray-root.open .juke-stories-tray-sheet {
+        transform: translateY(0);
+    }
+}
+
 .juke-stories-tray-root.open .juke-stories-tray-backdrop {
     opacity: 1;
-}
-
-.juke-stories-tray-root.open .juke-stories-tray-sheet {
-    transform: translate(-50%, 0);
-}
-
-.juke-stories-tray-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:12px 14px;
-    border-bottom:1px solid rgba(255,255,255,0.08);
-}
-
-.juke-stories-tray-title{
-    color:#fff;
-    font-weight:800;
-    font-size:0.95rem;
 }
 
 .juke-stories-tray-media{
@@ -249,9 +267,45 @@
     aspect-ratio: 1 / 1;
     border-radius: 14px;
     overflow: hidden;
+    position: relative;
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.10);
     box-shadow: 0 14px 38px rgba(0,0,0,0.45);
+}
+
+.juke-story-nav{
+    position:absolute;
+    top:50%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(0,0,0,0.55);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index: 2;
+}
+
+.juke-story-nav:hover{
+    background: rgba(0,0,0,0.72);
+    border-color: rgba(0,255,208,0.28);
+}
+
+.juke-story-nav:disabled{
+    opacity: 0.35;
+    cursor: default;
+}
+
+.juke-story-nav-prev{
+    left: 10px;
+}
+
+.juke-story-nav-next{
+    right: 10px;
 }
 
 .juke-story-media-frame img,
