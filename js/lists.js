@@ -325,6 +325,16 @@ async function openPlaylist(playlist) {
             return Array.isArray(d);
         });
 
+        // Set contextual queue for prev/next within this playlist
+        try {
+            if (window.JukePlayer && typeof window.JukePlayer.setTrackList === 'function' && Array.isArray(tracks)) {
+                window.JukePlayer.setTrackList(tracks.map(function (t) {
+                    return String(t.id);
+                }));
+            }
+        } catch (_) {
+        }
+
         if (ui.playlistStatus) ui.playlistStatus.textContent = '';
         if (!ui.playlistTracks) return;
 

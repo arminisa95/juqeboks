@@ -346,7 +346,8 @@ var feedState = {
     loading: false,
     done: false,
     bound: false,
-    storiesLoaded: false
+    storiesLoaded: false,
+    trackIds: []
 };
 
 async function renderStoriesBar() {
@@ -419,6 +420,7 @@ async function loadFeedStream(reset) {
         feedState.offset = 0;
         feedState.done = false;
         feedState.storiesLoaded = false;
+        feedState.trackIds = [];
         grid.innerHTML = '';
         renderStoriesBar();
     }
@@ -443,7 +445,24 @@ async function loadFeedStream(reset) {
 
         tracks.forEach(function (t) {
             grid.appendChild(createFeedPostCard(t));
+            try {
+                if (t && t.id != null) {
+                    var idStr = String(t.id);
+                    if (feedState.trackIds.indexOf(idStr) === -1) {
+                        feedState.trackIds.push(idStr);
+                    }
+                }
+            } catch (_) {
+            }
         });
+
+        // Update contextual queue for prev/next
+        try {
+            if (window.JukePlayer && typeof window.JukePlayer.setTrackList === 'function') {
+                window.JukePlayer.setTrackList(feedState.trackIds.slice());
+            }
+        } catch (_) {
+        }
 
         feedState.offset += tracks.length;
     } catch (e) {
