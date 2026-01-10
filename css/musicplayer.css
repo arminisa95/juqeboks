@@ -340,56 +340,55 @@ MUSIC PLAYER - Enhanced Modern Design
     cursor: pointer;
 }
 
-/* Add margin to main content to prevent it from being hidden behind the player */
 main {
-margin-bottom: 100px;
-/* Adjust this value based on your player's height */
+    margin-bottom: 100px;
 }
 
 @media (max-width: 768px) {
-.music-player {
-height: auto;
-min-height: 116px;
-padding: 8px 12px;
-padding-right: 12px;
-flex-wrap: wrap;
-align-items: flex-start;
-gap: 8px;
-opacity: 0.9;
-padding-bottom: calc(8px + env(safe-area-inset-bottom));
-}
+    .music-player {
+        height: auto;
+        min-height: 116px;
+        padding: 8px 12px;
+        padding-right: 12px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 8px;
+        opacity: 0.9;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    }
 
-.music-player .now-playing {
-width: 100%;
-min-width: 0;
-}
+    .music-player .now-playing {
+        width: 100%;
+        min-width: 0;
+    }
 
-.music-player .player-controls {
-width: 100%;
-max-width: none;
-}
+    .music-player .player-controls {
+        width: 100%;
+        max-width: none;
+    }
 
-.music-player .volume-controls {
-display: flex;
-width: auto;
-margin-left: auto;
-gap: 10px;
-align-items: center;
-}
+    .music-player .volume-controls {
+        display: flex;
+        width: auto;
+        margin-left: auto;
+        gap: 10px;
+        align-items: center;
+    }
 
-.music-player .volume-slider-container {
-display: none;
-}
+    .music-player .volume-slider-container {
+        display: none;
+    }
 
-.music-player .control-buttons {
-gap: 12px;
-margin-bottom: 6px;
-}
+    .music-player .control-buttons {
+        gap: 12px;
+        margin-bottom: 6px;
+    }
 
-.music-player .control-btn {
-padding: 10px;
-font-size: 1.1rem;
-}
+    .music-player .control-btn {
+        padding: 10px;
+        font-size: 1.1rem;
+    }
+
     .music-player .play-btn.large {
         width: 44px;
         height: 44px;

@@ -8,7 +8,6 @@ html,
 body {
     width: 100%;
     overflow-x: hidden;
-    /* Prevents horizontal scrollbar */
     margin: 0;
     padding: 0;
 }
@@ -256,21 +255,16 @@ h1,
 h2,
 h3 {
     color: #dbd8d8;
-    text-decoration: blink;
+    text-decoration: none;
     font-weight: 300;
 }
 
 h1 {
-    display: inline-block;
-    /* Changed from flex to inline-block */
+    display: block;
     margin: 0 10px;
-    /* Add some space between the h1 elements */
     font-size: 1.5rem;
-    /* Adjusted size for better appearance */
     color: #dbd8d8;
     font-weight: 400;
-    /* Slightly bolder than default */
-    vertical-align: middle;
 }
 
 .index-btn {
