@@ -612,6 +612,15 @@ function createFeedPostCard(track) {
                     }
                     if (!likedTrackIds.has(track.id)) {
                         likeTrack(String(track.id));
+                        // Immediately update UI for double-tap like
+                        const isLiked = likedTrackIds.has(String(track.id));
+                        if (likeBtn) {
+                            const icon = likeBtn.querySelector('i');
+                            if (icon) {
+                                icon.className = isLiked ? 'fas fa-heart' : 'far fa-heart';
+                            }
+                            likeBtn.classList.toggle('liked', isLiked);
+                        }
                     }
                 } else {
                     playTrack(String(track.id));
@@ -632,6 +641,13 @@ function createFeedPostCard(track) {
             likeBtn.dataset.bound = '1';
             likeBtn.addEventListener('click', function () {
                 likeTrack(String(track.id));
+                // Immediately update this like button UI
+                const isLiked = likedTrackIds.has(String(track.id));
+                const icon = likeBtn.querySelector('i');
+                if (icon) {
+                    icon.className = isLiked ? 'fas fa-heart' : 'far fa-heart';
+                }
+                likeBtn.classList.toggle('liked', isLiked);
             });
         }
         
