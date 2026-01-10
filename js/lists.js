@@ -656,7 +656,7 @@ async function loadLists() {
     const randomEl = document.getElementById('randomPlaylists');
 
     bindListsNavigatorUi();
-    showPanel('liked');
+    showPanel('lists');
 
     setEmpty(myPlaylistsEl, 'Loading...');
     setEmpty(curatedEl, 'Loading...');

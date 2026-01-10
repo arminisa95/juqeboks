@@ -278,6 +278,14 @@
                         }
                     });
                 }
+                
+                // Ensure lists panel is shown by default
+                const listsPanel = document.getElementById('listsPanelLists');
+                const likedPanel = document.getElementById('listsPanelLiked');
+                if (listsPanel && likedPanel) {
+                    listsPanel.style.display = '';
+                    likedPanel.style.display = 'none';
+                }
             }, 100);
         }
 
