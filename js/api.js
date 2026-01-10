@@ -800,6 +800,15 @@ async function likeTrack(trackId) {
         return;
     }
 
+    // Optimistically toggle local state before API
+    const wasLiked = likedTrackIds.has(trackId);
+    const newLiked = !wasLiked;
+    if (newLiked) {
+        likedTrackIds.add(trackId);
+    } else {
+        likedTrackIds.delete(trackId);
+    }
+
     try {
         const data = await apiFetchJson(`/tracks/${encodeURIComponent(trackId)}/like`, {
             method: 'POST',
@@ -810,8 +819,14 @@ async function likeTrack(trackId) {
             return !!d && typeof d === 'object' && !Array.isArray(d) && typeof d.liked === 'boolean';
         });
 
-        if (data && data.liked === true) likedTrackIds.add(trackId);
-        if (data && data.liked === false) likedTrackIds.delete(trackId);
+        // Reconcile with server response if needed
+        if (data && typeof data.liked === 'boolean') {
+            if (data.liked) {
+                likedTrackIds.add(trackId);
+            } else {
+                likedTrackIds.delete(trackId);
+            }
+        }
 
         try {
             window.dispatchEvent(new CustomEvent('tracks:liked-changed', {
@@ -824,12 +839,18 @@ async function likeTrack(trackId) {
             document.querySelectorAll(`.like-btn[data-track-id="${CSS.escape(String(trackId))}"]`).forEach((btn) => {
                 const icon = btn.querySelector('i');
                 if (icon) {
-                    icon.className = data.liked ? 'fas fa-heart' : 'far fa-heart';
+                    icon.className = (data && data.liked) ? 'fas fa-heart' : 'far fa-heart';
                 }
             });
         } catch (_) {
         }
     } catch (e) {
+        // Revert optimistic update on failure
+        if (wasLiked) {
+            likedTrackIds.add(trackId);
+        } else {
+            likedTrackIds.delete(trackId);
+        }
         console.error('Liking track failed:', e);
     }
 }
