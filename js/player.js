@@ -374,7 +374,10 @@
             if (prevBtn) {
                 prevBtn.addEventListener('click', function () {
                     try {
-                        if (historyIndex > 0) {
+                        // Use global track list first, then fall back to history
+                        if (window.JukePlayer && typeof window.JukePlayer.playPrev === 'function') {
+                            window.JukePlayer.playPrev();
+                        } else if (historyIndex > 0) {
                             historyIndex -= 1;
                             playTrackById(history[historyIndex]);
                         }
@@ -386,7 +389,10 @@
             if (nextBtn) {
                 nextBtn.addEventListener('click', function () {
                     try {
-                        if (historyIndex >= 0 && historyIndex < history.length - 1) {
+                        // Use global track list first, then fall back to history
+                        if (window.JukePlayer && typeof window.JukePlayer.playNext === 'function') {
+                            window.JukePlayer.playNext();
+                        } else if (historyIndex >= 0 && historyIndex < history.length - 1) {
                             historyIndex += 1;
                             playTrackById(history[historyIndex]);
                         }
@@ -691,11 +697,244 @@
         }
     });
 
+    // Global track list for prev/next functionality
+    var globalTrackList = [];
+    var globalTrackIndex = -1;
+
+    function setGlobalTrackList(trackIds) {
+        globalTrackList = trackIds || [];
+    }
+
+    function findCurrentTrackIndex() {
+        if (!state.trackId || !globalTrackList.length) return -1;
+        return globalTrackList.findIndex(function(id) {
+            return String(id) === String(state.trackId);
+        });
+    }
+
+    function playPrevTrack() {
+        var idx = findCurrentTrackIndex();
+        if (idx > 0) {
+            playTrackById(globalTrackList[idx - 1]);
+        } else if (historyIndex > 0) {
+            historyIndex -= 1;
+            playTrackById(history[historyIndex]);
+        }
+    }
+
+    function playNextTrack() {
+        var idx = findCurrentTrackIndex();
+        if (idx >= 0 && idx < globalTrackList.length - 1) {
+            playTrackById(globalTrackList[idx + 1]);
+        } else if (historyIndex >= 0 && historyIndex < history.length - 1) {
+            historyIndex += 1;
+            playTrackById(history[historyIndex]);
+        }
+    }
+
+    // Mobile player functions
+    function updateMobilePlayer() {
+        var miniPlayer = document.getElementById('mobileMiniPlayer');
+        var miniCover = document.getElementById('miniCover');
+        var miniTitle = document.getElementById('miniTitle');
+        var miniArtist = document.getElementById('miniArtist');
+        var miniProgress = document.getElementById('miniProgress');
+        var miniPlay = document.getElementById('miniPlay');
+        var miniLike = document.getElementById('miniLike');
+
+        var fsPlayer = document.getElementById('fullscreenPlayer');
+        var fsCover = document.getElementById('fsCover');
+        var fsTitle = document.getElementById('fsTitle');
+        var fsArtist = document.getElementById('fsArtist');
+        var fsProgressFill = document.getElementById('fsProgressFill');
+        var fsCurrentTime = document.getElementById('fsCurrentTime');
+        var fsDuration = document.getElementById('fsDuration');
+        var fsPlay = document.getElementById('fsPlay');
+
+        if (!miniPlayer) return;
+
+        // Show/hide mini player based on track state
+        if (state.trackId && isAuthed()) {
+            miniPlayer.style.display = 'block';
+        } else {
+            miniPlayer.style.display = 'none';
+            return;
+        }
+
+        // Update mini player
+        if (miniCover) miniCover.src = state.coverUrl || getImageUrl('images/juke.png');
+        if (miniTitle) miniTitle.textContent = state.title || 'Not Playing';
+        if (miniArtist) miniArtist.textContent = state.artist || '-';
+
+        // Progress
+        if (miniProgress && Number.isFinite(audio.duration) && audio.duration > 0) {
+            var pct = Math.max(0, Math.min(1, (audio.currentTime || 0) / audio.duration)) * 100;
+            miniProgress.style.width = pct.toFixed(2) + '%';
+        }
+
+        // Play button
+        if (miniPlay) {
+            var icon = miniPlay.querySelector('i');
+            if (icon) icon.className = state.isPlaying ? 'fas fa-pause' : 'fas fa-play';
+        }
+
+        // Like button
+        if (miniLike) {
+            var likeIcon = miniLike.querySelector('i');
+            if (likeIcon && state.trackId && typeof window.isTrackLiked === 'function') {
+                var liked = window.isTrackLiked(state.trackId);
+                likeIcon.className = liked ? 'fas fa-heart' : 'far fa-heart';
+            }
+        }
+
+        // Update fullscreen player
+        if (fsCover) fsCover.src = state.coverUrl || getImageUrl('images/juke.png');
+        if (fsTitle) fsTitle.textContent = state.title || 'Not Playing';
+        if (fsArtist) fsArtist.textContent = state.artist || '-';
+        if (fsCurrentTime) fsCurrentTime.textContent = formatTime(audio.currentTime || 0);
+        if (fsDuration) fsDuration.textContent = formatTime(audio.duration || 0);
+
+        if (fsProgressFill && Number.isFinite(audio.duration) && audio.duration > 0) {
+            var pctFs = Math.max(0, Math.min(1, (audio.currentTime || 0) / audio.duration)) * 100;
+            fsProgressFill.style.width = pctFs.toFixed(2) + '%';
+        }
+
+        if (fsPlay) {
+            var fsIcon = fsPlay.querySelector('i');
+            if (fsIcon) fsIcon.className = state.isPlaying ? 'fas fa-pause' : 'fas fa-play';
+        }
+    }
+
+    function bindMobilePlayer() {
+        var miniPlayer = document.getElementById('mobileMiniPlayer');
+        var miniPlay = document.getElementById('miniPlay');
+        var miniLike = document.getElementById('miniLike');
+        var miniContent = miniPlayer ? miniPlayer.querySelector('.mini-content') : null;
+
+        var fsPlayer = document.getElementById('fullscreenPlayer');
+        var fsClose = document.getElementById('fsClose');
+        var fsPlay = document.getElementById('fsPlay');
+        var fsPrev = document.getElementById('fsPrev');
+        var fsNext = document.getElementById('fsNext');
+        var fsProgressBar = document.getElementById('fsProgressBar');
+
+        if (miniPlay && !miniPlay.dataset.bound) {
+            miniPlay.dataset.bound = '1';
+            miniPlay.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (!state.audioUrl) return;
+                if (audio.paused) {
+                    audio.play().catch(function(){});
+                } else {
+                    audio.pause();
+                }
+            });
+        }
+
+        if (miniLike && !miniLike.dataset.bound) {
+            miniLike.dataset.bound = '1';
+            miniLike.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (state.trackId && typeof window.likeTrack === 'function') {
+                    window.likeTrack(state.trackId);
+                }
+            });
+        }
+
+        // Click on mini player opens fullscreen
+        if (miniContent && !miniContent.dataset.bound) {
+            miniContent.dataset.bound = '1';
+            miniContent.addEventListener('click', function(e) {
+                if (e.target.closest('button')) return;
+                if (fsPlayer) fsPlayer.classList.add('active');
+            });
+        }
+
+        // Fullscreen player controls
+        if (fsClose && !fsClose.dataset.bound) {
+            fsClose.dataset.bound = '1';
+            fsClose.addEventListener('click', function() {
+                if (fsPlayer) fsPlayer.classList.remove('active');
+            });
+        }
+
+        if (fsPlay && !fsPlay.dataset.bound) {
+            fsPlay.dataset.bound = '1';
+            fsPlay.addEventListener('click', function() {
+                if (!state.audioUrl) return;
+                if (audio.paused) {
+                    audio.play().catch(function(){});
+                } else {
+                    audio.pause();
+                }
+            });
+        }
+
+        if (fsPrev && !fsPrev.dataset.bound) {
+            fsPrev.dataset.bound = '1';
+            fsPrev.addEventListener('click', function() {
+                playPrevTrack();
+            });
+        }
+
+        if (fsNext && !fsNext.dataset.bound) {
+            fsNext.dataset.bound = '1';
+            fsNext.addEventListener('click', function() {
+                playNextTrack();
+            });
+        }
+
+        if (fsProgressBar && !fsProgressBar.dataset.bound) {
+            fsProgressBar.dataset.bound = '1';
+            fsProgressBar.addEventListener('click', function(e) {
+                if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+                var rect = fsProgressBar.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var pct = Math.max(0, Math.min(1, x / rect.width));
+                audio.currentTime = pct * audio.duration;
+            });
+        }
+    }
+
+    // Update mobile navigation active state
+    function updateMobileNavActive() {
+        var hash = window.location.hash || '#/feed';
+        var navItems = document.querySelectorAll('.mobile-nav-item');
+        navItems.forEach(function(item) {
+            var nav = item.getAttribute('data-nav');
+            if (hash.includes(nav)) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initOrUpdatePlayer();
+        bindMobilePlayer();
+        updateMobileNavActive();
+
+        // Update mobile player on audio events
+        audio.addEventListener('timeupdate', updateMobilePlayer);
+        audio.addEventListener('play', updateMobilePlayer);
+        audio.addEventListener('pause', updateMobilePlayer);
+        audio.addEventListener('loadedmetadata', updateMobilePlayer);
     });
 
     document.addEventListener('auth:changed', function () {
         initOrUpdatePlayer();
+        updateMobilePlayer();
     });
+
+    window.addEventListener('hashchange', function() {
+        updateMobileNavActive();
+    });
+
+    // Expose for external use
+    window.JukePlayer = window.JukePlayer || {};
+    window.JukePlayer.setTrackList = setGlobalTrackList;
+    window.JukePlayer.playPrev = playPrevTrack;
+    window.JukePlayer.playNext = playNextTrack;
+    window.JukePlayer.updateMobile = updateMobilePlayer;
 })();

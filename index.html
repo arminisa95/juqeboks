@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/login.css">
     <link rel="stylesheet" href="css/register.css">
     <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/mobile.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -419,6 +420,98 @@
     <a href="#/login" class="floating-button">
         <img src="images/U-pink.png" alt="Juke Logo">
     </a>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <a href="#/feed">
+            <img src="images/juqe.png" alt="JUKE" class="mobile-logo">
+        </a>
+        <button class="mobile-user-btn auth-login" onclick="window.location.hash='#/login'">U</button>
+        <button class="mobile-user-btn auth-user" style="display:none;" onclick="window.location.hash='#/profile'">U</button>
+    </div>
+
+    <!-- Mobile Mini Player -->
+    <div class="mobile-mini-player" id="mobileMiniPlayer" style="display:none;">
+        <div class="mini-progress" id="miniProgress"></div>
+        <div class="mini-content">
+            <img src="images/juke.png" alt="Cover" class="mini-cover" id="miniCover">
+            <div class="mini-info">
+                <p class="mini-title" id="miniTitle">Not Playing</p>
+                <p class="mini-artist" id="miniArtist">-</p>
+            </div>
+            <div class="mini-controls">
+                <button class="mini-btn mini-like" id="miniLike" aria-label="Like">
+                    <i class="far fa-heart"></i>
+                </button>
+                <button class="mini-btn mini-play-btn" id="miniPlay" aria-label="Play">
+                    <i class="fas fa-play"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+        <div class="mobile-nav-items">
+            <a href="#/feed" class="mobile-nav-item" data-nav="feed">
+                <i class="fas fa-home"></i>
+                <span>Feed</span>
+            </a>
+            <a href="#/lists" class="mobile-nav-item" data-nav="lists">
+                <i class="fas fa-list"></i>
+                <span>Lists</span>
+            </a>
+            <a href="#/disqo" class="mobile-nav-item" data-nav="disqo">
+                <i class="fas fa-compact-disc"></i>
+                <span>Disqo</span>
+            </a>
+            <a href="#/upload" class="mobile-nav-item" data-nav="upload">
+                <i class="fas fa-upload"></i>
+                <span>Uqload</span>
+            </a>
+            <a href="#/koleqtion" class="mobile-nav-item" data-nav="koleqtion">
+                <i class="fas fa-folder"></i>
+                <span>Koleqtion</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Fullscreen Player -->
+    <div class="fullscreen-player" id="fullscreenPlayer">
+        <div class="fs-header">
+            <button class="fs-close" id="fsClose"><i class="fas fa-chevron-down"></i></button>
+            <div class="fs-title-small">Now Playing</div>
+            <button class="fs-more"><i class="fas fa-ellipsis-h"></i></button>
+        </div>
+        <div class="fs-artwork">
+            <img src="images/juke.png" alt="Album Art" class="fs-cover" id="fsCover">
+        </div>
+        <div class="fs-info">
+            <h2 class="fs-track-title" id="fsTitle">Not Playing</h2>
+            <p class="fs-track-artist" id="fsArtist">-</p>
+        </div>
+        <div class="fs-progress">
+            <div class="fs-progress-bar" id="fsProgressBar">
+                <div class="fs-progress-fill" id="fsProgressFill"></div>
+            </div>
+            <div class="fs-times">
+                <span id="fsCurrentTime">0:00</span>
+                <span id="fsDuration">0:00</span>
+            </div>
+        </div>
+        <div class="fs-controls">
+            <button class="fs-ctrl-btn" id="fsShuffle"><i class="fas fa-random"></i></button>
+            <button class="fs-ctrl-btn fs-prev-btn" id="fsPrev"><i class="fas fa-step-backward"></i></button>
+            <button class="fs-ctrl-btn fs-play-btn" id="fsPlay"><i class="fas fa-play"></i></button>
+            <button class="fs-ctrl-btn fs-next-btn" id="fsNext"><i class="fas fa-step-forward"></i></button>
+            <button class="fs-ctrl-btn" id="fsRepeat"><i class="fas fa-redo"></i></button>
+        </div>
+        <div class="fs-bottom">
+            <button class="fs-bottom-btn" id="fsDevice"><i class="fas fa-mobile-alt"></i></button>
+            <button class="fs-bottom-btn" id="fsShare"><i class="fas fa-share"></i></button>
+            <button class="fs-bottom-btn" id="fsQueue"><i class="fas fa-bars"></i></button>
+        </div>
+    </div>
 
     <div class="music-player"></div>
 </body>

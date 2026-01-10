@@ -473,6 +473,14 @@ function displayFeedTracks(tracks) {
 
     musicGrid.innerHTML = '';
 
+    // Set global track list for prev/next functionality
+    try {
+        if (window.JukePlayer && typeof window.JukePlayer.setTrackList === 'function') {
+            const trackIds = tracks.map(t => String(t.id));
+            window.JukePlayer.setTrackList(trackIds);
+        }
+    } catch (_) {}
+
     tracks.forEach(track => {
         const trackCard = createFeedPostCard(track);
         musicGrid.appendChild(trackCard);
@@ -500,6 +508,14 @@ function displayCollectionTracks(tracks) {
         tracksGrid.innerHTML = '<div class="empty-state">No uploaded tracks yet.</div>';
         return;
     }
+
+    // Set global track list for prev/next functionality
+    try {
+        if (window.JukePlayer && typeof window.JukePlayer.setTrackList === 'function') {
+            const trackIds = tracks.map(t => String(t.id));
+            window.JukePlayer.setTrackList(trackIds);
+        }
+    } catch (_) {}
 
     tracks.forEach(track => {
         const card = createFeedPostCard(track);
