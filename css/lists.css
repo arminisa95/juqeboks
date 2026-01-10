@@ -509,6 +509,19 @@
     background: rgba(255, 255, 255, 0.05);
 }
 
+.lists-track-artist {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
+.lists-track-date {
+    color: rgba(0, 255, 208, 0.65);
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 3px;
+}
+
 .lists-track-duration {
     color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;

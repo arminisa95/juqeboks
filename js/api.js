@@ -110,6 +110,44 @@ function resolveAssetUrl(url, fallback) {
     return url;
 }
 
+function parseTrackDate(track) {
+    try {
+        var v = track && (track.created_at || track.createdAt || track.created);
+        if (!v) return null;
+        var d = new Date(v);
+        if (!d || isNaN(d.getTime())) return null;
+        return d;
+    } catch (_) {
+        return null;
+    }
+}
+
+function formatTrackDateShort(track) {
+    var d = parseTrackDate(track);
+    if (!d) return '';
+    try {
+        var now = new Date();
+        var diffMs = now.getTime() - d.getTime();
+        if (!isFinite(diffMs)) return '';
+        var diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return 'now';
+        if (diffMin < 60) return diffMin + 'm';
+        var diffHr = Math.floor(diffMin / 60);
+        if (diffHr < 24) return diffHr + 'h';
+        var diffDay = Math.floor(diffHr / 24);
+        if (diffDay < 7) return diffDay + 'd';
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch (_) {
+        return '';
+    }
+}
+
+try {
+    window.JukeUi = window.JukeUi || {};
+    window.JukeUi.formatTrackDateShort = formatTrackDateShort;
+} catch (_) {
+}
+
 async function fetchJson(url, options = {}) {
     const response = await fetch(url, options);
     if (!response.ok) {
@@ -387,24 +425,63 @@ async function renderStoriesBar() {
             storiesBar = document.createElement('div');
             storiesBar.className = 'stories-bar';
             const title = feedContainer.querySelector('.feed-title');
-            if (title) {
+            var isMobile = false;
+            try {
+                isMobile = !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+            } catch (_) {
+                isMobile = false;
+            }
+            if (isMobile) {
+                feedContainer.insertAdjacentElement('afterbegin', storiesBar);
+            } else if (title) {
                 title.insertAdjacentElement('afterend', storiesBar);
             } else {
                 feedContainer.insertAdjacentElement('afterbegin', storiesBar);
             }
         }
         
-        const tracks = await apiFetchJson('/tracks/new?limit=20&offset=0', {}, d => Array.isArray(d));
+        const tracks = await apiFetchJson('/tracks/new?limit=40&offset=0', {}, d => Array.isArray(d));
         const uploaders = new Map();
-        
+
         (tracks || []).forEach(t => {
-            if (t.uploader_id && t.uploader_username && !uploaders.has(t.uploader_id)) {
-                uploaders.set(t.uploader_id, {
+            if (!t || !t.uploader_id || !t.uploader_username) return;
+            var key = String(t.uploader_id);
+            if (!uploaders.has(key)) {
+                uploaders.set(key, {
                     id: t.uploader_id,
                     username: t.uploader_username,
                     avatar: t.cover_image_url || null,
-                    hasNew: true
+                    hasNew: true,
+                    tracks: []
                 });
+            }
+            try {
+                uploaders.get(key).tracks.push(t);
+            } catch (_) {
+            }
+        });
+
+        // Sort tracks per uploader by created_at desc, and uploaders by latest track
+        var uploaderArr = Array.from(uploaders.values());
+        uploaderArr.forEach(function (u) {
+            try {
+                u.tracks = (u.tracks || []).slice().sort(function (a, b) {
+                    var da = parseTrackDate(a);
+                    var db = parseTrackDate(b);
+                    var ta = da ? da.getTime() : 0;
+                    var tb = db ? db.getTime() : 0;
+                    return tb - ta;
+                });
+            } catch (_) {
+            }
+        });
+        uploaderArr.sort(function (a, b) {
+            try {
+                var ta = (a && a.tracks && a.tracks[0]) ? (parseTrackDate(a.tracks[0]) || new Date(0)).getTime() : 0;
+                var tb = (b && b.tracks && b.tracks[0]) ? (parseTrackDate(b.tracks[0]) || new Date(0)).getTime() : 0;
+                return tb - ta;
+            } catch (_) {
+                return 0;
             }
         });
         
@@ -413,8 +490,112 @@ async function renderStoriesBar() {
             return;
         }
         
+        function openStoriesTray(u) {
+            try {
+                if (!u) return;
+                var existing = document.getElementById('jukeStoriesTrayRoot');
+                if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+                var root = document.createElement('div');
+                root.id = 'jukeStoriesTrayRoot';
+                root.className = 'juke-stories-tray-root';
+
+                var title = u.username ? ('@' + String(u.username)) : 'Stories';
+                var listHtml = '';
+                (u.tracks || []).slice(0, 20).forEach(function (t) {
+                    var cover = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
+                    var safeTitle = t && t.title ? String(t.title) : 'Untitled';
+                    var safeArtist = (t && (t.artist_name || t.uploader_username)) ? String(t.artist_name || t.uploader_username) : '';
+                    var dateTxt = formatTrackDateShort(t);
+                    listHtml += '' +
+                        '<div class="juke-story-track" role="button" tabindex="0" data-track-id="' + String(t.id) + '">' +
+                        '  <img class="juke-story-track-cover" src="' + cover + '" alt="">' +
+                        '  <div class="juke-story-track-meta">' +
+                        '    <div class="juke-story-track-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                        '    <div class="juke-story-track-sub">' +
+                        '      <span class="juke-story-track-artist">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
+                        (dateTxt ? ('<span class="juke-story-track-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>') : '') +
+                        '    </div>' +
+                        '  </div>' +
+                        '  <button type="button" class="juke-story-track-share" data-share-track-id="' + String(t.id) + '" aria-label="Share"><i class="far fa-paper-plane"></i></button>' +
+                        '</div>';
+                });
+
+                root.innerHTML = '' +
+                    '<div class="juke-stories-tray-backdrop" data-juke-stories-close="1"></div>' +
+                    '<div class="juke-stories-tray-sheet" role="dialog" aria-modal="true">' +
+                    '  <div class="juke-stories-tray-header">' +
+                    '    <div class="juke-stories-tray-title">' + title.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                    '    <button type="button" class="juke-stories-tray-close" data-juke-stories-close="1" aria-label="Close">' +
+                    '      <i class="fas fa-times"></i>' +
+                    '    </button>' +
+                    '  </div>' +
+                    '  <div class="juke-stories-tray-list">' + (listHtml || '<div class="empty-state">No recent tracks</div>') + '</div>' +
+                    '</div>';
+
+                document.body.appendChild(root);
+
+                function close() {
+                    try {
+                        if (root && root.parentNode) root.parentNode.removeChild(root);
+                    } catch (_) {
+                    }
+                }
+
+                root.addEventListener('click', function (e) {
+                    var target = e && e.target ? e.target : null;
+                    if (!target) return;
+
+                    try {
+                        if (target.getAttribute && target.getAttribute('data-juke-stories-close') === '1') {
+                            close();
+                            return;
+                        }
+                    } catch (_) {
+                    }
+
+                    var shareBtn = null;
+                    try {
+                        shareBtn = target.closest ? target.closest('.juke-story-track-share[data-share-track-id]') : null;
+                    } catch (_) {
+                        shareBtn = null;
+                    }
+                    if (shareBtn) {
+                        try {
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                        } catch (_) {
+                        }
+                        var sid = shareBtn.getAttribute('data-share-track-id');
+                        if (sid && typeof window.shareTrackById === 'function') {
+                            try {
+                                var tt = (u.tracks || []).find(function (x) { return String(x.id) === String(sid); });
+                                window.shareTrackById(String(sid), { title: tt && tt.title ? tt.title : '', text: tt && (tt.artist_name || tt.uploader_username) ? (tt.artist_name || tt.uploader_username) : '' });
+                            } catch (_) {
+                            }
+                        }
+                        return;
+                    }
+
+                    var trackBtn = null;
+                    try {
+                        trackBtn = target.closest ? target.closest('.juke-story-track[data-track-id]') : null;
+                    } catch (_) {
+                        trackBtn = null;
+                    }
+                    if (trackBtn) {
+                        var tid = trackBtn.getAttribute('data-track-id');
+                        if (tid && typeof playTrack === 'function') {
+                            playTrack(String(tid));
+                        }
+                        close();
+                    }
+                });
+            } catch (_) {
+            }
+        }
+
         storiesBar.innerHTML = '';
-        uploaders.forEach(u => {
+        uploaderArr.forEach(function (u) {
             const item = document.createElement('div');
             item.className = 'story-item';
             item.innerHTML = `
@@ -424,11 +605,7 @@ async function renderStoriesBar() {
                 <div class="story-username">${u.username}</div>
             `;
             item.addEventListener('click', () => {
-                if (isSpaMode()) {
-                    window.location.hash = '#/koleqtion/' + u.id;
-                } else {
-                    window.location.href = 'koleqtion.html?user=' + u.id;
-                }
+                openStoriesTray(u);
             });
             storiesBar.appendChild(item);
         });
@@ -578,7 +755,7 @@ function createFeedPostCard(track) {
     card.className = 'music-card';
 
     const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
-    const artistName = track.artist_name || 'Unknown Artist';
+    const artistName = track.artist_name || track.uploader_username || 'Unknown Artist';
     const uploaderName = track.uploader_username || '';
     const uploaderId = track.uploader_id || '';
     const currentUserId = getCurrentUserId();
@@ -597,10 +774,12 @@ function createFeedPostCard(track) {
 
     const safeTitle = (track && track.title) ? String(track.title) : '';
     const safeArtist = (artistName && typeof artistName === 'string') ? artistName : '';
+    const uploadedShort = formatTrackDateShort(track);
     const coverMedia = `<img class="post-media" src="${coverUrl}" alt="${safeTitle}">`;
     const uploaderLine = (uploaderName && uploaderId && String(uploaderId) !== String(currentUserId || ''))
         ? `<a href="#/koleqtion/${uploaderId}" class="uploader-link">@${uploaderName}</a>`
         : (uploaderName ? `<span class="uploader-link">@${uploaderName}</span>` : '');
+    const uploadedLine = uploadedShort ? `<span class="post-date">${uploadedShort}</span>` : '';
 
     card.innerHTML = `
         <div class="post-header">
@@ -608,7 +787,7 @@ function createFeedPostCard(track) {
                 <div class="post-title">${safeTitle}</div>
                 <div class="post-subtitle">${safeArtist}</div>
             </div>
-            <div class="post-header-right">${uploaderLine}</div>
+            <div class="post-header-right">${uploaderLine}${uploadedLine}</div>
         </div>
 
         <div class="post-media-wrap" data-track-id="${track.id}">
@@ -777,10 +956,12 @@ function createCollectionTrackCard(track) {
     card.className = 'track-card';
 
     const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
-    const artistName = track.artist_name || 'Unknown Artist';
+    const artistName = track.artist_name || track.uploader_username || 'Unknown Artist';
     const isLiked = likedTrackIds.has(String(track.id));
     const currentUserId = getCurrentUserId();
     const canDelete = !!currentUserId && !!track.uploader_id && String(track.uploader_id) === String(currentUserId);
+    const uploadedShort = formatTrackDateShort(track);
+    const statsLeft = (track.genre || '') + (uploadedShort ? (' · ' + uploadedShort) : '');
 
     card.innerHTML = `
         <div class="track-cover">
@@ -795,7 +976,7 @@ function createCollectionTrackCard(track) {
             <h3 class="track-title">${track.title}</h3>
             <p class="track-artist">${artistName}</p>
             <div class="track-stats">
-                <span>${track.genre || ''}</span>
+                <span>${statsLeft}</span>
                 <div class="track-actions">
                     <button class="action-btn ${isLiked ? 'liked' : ''}" data-track-id="${track.id}" onclick="likeTrack('${track.id}')">
                         <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
@@ -1229,6 +1410,7 @@ async function loadDisqoFeatured() {
         const track = tracks[0];
         const coverUrl = resolveAssetUrl(track.cover_image_url, 'images/juke.png');
         
+        const dateTxt = formatTrackDateShort(track);
         featured.innerHTML = `
             <div class="disqo-featured-hero">
                 <img class="disqo-featured-bg" src="${coverUrl}" alt="">
@@ -1237,7 +1419,8 @@ async function loadDisqoFeatured() {
                     <div class="disqo-featured-info">
                         <div class="disqo-featured-label">Featured Track</div>
                         <h1 class="disqo-featured-title">${track.title || 'Untitled'}</h1>
-                        <div class="disqo-featured-artist">${track.artist_name || 'Unknown Artist'}</div>
+                        <div class="disqo-featured-artist">${(track.artist_name || track.uploader_username || 'Unknown Artist')}</div>
+                        ${dateTxt ? `<div class="disqo-featured-date">${dateTxt}</div>` : ''}
                         <div class="disqo-featured-actions">
                             <button class="disqo-play-btn" data-track-id="${track.id}">
                                 <i class="fas fa-play"></i> Play
@@ -1297,12 +1480,14 @@ async function loadDisqoRecommendations() {
         
         row.innerHTML = tracks.map(t => {
             const coverUrl = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
+            const dateTxt = formatTrackDateShort(t);
             return `
                 <div class="recommendation-card" data-track-id="${t.id}">
                     <img class="recommendation-cover" src="${coverUrl}" alt="">
                     <div class="recommendation-info">
                         <div class="recommendation-title">${t.title || 'Untitled'}</div>
-                        <div class="recommendation-artist">${t.artist_name || ''}</div>
+                        <div class="recommendation-artist">${t.artist_name || t.uploader_username || ''}</div>
+                        ${dateTxt ? `<div class="recommendation-date">${dateTxt}</div>` : ''}
                         <button class="recommendation-play"><i class="fas fa-play"></i></button>
                         <button class="recommendation-share" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
                     </div>
@@ -1358,12 +1543,14 @@ async function loadDisqoNewReleases() {
         
         grid.innerHTML = tracks.map(t => {
             const coverUrl = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
+            const dateTxt = formatTrackDateShort(t);
             return `
                 <div class="album-card" data-track-id="${t.id}">
                     <button class="album-share" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
                     <img class="album-cover" src="${coverUrl}" alt="">
                     <div class="album-title">${t.title || 'Untitled'}</div>
-                    <div class="album-artist">${t.artist_name || ''}</div>
+                    <div class="album-artist">${t.artist_name || t.uploader_username || ''}</div>
+                    ${dateTxt ? `<div class="album-date">${dateTxt}</div>` : ''}
                 </div>
             `;
         }).join('');

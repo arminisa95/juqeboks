@@ -37,6 +37,21 @@
             fileInput.click();
         });
 
+        try {
+            var artistElPrefill = document.getElementById('artistName');
+            if (artistElPrefill && !String(artistElPrefill.value || '').trim()) {
+                var u = null;
+                try {
+                    if (typeof getCurrentUser === 'function') u = getCurrentUser();
+                } catch (_) {
+                    u = null;
+                }
+                var uname = (u && u.username) ? String(u.username) : '';
+                if (uname) artistElPrefill.value = uname;
+            }
+        } catch (_) {
+        }
+
         fileInput.addEventListener('change', function (e) {
             updateFileInfo(e.target.files);
         });
@@ -128,8 +143,24 @@
             var albumEl = document.getElementById('albumTitle');
             var genreEl = document.getElementById('genre');
 
+            var u2 = null;
+            try {
+                if (typeof getCurrentUser === 'function') u2 = getCurrentUser();
+            } catch (_) {
+                u2 = null;
+            }
+            var uname2 = (u2 && u2.username) ? String(u2.username) : '';
+            var artistVal = artistEl ? String(artistEl.value || '').trim() : '';
+            if (!artistVal && uname2) {
+                artistVal = uname2;
+                try {
+                    if (artistEl) artistEl.value = uname2;
+                } catch (_) {
+                }
+            }
+
             formData.append('title', titleEl ? titleEl.value : '');
-            formData.append('artist', artistEl ? artistEl.value : '');
+            formData.append('artist', artistVal);
             formData.append('album', albumEl ? albumEl.value : '');
             formData.append('genre', genreEl ? genreEl.value : '');
 

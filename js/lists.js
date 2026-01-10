@@ -385,6 +385,14 @@ async function openPlaylist(playlist) {
             const safeArtist = (t && t.artist_name) ? String(t.artist_name) : '';
             const pos = idx + 1;
             const coverUrl = (t.cover_image_url) ? t.cover_image_url : 'images/juke.png';
+            let dateTxt = '';
+            try {
+                if (window.JukeUi && typeof window.JukeUi.formatTrackDateShort === 'function') {
+                    dateTxt = window.JukeUi.formatTrackDateShort(t) || '';
+                }
+            } catch (_) {
+                dateTxt = '';
+            }
 
             row.innerHTML = `
                 <div class="lists-track-num">${pos}</div>
@@ -393,6 +401,7 @@ async function openPlaylist(playlist) {
                 <div class="lists-track-meta">
                     <div class="lists-track-title">${safeTitle}</div>
                     <div class="lists-track-artist">${safeArtist}</div>
+                    ${dateTxt ? `<div class="lists-track-date">${dateTxt}</div>` : ''}
                 </div>
                 <div class="lists-track-actions">
                     <button class="lists-track-action" type="button" aria-label="Like"><i class="far fa-heart"></i></button>
@@ -534,6 +543,14 @@ function renderPlaylistCard(p) {
 function renderTrackCard(t) {
     const coverFallback = isSpaMode() ? 'images/juke.png' : '../images/juke.png';
     const coverUrl = resolveAssetUrl(t.cover_image_url, coverFallback);
+    let dateTxt = '';
+    try {
+        if (window.JukeUi && typeof window.JukeUi.formatTrackDateShort === 'function') {
+            dateTxt = window.JukeUi.formatTrackDateShort(t) || '';
+        }
+    } catch (_) {
+        dateTxt = '';
+    }
 
     const div = document.createElement('div');
     div.className = 'card';
@@ -547,7 +564,7 @@ function renderTrackCard(t) {
             <div class="card-title">${t.title}</div>
             <div class="card-subtitle">${t.artist_name || ''}</div>
             <div class="card-meta">
-                <span>${t.duration_seconds ? `${Math.floor(t.duration_seconds / 60)}:${String(t.duration_seconds % 60).padStart(2, '0')}` : ''}</span>
+                <span>${t.duration_seconds ? `${Math.floor(t.duration_seconds / 60)}:${String(t.duration_seconds % 60).padStart(2, '0')}` : ''}${dateTxt ? ` · ${dateTxt}` : ''}</span>
                 <span>
                     <button class="card-action-btn card-share-btn" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
                 </span>

@@ -1159,7 +1159,7 @@ app.get('/api/tracks/user/:id', authenticateToken, async (req, res) => {
             LEFT JOIN albums al ON t.album_id = al.id
             LEFT JOIN users u ON t.uploader_id = u.id
             WHERE t.uploader_id = $1
-            ORDER BY t.id DESC
+            ORDER BY t.created_at DESC
             LIMIT 200
         `, [id]);
 
@@ -1323,7 +1323,7 @@ app.get('/api/search', async (req, res) => {
 
 app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }, { name: 'videoFile', maxCount: 1 }]), async (req, res) => {
     try {
-        const { title, artist, genre } = req.body;
+        const { title, artist: artistRaw, genre } = req.body;
         const rawAlbum = (req.body && typeof req.body.album === 'string') ? req.body.album : '';
         const albumTitle = (rawAlbum || '').trim() || 'Single';
         const file = req.files && req.files.audioFile ? req.files.audioFile[0] : null;
@@ -1331,21 +1331,28 @@ app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', m
         const video = req.files && req.files.videoFile ? req.files.videoFile[0] : null;
         const userId = req.user.id;
 
+        const artist = (typeof artistRaw === 'string') ? artistRaw.trim() : '';
+        const artistName = artist || (req.user && req.user.username ? String(req.user.username) : '');
+
         if (!file) {
             return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        if (!artistName) {
+            return res.status(400).json({ error: 'Artist is required' });
         }
 
         // Get or create artist first
         let artistResult = await db.query(
             'SELECT id FROM artists WHERE name = $1',
-            [artist]
+            [artistName]
         );
 
         let artistId;
         if (artistResult.rows.length === 0) {
             // Create new artist
             const newArtist = await db.insert('artists', {
-                name: artist,
+                name: artistName,
                 bio: 'Uploaded via JUKE platform',
                 verified: false
             });

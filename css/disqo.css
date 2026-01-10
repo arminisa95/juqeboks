@@ -374,6 +374,27 @@
     transform: scale(1.1);
 }
 
+ .disqo-featured-date {
+     margin-top: 6px;
+     color: rgba(255, 255, 255, 0.55);
+     font-size: 0.85rem;
+     font-weight: 700;
+ }
+
+ .recommendation-date {
+     margin: 0 0 10px;
+     color: rgba(0, 255, 208, 0.75);
+     font-size: 0.8rem;
+     font-weight: 700;
+ }
+
+ .album-date {
+     margin-top: 6px;
+     color: rgba(0, 255, 208, 0.65);
+     font-size: 0.8rem;
+     font-weight: 700;
+ }
+
  .recommendation-share {
      width: 32px;
      height: 32px;
