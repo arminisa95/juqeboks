@@ -1340,6 +1340,37 @@ app.post('/api/tracks/:id/comments', authenticateToken, async (req, res) => {
     }
 });
 
+app.delete('/api/tracks/:trackId/comments/:commentId', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const isAdmin = !!(req.user && req.user.is_admin);
+        const { trackId, commentId } = req.params;
+
+        if (!isUuid(trackId) || !isUuid(commentId)) {
+            return res.status(400).json({ error: 'Invalid ID' });
+        }
+
+        const comment = await db.get(
+            'SELECT id, user_id, track_id FROM track_comments WHERE id = $1 AND track_id = $2',
+            [commentId, trackId]
+        );
+
+        if (!comment) {
+            return res.status(404).json({ error: 'Comment not found' });
+        }
+
+        if (!isAdmin && (!comment.user_id || String(comment.user_id) !== String(userId))) {
+            return res.status(403).json({ error: 'Not allowed' });
+        }
+
+        await db.query('DELETE FROM track_comments WHERE id = $1', [commentId]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete track comment error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Search for music
 app.get('/api/search', async (req, res) => {
     try {
@@ -1397,6 +1428,7 @@ app.get('/api/search', async (req, res) => {
 app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }, { name: 'videoFile', maxCount: 1 }]), async (req, res) => {
     try {
         const { title, artist: artistRaw, genre } = req.body;
+
         const rawAlbum = (req.body && typeof req.body.album === 'string') ? req.body.album : '';
         const albumTitle = (rawAlbum || '').trim() || 'Single';
         const file = req.files && req.files.audioFile ? req.files.audioFile[0] : null;

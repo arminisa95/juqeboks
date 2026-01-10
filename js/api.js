@@ -210,6 +210,32 @@ async function createTrackComment(trackId, text) {
     }
 }
 
+async function deleteTrackComment(trackId, commentId) {
+    const token = getAuthToken();
+    if (!token) {
+        if (isSpaMode()) {
+            window.location.hash = '#/login';
+        } else {
+            window.location.href = 'login.html';
+        }
+        return false;
+    }
+
+    try {
+        await apiFetchJson(`/tracks/${encodeURIComponent(String(trackId))}/comments/${encodeURIComponent(String(commentId))}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }, function (d) {
+            return !!d && typeof d === 'object' && (d.success === true || d.success === undefined);
+        });
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
 function renderTrackCommentsList(listEl, comments) {
     if (!listEl) return;
     if (!Array.isArray(comments) || comments.length === 0) {
@@ -217,7 +243,28 @@ function renderTrackCommentsList(listEl, comments) {
         return;
     }
 
+    var currentUserId = null;
+    var isAdmin = false;
+    try {
+        if (typeof getCurrentUser === 'function') {
+            var u = getCurrentUser();
+            currentUserId = u && u.id ? String(u.id) : null;
+            isAdmin = !!(u && (u.isAdmin || u.is_admin));
+        }
+    } catch (_) {
+        currentUserId = null;
+        isAdmin = false;
+    }
+
     listEl.innerHTML = comments.map(function (c) {
+        var cid = (c && c.id) ? String(c.id) : '';
+        var tid = (c && c.track_id) ? String(c.track_id) : '';
+        var canDelete = false;
+        try {
+            canDelete = !!isAdmin || (!!currentUserId && !!c && c.user_id && String(c.user_id) === String(currentUserId));
+        } catch (_) {
+            canDelete = false;
+        }
         var username = escapeHtml((c && c.username) ? c.username : 'user');
         var body = escapeHtml((c && c.body) ? c.body : '');
         var time = formatRelativeTime(c && c.created_at ? c.created_at : null);
@@ -226,7 +273,7 @@ function renderTrackCommentsList(listEl, comments) {
             '<div class="comment-item">' +
             '  <div class="comment-avatar">' + escapeHtml(initial) + '</div>' +
             '  <div class="comment-content">' +
-            '    <div class="comment-username">@' + username + (time ? (' <span class="comment-time">' + escapeHtml(time) + '</span>') : '') + '</div>' +
+            '    <div class="comment-username">@' + username + (time ? (' <span class="comment-time">' + escapeHtml(time) + '</span>') : '') + (canDelete ? (' <button type="button" class="comment-delete-btn" data-track-id="' + escapeHtml(tid) + '" data-comment-id="' + escapeHtml(cid) + '" aria-label="Delete">Delete</button>') : '') + '</div>' +
             '    <div class="comment-text">' + body + '</div>' +
             '  </div>' +
             '</div>';
@@ -324,6 +371,30 @@ function openTrackCommentsModal(trackId, meta) {
                     if (input) input.value = '';
                     createTrackComment(id, text).then(function () {
                         loadAndRenderTrackComments(id, list);
+                    });
+                } catch (_) {
+                }
+                return;
+            }
+
+            var delBtn = null;
+            try {
+                delBtn = t.closest ? t.closest('.comment-delete-btn[data-track-id][data-comment-id]') : null;
+            } catch (_) {
+                delBtn = null;
+            }
+            if (delBtn) {
+                var tid = delBtn.getAttribute('data-track-id');
+                var cid = delBtn.getAttribute('data-comment-id');
+                if (!tid || !cid) return;
+                try {
+                    if (!window.confirm('Delete this comment?')) return;
+                } catch (_) {
+                }
+                try {
+                    var listEl = root.querySelector('.post-comments-list[data-track-id]');
+                    deleteTrackComment(tid, cid).then(function () {
+                        loadAndRenderTrackComments(String(tid), listEl);
                     });
                 } catch (_) {
                 }
@@ -718,13 +789,6 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                 if (!trackObj || trackObj.id == null) return;
                 activeTrackId = String(trackObj.id);
 
-                var commentsWereOpen = false;
-                try {
-                    commentsWereOpen = !!(mediaHost.classList && mediaHost.classList.contains('comments-open'));
-                } catch (_) {
-                    commentsWereOpen = false;
-                }
-
                 var idx = getActiveIndex();
                 var hasPrev = !!(idx > 0);
                 var hasNext = !!(idx >= 0 && Array.isArray(tracksArr) && idx < (tracksArr.length - 1));
@@ -749,46 +813,59 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                     liked = false;
                 }
 
+                var likeCount = 0;
+                try {
+                    likeCount = (typeof trackObj.like_count === 'number') ? trackObj.like_count : 0;
+                } catch (_) {
+                    likeCount = 0;
+                }
+                var likeCountTxt = (liked || likeCount > 0) ? String(likeCount) : '';
+
                 mediaHost.innerHTML = '' +
-                    '<div class="juke-story-media-layout">' +
-                    '  <button type="button" class="juke-story-side juke-story-side-prev" data-juke-media-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
-                    '  <div class="juke-story-media-frame">' + mediaEl + '</div>' +
-                    '  <button type="button" class="juke-story-side juke-story-side-next" data-juke-media-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
-                    '</div>' +
-                    '<div class="juke-story-actions">' +
-                    '  <button class="post-action like-btn ' + (liked ? 'liked' : '') + '" data-track-id="' + String(trackObj.id) + '" type="button" aria-label="Like">' +
-                    '    <i class="' + (liked ? 'fas' : 'far') + ' fa-heart"></i>' +
-                    '  </button>' +
-                    '  <button class="post-action" type="button" aria-label="Comments" data-juke-media-comments-toggle="1">' +
-                    '    <i class="far fa-comment"></i>' +
-                    '  </button>' +
-                    '  <button class="post-action" type="button" aria-label="Share" data-share-track-id="' + String(trackObj.id) + '">' +
-                    '    <i class="far fa-paper-plane"></i>' +
-                    '  </button>' +
-                    '</div>' +
-                    '<div class="juke-story-comments">' +
-                    '  <div class="post-comments-title">Comments</div>' +
-                    '  <div class="post-comments-list" data-track-id="' + String(trackObj.id) + '"></div>' +
-                    '  <div class="post-comment-compose">' +
-                    '    <input type="text" class="post-comment-input" placeholder="Add a comment…" data-track-id="' + String(trackObj.id) + '">' +
-                    '    <button type="button" class="post-comment-send" data-track-id="' + String(trackObj.id) + '">Post</button>' +
-                    '  </div>' +
-                    '</div>' +
-                    '<div class="juke-story-media-meta">' +
-                    '  <div style="min-width:0;flex:1;">' +
-                    '    <div class="juke-story-media-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-                    '    <div class="juke-story-media-sub">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-                    '  </div>' +
+                    '<div class="juke-story-split">' +
+                    '  <div class="juke-story-left">' +
+                    '    <div class="juke-story-media-layout">' +
+                    '      <button type="button" class="juke-story-side juke-story-side-prev" data-juke-media-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
+                    '      <div class="juke-story-media-frame">' + mediaEl + '</div>' +
+                    '      <button type="button" class="juke-story-side juke-story-side-next" data-juke-media-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
+                    '    </div>' +
+                    '    <div class="juke-story-actions">' +
+                    '      <button class="post-action like-btn ' + (liked ? 'liked' : '') + '" data-track-id="' + String(trackObj.id) + '" type="button" aria-label="Like">' +
+                    '        <i class="' + (liked ? 'fas' : 'far') + ' fa-heart"></i>' +
+                    '        <span class="like-count" data-track-id="' + String(trackObj.id) + '">' + likeCountTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
+                    '      </button>' +
+                    '      <button class="post-action" type="button" aria-label="Comments" data-juke-media-comments-toggle="1">' +
+                    '        <i class="far fa-comment"></i>' +
+                    '      </button>' +
+                    '      <button class="post-action" type="button" aria-label="Share" data-share-track-id="' + String(trackObj.id) + '">' +
+                    '        <i class="far fa-paper-plane"></i>' +
+                    '      </button>' +
+                    '    </div>' +
+                    '    <div class="juke-story-media-meta">' +
+                    '      <div style="min-width:0;flex:1;">' +
+                    '        <div class="juke-story-media-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                    '        <div class="juke-story-media-sub">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                    '      </div>' +
                     (dateTxt ? ('<div class="juke-story-media-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>') : '') +
+                    '    </div>' +
+                    '  </div>' +
+                    '  <div class="juke-story-right">' +
+                    '    <div class="juke-story-comments">' +
+                    '      <div class="post-comments-title">Comments</div>' +
+                    '      <div class="post-comments-list" data-track-id="' + String(trackObj.id) + '"></div>' +
+                    '      <div class="post-comment-compose">' +
+                    '        <input type="text" class="post-comment-input" placeholder="Add a comment…" data-track-id="' + String(trackObj.id) + '">' +
+                    '        <button type="button" class="post-comment-send" data-track-id="' + String(trackObj.id) + '">Post</button>' +
+                    '      </div>' +
+                    '    </div>' +
+                    '  </div>' +
                     '</div>';
 
                 try {
-                    if (commentsWereOpen && mediaHost.classList) {
-                        mediaHost.classList.add('comments-open');
-                        var listElAuto = mediaHost.querySelector('.post-comments-list[data-track-id]');
-                        var tidAuto = listElAuto ? listElAuto.getAttribute('data-track-id') : null;
-                        if (tidAuto) loadAndRenderTrackComments(tidAuto, listElAuto);
-                    }
+                    if (mediaHost.classList) mediaHost.classList.add('comments-open');
+                    var listElAuto = mediaHost.querySelector('.post-comments-list[data-track-id]');
+                    var tidAuto = listElAuto ? listElAuto.getAttribute('data-track-id') : null;
+                    if (tidAuto) loadAndRenderTrackComments(tidAuto, listElAuto);
                 } catch (_) {
                 }
 
@@ -921,6 +998,30 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                     if (input2) input2.value = '';
                     createTrackComment(tid2, txt2).then(function () {
                         loadAndRenderTrackComments(tid2, list2);
+                    });
+                } catch (_) {
+                }
+                return;
+            }
+
+            var delBtn = null;
+            try {
+                delBtn = target.closest ? target.closest('.comment-delete-btn[data-track-id][data-comment-id]') : null;
+            } catch (_) {
+                delBtn = null;
+            }
+            if (delBtn) {
+                var dtid = delBtn.getAttribute('data-track-id');
+                var dcid = delBtn.getAttribute('data-comment-id');
+                if (!dtid || !dcid) return;
+                try {
+                    if (!window.confirm('Delete this comment?')) return;
+                } catch (_) {
+                }
+                try {
+                    var listDel = mediaHost ? mediaHost.querySelector('.post-comments-list[data-track-id="' + String(dtid) + '"]') : null;
+                    deleteTrackComment(dtid, dcid).then(function () {
+                        loadAndRenderTrackComments(dtid, listDel);
                     });
                 } catch (_) {
                 }
@@ -1987,6 +2088,7 @@ function createFeedPostCard(track) {
             <div class="post-actions-left">
                 <button class="post-action like-btn ${isLiked ? 'liked' : ''}" data-track-id="${track.id}" type="button" aria-label="Like">
                     <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
+                    <span class="like-count" data-track-id="${track.id}">${(isLiked || (typeof track.like_count === 'number' && track.like_count > 0)) ? String(track.like_count || 0) : ''}</span>
                 </button>
                 <button class="post-action post-comment-toggle" type="button" aria-expanded="false" aria-label="Comments">
                     <i class="far fa-comment"></i>
@@ -2204,6 +2306,7 @@ function createCollectionTrackCard(track) {
                 <div class="track-actions">
                     <button class="action-btn ${isLiked ? 'liked' : ''}" data-track-id="${track.id}" onclick="likeTrack('${track.id}')">
                         <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
+                        <span class="like-count" data-track-id="${track.id}">${(isLiked || (typeof track.like_count === 'number' && track.like_count > 0)) ? String(track.like_count || 0) : ''}</span>
                     </button>
                     <button class="action-btn comment-btn" data-track-id="${track.id}" type="button" aria-label="Comments">
                         <i class="far fa-comment"></i>
@@ -2351,6 +2454,20 @@ async function likeTrack(trackId) {
         }, function (d) {
             return !!d && typeof d === 'object' && !Array.isArray(d) && typeof d.liked === 'boolean';
         });
+
+        try {
+            var nextCount = (data && typeof data.like_count === 'number') ? data.like_count : null;
+            if (nextCount != null) {
+                document.querySelectorAll(`.like-count[data-track-id="${CSS.escape(String(trackId))}"]`).forEach(function (el) {
+                    try {
+                        var show = !!(data && data.liked) || nextCount > 0;
+                        el.textContent = show ? String(nextCount) : '';
+                    } catch (_) {
+                    }
+                });
+            }
+        } catch (_) {
+        }
 
         // Reconcile with server response if needed
         if (data && typeof data.liked === 'boolean') {
@@ -2603,12 +2720,118 @@ function setupGlobalSearch() {
     });
 }
 
+function setupMobileSearch() {
+    var input = document.querySelector('.mobile-header .mobile-search');
+    if (!input) return;
+    if (input.dataset.bound === 'true') return;
+    input.dataset.bound = 'true';
+
+    var results = null;
+
+    function ensureResults() {
+        if (results && results.parentNode) return results;
+        results = document.createElement('div');
+        results.className = 'mobile-search-results';
+        results.style.display = 'none';
+        document.body.appendChild(results);
+        return results;
+    }
+
+    function hide() {
+        var r = ensureResults();
+        r.style.display = 'none';
+        r.innerHTML = '';
+    }
+
+    function showLoading() {
+        var r = ensureResults();
+        r.style.display = '';
+        r.innerHTML = '<div class="search-results__item search-results__item--muted">Searching…</div>';
+    }
+
+    function renderTracks(tracks) {
+        var r = ensureResults();
+        if (!Array.isArray(tracks) || tracks.length === 0) {
+            r.style.display = '';
+            r.innerHTML = '<div class="search-results__item search-results__item--muted">No results</div>';
+            return;
+        }
+
+        r.style.display = '';
+        r.innerHTML = tracks.slice(0, 10).map(function (t) {
+            var cover = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
+            var title = (t && t.title) ? String(t.title) : 'Unknown';
+            var artist = (t && t.artist_name) ? String(t.artist_name) : '';
+            return (
+                '<button type="button" class="search-results__item" data-track-id="' + String(t.id) + '">' +
+                '  <img class="search-results__cover" src="' + cover + '" alt="">' +
+                '  <span class="search-results__meta">' +
+                '    <span class="search-results__title">' + title.replace(/</g, '&lt;') + '</span>' +
+                '    <span class="search-results__subtitle">' + artist.replace(/</g, '&lt;') + '</span>' +
+                '  </span>' +
+                '  <span class="search-results__play"><i class="fas fa-play"></i></span>' +
+                '</button>'
+            );
+        }).join('');
+    }
+
+    var doSearch = debounce(async function () {
+        var q = String(input.value || '').trim();
+        if (!q) {
+            hide();
+            return;
+        }
+        showLoading();
+        try {
+            var data = await apiFetchJson('/search?q=' + encodeURIComponent(q) + '&type=tracks&limit=10', {}, function (d) {
+                return !!d && typeof d === 'object' && (Array.isArray(d.tracks) || Array.isArray(d));
+            });
+            var tracks = Array.isArray(data) ? data : (data && data.tracks ? data.tracks : []);
+            renderTracks(tracks);
+        } catch (_) {
+            var r = ensureResults();
+            r.style.display = '';
+            r.innerHTML = '<div class="search-results__item search-results__item--muted">Search failed</div>';
+        }
+    }, 200);
+
+    input.addEventListener('input', function () {
+        doSearch();
+    });
+
+    input.addEventListener('focus', function () {
+        if (String(input.value || '').trim()) doSearch();
+    });
+
+    document.addEventListener('click', function (e) {
+        try {
+            var r = ensureResults();
+            if (r.style.display === 'none') return;
+            if (e && e.target && (r.contains(e.target) || input.contains(e.target))) return;
+        } catch (_) {
+        }
+        hide();
+    });
+
+    ensureResults().addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest('.search-results__item[data-track-id]') : null;
+        if (!btn) return;
+        var id = btn.getAttribute('data-track-id');
+        if (!id) return;
+        try { input.blur(); } catch (_) {}
+        hide();
+        playTrack(id);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     setupGlobalSearch();
+    setupMobileSearch();
 });
 
 document.addEventListener('spa:navigate', function () {
     setupGlobalSearch();
+    setupMobileSearch();
 });
 
 // Disqo page functions
