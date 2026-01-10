@@ -1910,14 +1910,21 @@ async function renderStoriesBar() {
             `;
             item.addEventListener('click', () => {
                 // For mobile, open media player with story queue instead of stories tray
-                if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
+                var isMobile = false;
+                try {
+                    isMobile = !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+                } catch (_) {
+                    isMobile = false;
+                }
+                
+                if (isMobile) {
                     if (u.tracks && Array.isArray(u.tracks) && u.tracks.length > 0) {
                         // Set the story queue in feed state
                         feedState.queueTracks = u.tracks;
                         // Open media viewer with first story track
-                        if (typeof window.openTrackMediaViewer === 'function') {
-                            window.openTrackMediaViewer(u.tracks, u.tracks[0].id);
-                        } else {
+                        if (typeof openTrackMediaViewer === 'function') {
+                            openTrackMediaViewer(u.tracks, u.tracks[0].id);
+                        } else if (typeof playTrack === 'function') {
                             playTrack(u.tracks[0].id);
                         }
                     }
@@ -3218,3 +3225,4 @@ window.JukeApi = {
 window.deleteTrack = deleteTrack;
 window.loadDisqoPage = loadDisqoPage;
 window.setupKoleqtionTabs = setupKoleqtionTabs;
+window.openTrackMediaViewer = openTrackMediaViewer;
