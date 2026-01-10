@@ -753,11 +753,11 @@
 
         if (!miniPlayer) return;
 
-        // Show/hide mini player based on track state
+        // Show/hide mini player based on track state using class
         if (state.trackId && isAuthed()) {
-            miniPlayer.style.display = 'block';
+            miniPlayer.classList.add('active');
         } else {
-            miniPlayer.style.display = 'none';
+            miniPlayer.classList.remove('active');
             return;
         }
 

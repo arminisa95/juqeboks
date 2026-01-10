@@ -54,7 +54,7 @@
 }
 
 .mobile-nav-item.active {
-    color: #1DB954;
+    color: #F72193;
 }
 
 .mobile-nav-item span {
@@ -84,18 +84,30 @@
 }
 
 .mobile-header .mobile-user-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #F72193, #00ffd0);
+    background: none;
     border: none;
-    color: #fff;
-    font-size: 0.85rem;
+    color: #F72193;
+    font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 8px;
+}
+
+.mobile-header .mobile-search {
+    flex: 1;
+    max-width: 200px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 0 14px;
+    color: #fff;
+    font-size: 0.8rem;
+    outline: none;
+}
+
+.mobile-header .mobile-search::placeholder {
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Mobile Mini Player (Spotify-style) */
@@ -202,7 +214,7 @@
 }
 
 .mobile-mini-player .mini-btn.mini-like i.fas {
-    color: #1DB954;
+    color: #F72193;
 }
 
 .mobile-mini-player .mini-play-btn {
@@ -418,14 +430,14 @@
         margin-bottom: 0 !important;
     }
 
-    /* Hide desktop player on mobile when mini player is visible */
+    /* Hide desktop player on mobile */
     .music-player {
         display: none !important;
     }
 
-    /* Show mobile mini player */
-    .mobile-mini-player {
-        display: block;
+    /* Show mobile mini player only when active (has track) */
+    .mobile-mini-player.active {
+        display: block !important;
     }
 }
 
