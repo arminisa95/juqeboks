@@ -1129,10 +1129,54 @@ function maybeAutoPlaySharedTrack() {
     }
 }
 
+// Clean up stories older than 1 month
+async function cleanupOldStories() {
+    try {
+        const token = getAuthToken();
+        if (!token) return;
+        
+        // Get all tracks to check for stories older than 1 month
+        const tracks = await apiFetchJson('/tracks/new?limit=1000&offset=0', {}, d => Array.isArray(d));
+        if (!Array.isArray(tracks)) return;
+        
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        
+        const oldTracks = tracks.filter(track => {
+            if (!track.created_at) return false;
+            const trackDate = new Date(track.created_at);
+            return trackDate < oneMonthAgo;
+        });
+        
+        // Delete old tracks (stories)
+        for (const track of oldTracks) {
+            try {
+                await apiFetchJson(`/tracks/${encodeURIComponent(String(track.id))}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+            } catch (e) {
+                console.warn('Failed to delete old story track:', track.id, e);
+            }
+        }
+        
+        if (oldTracks.length > 0) {
+            console.log(`Cleaned up ${oldTracks.length} old story tracks`);
+        }
+    } catch (e) {
+        console.warn('Story cleanup failed:', e);
+    }
+}
+
 async function renderStoriesBar() {
     try {
         const feedContainer = document.querySelector('.feed-container');
         if (!feedContainer || feedState.storiesLoaded) return;
+        
+        // Clean up stories older than 1 month
+        await cleanupOldStories();
         
         let storiesBar = feedContainer.querySelector('.stories-bar');
         if (!storiesBar) {
@@ -1865,7 +1909,22 @@ async function renderStoriesBar() {
                 <div class="story-username">${u.username}</div>
             `;
             item.addEventListener('click', () => {
-                openStoriesTray(u);
+                // For mobile, open media player with story queue instead of stories tray
+                if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
+                    if (u.tracks && Array.isArray(u.tracks) && u.tracks.length > 0) {
+                        // Set the story queue in feed state
+                        feedState.queueTracks = u.tracks;
+                        // Open media viewer with first story track
+                        if (typeof window.openTrackMediaViewer === 'function') {
+                            window.openTrackMediaViewer(u.tracks, u.tracks[0].id);
+                        } else {
+                            playTrack(u.tracks[0].id);
+                        }
+                    }
+                } else {
+                    // Desktop: keep existing stories tray behavior
+                    openStoriesTray(u);
+                }
             });
             storiesBar.appendChild(item);
         });
