@@ -573,6 +573,7 @@ function renderTrackCard(t) {
             <div class="card-meta">
                 <span>${t.duration_seconds ? `${Math.floor(t.duration_seconds / 60)}:${String(t.duration_seconds % 60).padStart(2, '0')}` : ''}${dateTxt ? ` · ${dateTxt}` : ''}</span>
                 <span>
+                    <button class="card-action-btn card-comment-btn" type="button" aria-label="Comments"><i class="far fa-comment"></i></button>
                     <button class="card-action-btn card-share-btn" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
                 </span>
             </div>
@@ -606,6 +607,20 @@ function renderTrackCard(t) {
     });
 
     try {
+        const commentBtn = div.querySelector('.card-comment-btn');
+        if (commentBtn && !commentBtn.dataset.bound) {
+            commentBtn.dataset.bound = '1';
+            commentBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                try {
+                    if (typeof window.openTrackCommentsModal === 'function') {
+                        window.openTrackCommentsModal(String(t.id), { title: t.title || 'Comments' });
+                    }
+                } catch (_) {
+                }
+            });
+        }
+
         const shareBtn = div.querySelector('.card-share-btn');
         if (shareBtn && !shareBtn.dataset.bound) {
             shareBtn.dataset.bound = '1';

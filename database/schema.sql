@@ -118,6 +118,15 @@ CREATE TABLE user_favorites (
     UNIQUE(user_id, track_id)
 );
 
+-- Track comments
+CREATE TABLE track_comments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- User following artists
 CREATE TABLE user_following_artists (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

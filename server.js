@@ -226,6 +226,14 @@ async function initializeDatabase() {
                 body TEXT NOT NULL,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS track_comments (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                body TEXT NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
         `;
 
         await db.query(schema);
@@ -1263,6 +1271,71 @@ app.post('/api/tracks/:id/like', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Like track error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/tracks/:id/comments', authenticateToken, async (req, res) => {
+    try {
+        const { id: trackId } = req.params;
+
+        if (!isUuid(trackId)) {
+            return res.status(400).json({ error: 'Invalid track ID' });
+        }
+
+        const track = await db.get('SELECT id FROM tracks WHERE id = $1', [trackId]);
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const comments = await db.getAll(`
+            SELECT tc.id, tc.track_id, tc.user_id, tc.body, tc.created_at,
+                   u.username as username
+            FROM track_comments tc
+            LEFT JOIN users u ON tc.user_id = u.id
+            WHERE tc.track_id = $1
+            ORDER BY tc.created_at DESC
+            LIMIT 100
+        `, [trackId]);
+
+        res.json(comments || []);
+    } catch (error) {
+        console.error('Get track comments error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/tracks/:id/comments', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id: trackId } = req.params;
+        const body = (req && req.body && typeof req.body === 'object') ? req.body : {};
+        const text = (typeof body.body === 'string') ? body.body.trim() : '';
+
+        if (!isUuid(trackId)) {
+            return res.status(400).json({ error: 'Invalid track ID' });
+        }
+        if (!text) {
+            return res.status(400).json({ error: 'Comment is required' });
+        }
+
+        const track = await db.get('SELECT id FROM tracks WHERE id = $1', [trackId]);
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const created = await db.insert('track_comments', {
+            track_id: trackId,
+            user_id: userId,
+            body: text
+        });
+
+        res.json({
+            ...(created || {}),
+            username: (req.user && req.user.username) ? req.user.username : undefined
+        });
+    } catch (error) {
+        console.error('Create track comment error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

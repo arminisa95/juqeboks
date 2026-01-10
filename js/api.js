@@ -120,6 +120,238 @@ function resolveLocalAssetUrl(pathFromRoot) {
     }
 }
 
+function escapeHtml(value) {
+    try {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    } catch (_) {
+        return '';
+    }
+}
+
+function formatRelativeTime(value) {
+    try {
+        var d = value ? new Date(value) : null;
+        if (!d || !isFinite(d.getTime())) return '';
+        var diff = Date.now() - d.getTime();
+        if (!isFinite(diff)) return '';
+        var s = Math.max(0, Math.floor(diff / 1000));
+        if (s < 10) return 'now';
+        if (s < 60) return s + 's';
+        var m = Math.floor(s / 60);
+        if (m < 60) return m + 'm';
+        var h = Math.floor(m / 60);
+        if (h < 24) return h + 'h';
+        var days = Math.floor(h / 24);
+        if (days < 7) return days + 'd';
+        var w = Math.floor(days / 7);
+        if (w < 5) return w + 'w';
+        var mo = Math.floor(days / 30);
+        if (mo < 12) return mo + 'mo';
+        var y = Math.floor(days / 365);
+        return y + 'y';
+    } catch (_) {
+        return '';
+    }
+}
+
+async function fetchTrackComments(trackId) {
+    const token = getAuthToken();
+    if (!token) {
+        if (isSpaMode()) {
+            window.location.hash = '#/login';
+        } else {
+            window.location.href = 'login.html';
+        }
+        return [];
+    }
+
+    try {
+        return await apiFetchJson(`/tracks/${encodeURIComponent(String(trackId))}/comments`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }, function (d) {
+            return Array.isArray(d);
+        });
+    } catch (_) {
+        return [];
+    }
+}
+
+async function createTrackComment(trackId, text) {
+    const token = getAuthToken();
+    if (!token) {
+        if (isSpaMode()) {
+            window.location.hash = '#/login';
+        } else {
+            window.location.href = 'login.html';
+        }
+        return null;
+    }
+
+    try {
+        return await apiFetchJson(`/tracks/${encodeURIComponent(String(trackId))}/comments`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ body: String(text || '').trim() })
+        }, function (d) {
+            return !!d && typeof d === 'object' && !Array.isArray(d);
+        });
+    } catch (_) {
+        return null;
+    }
+}
+
+function renderTrackCommentsList(listEl, comments) {
+    if (!listEl) return;
+    if (!Array.isArray(comments) || comments.length === 0) {
+        listEl.innerHTML = '<div class="post-comments-empty">No comments yet.</div>';
+        return;
+    }
+
+    listEl.innerHTML = comments.map(function (c) {
+        var username = escapeHtml((c && c.username) ? c.username : 'user');
+        var body = escapeHtml((c && c.body) ? c.body : '');
+        var time = formatRelativeTime(c && c.created_at ? c.created_at : null);
+        var initial = username ? username.charAt(0).toUpperCase() : 'U';
+        return '' +
+            '<div class="comment-item">' +
+            '  <div class="comment-avatar">' + escapeHtml(initial) + '</div>' +
+            '  <div class="comment-content">' +
+            '    <div class="comment-username">@' + username + (time ? (' <span class="comment-time">' + escapeHtml(time) + '</span>') : '') + '</div>' +
+            '    <div class="comment-text">' + body + '</div>' +
+            '  </div>' +
+            '</div>';
+    }).join('');
+}
+
+async function loadAndRenderTrackComments(trackId, listEl) {
+    if (!listEl) return;
+    listEl.innerHTML = '<div class="post-comments-empty">Loading...</div>';
+    const comments = await fetchTrackComments(trackId);
+    renderTrackCommentsList(listEl, comments);
+}
+
+function openTrackCommentsModal(trackId, meta) {
+    try {
+        if (!trackId) return;
+        var existing = document.getElementById('jukeTrackCommentsRoot');
+        if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+        var root = document.createElement('div');
+        root.id = 'jukeTrackCommentsRoot';
+        root.className = 'juke-track-comments-root';
+
+        var title = (meta && meta.title) ? String(meta.title) : 'Comments';
+
+        root.innerHTML = '' +
+            '<div class="juke-track-comments-backdrop" data-juke-track-comments-close="1"></div>' +
+            '<div class="juke-track-comments-sheet" role="dialog" aria-modal="true">' +
+            '  <div class="juke-track-comments-header">' +
+            '    <div class="juke-track-comments-title">' + escapeHtml(title) + '</div>' +
+            '    <button type="button" class="juke-track-comments-close" data-juke-track-comments-close="1" aria-label="Close"><i class="fas fa-times"></i></button>' +
+            '  </div>' +
+            '  <div class="post-comments-list" data-track-id="' + escapeHtml(String(trackId)) + '"></div>' +
+            '  <div class="post-comment-compose">' +
+            '    <input type="text" class="post-comment-input" placeholder="Add a comment…" data-track-id="' + escapeHtml(String(trackId)) + '">' +
+            '    <button type="button" class="post-comment-send" data-track-id="' + escapeHtml(String(trackId)) + '">Post</button>' +
+            '  </div>' +
+            '</div>';
+
+        document.body.appendChild(root);
+
+        try {
+            requestAnimationFrame(function () {
+                try {
+                    root.classList.add('open');
+                } catch (_) {
+                }
+            });
+        } catch (_) {
+        }
+
+        try {
+            var listEl = root.querySelector('.post-comments-list[data-track-id]');
+            loadAndRenderTrackComments(String(trackId), listEl);
+        } catch (_) {
+        }
+
+        function close() {
+            try {
+                root.classList.remove('open');
+            } catch (_) {
+            }
+            try {
+                root.parentNode.removeChild(root);
+            } catch (_) {
+            }
+        }
+
+        root.addEventListener('click', function (e) {
+            var t = e && e.target ? e.target : null;
+            if (!t) return;
+
+            try {
+                if (t.getAttribute && t.getAttribute('data-juke-track-comments-close') === '1') {
+                    close();
+                    return;
+                }
+            } catch (_) {
+            }
+
+            var send = null;
+            try {
+                send = t.closest ? t.closest('.post-comment-send[data-track-id]') : null;
+            } catch (_) {
+                send = null;
+            }
+            if (send) {
+                var id = send.getAttribute('data-track-id');
+                if (!id) return;
+                try {
+                    var input = root.querySelector('.post-comment-input[data-track-id="' + String(id) + '"]');
+                    var list = root.querySelector('.post-comments-list[data-track-id="' + String(id) + '"]');
+                    var text = input ? String(input.value || '').trim() : '';
+                    if (!text) return;
+                    if (input) input.value = '';
+                    createTrackComment(id, text).then(function () {
+                        loadAndRenderTrackComments(id, list);
+                    });
+                } catch (_) {
+                }
+                return;
+            }
+        });
+
+        try {
+            root.addEventListener('keydown', function (e) {
+                var t = e && e.target ? e.target : null;
+                if (!t) return;
+                if (t.classList && t.classList.contains('post-comment-input')) {
+                    if (e.key === 'Enter') {
+                        try {
+                            var id = t.getAttribute('data-track-id');
+                            var send = id ? root.querySelector('.post-comment-send[data-track-id="' + String(id) + '"]') : null;
+                            if (send) send.click();
+                        } catch (_) {
+                        }
+                    }
+                }
+            });
+        } catch (_) {
+        }
+    } catch (_) {
+    }
+}
+
 function parseTrackDate(track) {
     try {
         var v = track && (track.created_at || track.createdAt || track.created);
@@ -155,6 +387,11 @@ function formatTrackDateShort(track) {
 try {
     window.JukeUi = window.JukeUi || {};
     window.JukeUi.formatTrackDateShort = formatTrackDateShort;
+} catch (_) {
+}
+
+try {
+    window.openTrackCommentsModal = openTrackCommentsModal;
 } catch (_) {
 }
 
@@ -648,6 +885,13 @@ async function renderStoriesBar() {
                         }
                         if (!mediaHost) return;
 
+                        var commentsWereOpen = false;
+                        try {
+                            commentsWereOpen = !!(mediaHost.classList && mediaHost.classList.contains('comments-open'));
+                        } catch (_) {
+                            commentsWereOpen = false;
+                        }
+
                         var cover = resolveAssetUrl(track.cover_image_url, resolveLocalAssetUrl('images/juke.png'));
                         var safeTitle = track && track.title ? String(track.title) : 'Untitled';
                         var safeArtist = (track && (track.artist_name || track.uploader_username)) ? String(track.artist_name || track.uploader_username) : '';
@@ -670,11 +914,37 @@ async function renderStoriesBar() {
                             mediaEl = '<img src="' + String(cover).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" alt="">';
                         }
 
+                        var liked = false;
+                        try {
+                            liked = likedTrackIds.has(String(track.id));
+                        } catch (_) {
+                            liked = false;
+                        }
+
                         mediaHost.innerHTML = '' +
-                            '<div class="juke-story-media-frame">' +
-                            '  <button type="button" class="juke-story-nav juke-story-nav-prev" data-juke-story-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
-                            '  <button type="button" class="juke-story-nav juke-story-nav-next" data-juke-story-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
-                            mediaEl +
+                            '<div class="juke-story-media-layout">' +
+                            '  <button type="button" class="juke-story-side juke-story-side-prev" data-juke-story-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
+                            '  <div class="juke-story-media-frame">' + mediaEl + '</div>' +
+                            '  <button type="button" class="juke-story-side juke-story-side-next" data-juke-story-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
+                            '</div>' +
+                            '<div class="juke-story-actions">' +
+                            '  <button class="post-action like-btn ' + (liked ? 'liked' : '') + '" data-track-id="' + String(track.id) + '" type="button" aria-label="Like">' +
+                            '    <i class="' + (liked ? 'fas' : 'far') + ' fa-heart"></i>' +
+                            '  </button>' +
+                            '  <button class="post-action juke-story-comment-toggle" type="button" aria-label="Comments" data-juke-story-comments-toggle="1">' +
+                            '    <i class="far fa-comment"></i>' +
+                            '  </button>' +
+                            '  <button class="post-action juke-story-share" type="button" aria-label="Share" data-share-track-id="' + String(track.id) + '">' +
+                            '    <i class="far fa-paper-plane"></i>' +
+                            '  </button>' +
+                            '</div>' +
+                            '<div class="juke-story-comments">' +
+                            '  <div class="post-comments-title">Comments</div>' +
+                            '  <div class="post-comments-list" data-track-id="' + String(track.id) + '"></div>' +
+                            '  <div class="post-comment-compose">' +
+                            '    <input type="text" class="post-comment-input" placeholder="Add a comment…" data-track-id="' + String(track.id) + '">' +
+                            '    <button type="button" class="post-comment-send" data-track-id="' + String(track.id) + '">Post</button>' +
+                            '  </div>' +
                             '</div>' +
                             '<div class="juke-story-media-meta">' +
                             '  <div style="min-width:0;flex:1;">' +
@@ -683,6 +953,16 @@ async function renderStoriesBar() {
                             '  </div>' +
                             (dateTxt ? ('<div class="juke-story-media-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>') : '') +
                             '</div>';
+
+                        try {
+                            if (commentsWereOpen && mediaHost.classList) {
+                                mediaHost.classList.add('comments-open');
+                                var listElAuto = mediaHost.querySelector('.post-comments-list[data-track-id]');
+                                var tidAuto = listElAuto ? listElAuto.getAttribute('data-track-id') : null;
+                                if (tidAuto) loadAndRenderTrackComments(tidAuto, listElAuto);
+                            }
+                        } catch (_) {
+                        }
 
                         try {
                             var v = mediaHost.querySelector('video');
@@ -833,6 +1113,27 @@ async function renderStoriesBar() {
                     var target = e && e.target ? e.target : null;
                     if (!target) return;
 
+                    var likeBtn = null;
+                    try {
+                        likeBtn = target.closest ? target.closest('.like-btn[data-track-id]') : null;
+                    } catch (_) {
+                        likeBtn = null;
+                    }
+                    if (likeBtn) {
+                        try {
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                        } catch (_) {
+                        }
+                        var lid = likeBtn.getAttribute('data-track-id');
+                        if (lid) {
+                            try {
+                                likeTrack(String(lid));
+                            } catch (_) {
+                            }
+                        }
+                        return;
+                    }
+
                     var navBtn = null;
                     try {
                         navBtn = target.closest ? target.closest('[data-juke-story-nav]') : null;
@@ -870,12 +1171,99 @@ async function renderStoriesBar() {
                         }
                     }
 
+                    var storyCommentToggle = null;
+                    try {
+                        storyCommentToggle = target.closest ? target.closest('[data-juke-story-comments-toggle="1"]') : null;
+                    } catch (_) {
+                        storyCommentToggle = null;
+                    }
+                    if (storyCommentToggle) {
+                        try {
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                        } catch (_) {
+                        }
+                        var mediaHostEl = null;
+                        try {
+                            mediaHostEl = root.querySelector('.juke-stories-tray-media');
+                        } catch (_) {
+                            mediaHostEl = null;
+                        }
+                        if (mediaHostEl && mediaHostEl.classList) {
+                            var willOpen = !mediaHostEl.classList.contains('comments-open');
+                            mediaHostEl.classList.toggle('comments-open', willOpen);
+                            if (willOpen) {
+                                try {
+                                    var listEl = mediaHostEl.querySelector('.post-comments-list[data-track-id]');
+                                    var tid = listEl ? listEl.getAttribute('data-track-id') : null;
+                                    if (tid) loadAndRenderTrackComments(tid, listEl);
+                                } catch (_) {
+                                }
+                            }
+                        }
+                        return;
+                    }
+
+                    var storySend = null;
+                    try {
+                        storySend = target.closest ? target.closest('.post-comment-send[data-track-id]') : null;
+                    } catch (_) {
+                        storySend = null;
+                    }
+                    if (storySend) {
+                        try {
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                        } catch (_) {
+                        }
+                        var tid2 = storySend.getAttribute('data-track-id');
+                        if (!tid2) return;
+                        try {
+                            var host2 = root.querySelector('.juke-stories-tray-media');
+                            var input2 = host2 ? host2.querySelector('.post-comment-input[data-track-id="' + String(tid2) + '"]') : null;
+                            var list2 = host2 ? host2.querySelector('.post-comments-list[data-track-id="' + String(tid2) + '"]') : null;
+                            var txt2 = input2 ? String(input2.value || '').trim() : '';
+                            if (!txt2) return;
+                            if (input2) input2.value = '';
+                            createTrackComment(tid2, txt2).then(function () {
+                                loadAndRenderTrackComments(tid2, list2);
+                            });
+                        } catch (_) {
+                        }
+                        return;
+                    }
+
                     try {
                         if (target.getAttribute && target.getAttribute('data-juke-stories-close') === '1') {
                             close();
                             return;
                         }
                     } catch (_) {
+                    }
+
+                    var shareBtn2 = null;
+                    try {
+                        shareBtn2 = target.closest ? target.closest('[data-share-track-id]') : null;
+                    } catch (_) {
+                        shareBtn2 = null;
+                    }
+                    if (shareBtn2) {
+                        try {
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                        } catch (_) {
+                        }
+                        var sid = null;
+                        try {
+                            sid = shareBtn2.getAttribute('data-share-track-id');
+                        } catch (_) {
+                            sid = null;
+                        }
+                        if (sid && typeof window.shareTrackById === 'function') {
+                            try {
+                                var tt = (u.tracks || []).find(function (x) { return String(x.id) === String(sid); });
+                                window.shareTrackById(String(sid), { title: tt && tt.title ? tt.title : '', text: tt && (tt.artist_name || tt.uploader_username) ? (tt.artist_name || tt.uploader_username) : '' });
+                            } catch (_) {
+                            }
+                        }
+                        return;
                     }
 
                     var shareBtn = null;
@@ -931,6 +1319,24 @@ async function renderStoriesBar() {
                         }
                     }
                 });
+
+                try {
+                    root.addEventListener('keydown', function (e) {
+                        var t = e && e.target ? e.target : null;
+                        if (!t) return;
+                        if (t.classList && t.classList.contains('post-comment-input')) {
+                            if (e.key === 'Enter') {
+                                try {
+                                    var id = t.getAttribute('data-track-id');
+                                    var send = id ? root.querySelector('.post-comment-send[data-track-id="' + String(id) + '"]') : null;
+                                    if (send) send.click();
+                                } catch (_) {
+                                }
+                            }
+                        }
+                    });
+                } catch (_) {
+                }
             } catch (_) {
             }
         }
@@ -1318,12 +1724,19 @@ function createFeedPostCard(track) {
         
         const toggle = card.querySelector('.post-comment-toggle');
         const comments = card.querySelector('.post-comments');
+        const commentsList = card.querySelector('.post-comments-list[data-track-id]');
         if (toggle && comments && !toggle.dataset.bound) {
             toggle.dataset.bound = '1';
             toggle.addEventListener('click', function () {
                 const open = card.classList.contains('comments-open');
                 card.classList.toggle('comments-open', !open);
                 toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+                if (!open) {
+                    try {
+                        if (commentsList) loadAndRenderTrackComments(trackIdStr, commentsList);
+                    } catch (_) {
+                    }
+                }
             });
         }
         
@@ -1335,9 +1748,32 @@ function createFeedPostCard(track) {
                 const text = commentInput.value.trim();
                 if (!text) return;
                 commentInput.value = '';
+                try {
+                    await createTrackComment(trackIdStr, text);
+                } catch (_) {
+                }
+                try {
+                    if (commentsList) loadAndRenderTrackComments(trackIdStr, commentsList);
+                } catch (_) {
+                }
             });
             commentInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') commentSend.click();
+            });
+        }
+
+        const commentBtn = card.querySelector('.comment-btn[data-track-id]');
+        if (commentBtn && !commentBtn.dataset.bound) {
+            commentBtn.dataset.bound = '1';
+            commentBtn.addEventListener('click', function (e) {
+                try {
+                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                } catch (_) {
+                }
+                try {
+                    openTrackCommentsModal(String(track.id), { title: track.title || 'Comments' });
+                } catch (_) {
+                }
             });
         }
     } catch (_) {
@@ -1375,6 +1811,9 @@ function createCollectionTrackCard(track) {
                 <div class="track-actions">
                     <button class="action-btn ${isLiked ? 'liked' : ''}" data-track-id="${track.id}" onclick="likeTrack('${track.id}')">
                         <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
+                    </button>
+                    <button class="action-btn comment-btn" data-track-id="${track.id}" type="button" aria-label="Comments">
+                        <i class="far fa-comment"></i>
                     </button>
                     <button class="action-btn share-btn" data-track-id="${track.id}" type="button" aria-label="Share">
                         <i class="far fa-paper-plane"></i>
