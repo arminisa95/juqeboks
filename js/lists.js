@@ -335,6 +335,13 @@ async function openPlaylist(playlist) {
         } catch (_) {
         }
 
+        try {
+            if (window.JukePlayer && typeof window.JukePlayer.setQueueTracks === 'function' && Array.isArray(tracks)) {
+                window.JukePlayer.setQueueTracks(tracks);
+            }
+        } catch (_) {
+        }
+
         if (ui.playlistStatus) ui.playlistStatus.textContent = '';
         if (!ui.playlistTracks) return;
 

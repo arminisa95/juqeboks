@@ -177,6 +177,16 @@ MUSIC PLAYER - Enhanced Modern Design
     justify-content: center;
 }
 
+.music-player .queue-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .music-player .like-btn i {
     font-size: 1.45rem;
     color: rgba(255, 255, 255, 0.55);
@@ -185,6 +195,12 @@ MUSIC PLAYER - Enhanced Modern Design
 
 .music-player .share-btn i {
     font-size: 1.45rem;
+    color: rgba(255, 255, 255, 0.55);
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.music-player .queue-btn i {
+    font-size: 1.3rem;
     color: rgba(255, 255, 255, 0.55);
     transition: transform 0.15s ease, color 0.15s ease;
 }
@@ -199,8 +215,9 @@ MUSIC PLAYER - Enhanced Modern Design
     color: rgba(255, 255, 255, 0.9);
 }
 
-.music-player .like-btn.liked i {
-    color: #F72193;
+.music-player .queue-btn:hover i {
+    transform: scale(1.06);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .music-player .like-btn i.fas {
@@ -413,4 +430,132 @@ font-size: 1.1rem;
     main {
         margin-bottom: 150px;
     }
+}
+
+.juke-queue-root {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    pointer-events: none;
+}
+
+.juke-queue-root .juke-queue-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    transition: opacity 220ms ease;
+}
+
+.juke-queue-root .juke-queue-sheet {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, 16px);
+    width: min(520px, calc(100vw - 18px));
+    max-height: min(70vh, 560px);
+    background: rgba(18, 18, 18, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    opacity: 0;
+    transition: transform 220ms ease, opacity 220ms ease;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.juke-queue-root.open {
+    pointer-events: auto;
+}
+
+.juke-queue-root.open .juke-queue-backdrop {
+    opacity: 1;
+}
+
+.juke-queue-root.open .juke-queue-sheet {
+    transform: translate(-50%, 0);
+    opacity: 1;
+}
+
+.juke-queue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.juke-queue-titlebar {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.juke-queue-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.75);
+    padding: 8px;
+    cursor: pointer;
+}
+
+.juke-queue-list {
+    padding: 10px;
+    overflow: auto;
+    max-height: calc(min(70vh, 560px) - 52px);
+}
+
+.juke-queue-empty {
+    color: rgba(255, 255, 255, 0.65);
+    padding: 18px 10px;
+    text-align: center;
+}
+
+.juke-queue-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.juke-queue-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.juke-queue-item.active {
+    background: rgba(247, 33, 147, 0.12);
+    border-color: rgba(247, 33, 147, 0.28);
+}
+
+.juke-queue-cover {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.juke-queue-meta {
+    min-width: 0;
+    flex: 1;
+}
+
+.juke-queue-title {
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.9rem;
+    font-weight: 650;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.juke-queue-artist {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

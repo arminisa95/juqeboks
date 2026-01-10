@@ -421,7 +421,7 @@
             document.body.appendChild(el);
         }
 
-        var hasControls = el.querySelector('#play') && el.querySelector('.progress-bar') && el.querySelector('.volume-slider') && el.querySelector('.volume-btn') && el.querySelector('.share-btn') && el.querySelector('#playerVideoContainer');
+        var hasControls = el.querySelector('#play') && el.querySelector('.progress-bar') && el.querySelector('.volume-slider') && el.querySelector('.volume-btn') && el.querySelector('.share-btn') && el.querySelector('#playerVideoContainer') && el.querySelector('#queueToggle');
         if (!hasControls) {
             el.innerHTML = `
                 <div class="player-video-container" id="playerVideoContainer">
@@ -442,6 +442,9 @@
                         </button>
                         <button class="share-btn" aria-label="Share track" data-track-id="">
                             <i class="far fa-paper-plane"></i>
+                        </button>
+                        <button class="queue-btn" id="queueToggle" aria-label="Queue">
+                            <i class="fas fa-bars"></i>
                         </button>
                     </div>
                 </div>
@@ -516,6 +519,7 @@
         var volumeBtn = el.querySelector('.volume-btn');
         var volumeIcon = volumeBtn ? volumeBtn.querySelector('i') : null;
         var volumeSlider = el.querySelector('.volume-slider');
+        var queueToggle = el.querySelector('#queueToggle');
 
         function syncMuteUi() {
             if (volumeIcon) {
@@ -615,6 +619,12 @@
             if (playBtn) {
                 playBtn.addEventListener('click', async function () {
                     togglePlay();
+                });
+            }
+
+            if (queueToggle) {
+                queueToggle.addEventListener('click', function () {
+                    toggleQueue();
                 });
             }
 
@@ -985,6 +995,10 @@
             stopPlayback(true);
             setPlayerVisible(false);
             updateBodyPadding(null);
+            try {
+                closeQueue();
+            } catch (_) {
+            }
             return;
         }
 
@@ -1009,6 +1023,9 @@
         window.JukePlayer.playTrack = playTrackFromObject;
         window.JukePlayer.stop = function () { stopPlayback(true); };
         window.JukePlayer.render = bound.render;
+        window.JukePlayer.setQueueTracks = setQueueTracks;
+        window.JukePlayer.openQueue = openQueue;
+        window.JukePlayer.closeQueue = closeQueue;
 
         window.playTrack = function (trackId) {
             return playTrackById(trackId);
@@ -1059,10 +1076,195 @@
 
     // Global track list for prev/next functionality
     var globalTrackList = [];
-    var globalTrackIndex = -1;
 
     function setGlobalTrackList(trackIds) {
         globalTrackList = trackIds || [];
+    }
+
+    var queueTracks = [];
+
+    function setQueueTracks(tracks) {
+        try {
+            if (!Array.isArray(tracks)) {
+                queueTracks = [];
+            } else {
+                queueTracks = tracks.slice();
+            }
+        } catch (_) {
+            queueTracks = [];
+        }
+        try {
+            updateQueueUi();
+        } catch (_) {
+        }
+    }
+
+    function getQueueRoot() {
+        try {
+            return document.getElementById('jukeQueueRoot');
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function buildQueueListHtml() {
+        var html = '';
+        try {
+            if (!Array.isArray(queueTracks) || queueTracks.length === 0) {
+                return '<div class="juke-queue-empty">Queue is empty</div>';
+            }
+        } catch (_) {
+            return '<div class="juke-queue-empty">Queue is empty</div>';
+        }
+
+        try {
+            queueTracks.forEach(function (t) {
+                if (!t || t.id == null) return;
+                var idStr = String(t.id);
+                var active = (state.trackId != null && String(state.trackId) === idStr) ? ' active' : '';
+                var safeTitle = t && t.title ? String(t.title) : 'Untitled';
+                var safeArtist = (t && (t.artist_name || t.uploader_username)) ? String(t.artist_name || t.uploader_username) : '';
+                var cover = resolveAssetUrl(t.cover_image_url) || getImageUrl('images/juke.png');
+                html += '' +
+                    '<div class="juke-queue-item' + active + '" role="button" tabindex="0" data-queue-track-id="' + idStr + '">' +
+                    '  <img class="juke-queue-cover" src="' + String(cover).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" alt="">' +
+                    '  <div class="juke-queue-meta">' +
+                    '    <div class="juke-queue-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                    '    <div class="juke-queue-artist">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                    '  </div>' +
+                    '</div>';
+            });
+        } catch (_) {
+            return '<div class="juke-queue-empty">Queue is empty</div>';
+        }
+
+        return html || '<div class="juke-queue-empty">Queue is empty</div>';
+    }
+
+    function ensureQueueUi() {
+        var root = getQueueRoot();
+        if (root) return root;
+
+        root = document.createElement('div');
+        root.id = 'jukeQueueRoot';
+        root.className = 'juke-queue-root';
+        root.innerHTML = '' +
+            '<div class="juke-queue-backdrop" data-juke-queue-close="1"></div>' +
+            '<div class="juke-queue-sheet" role="dialog" aria-modal="true">' +
+            '  <div class="juke-queue-header">' +
+            '    <div class="juke-queue-titlebar">Queue</div>' +
+            '    <button type="button" class="juke-queue-close" data-juke-queue-close="1" aria-label="Close">' +
+            '      <i class="fas fa-times"></i>' +
+            '    </button>' +
+            '  </div>' +
+            '  <div class="juke-queue-list"></div>' +
+            '</div>';
+        document.body.appendChild(root);
+
+        root.addEventListener('click', function (e) {
+            var target = e && e.target ? e.target : null;
+            if (!target) return;
+
+            try {
+                if (target.getAttribute && target.getAttribute('data-juke-queue-close') === '1') {
+                    closeQueue();
+                    return;
+                }
+            } catch (_) {
+            }
+
+            var item = null;
+            try {
+                item = target.closest ? target.closest('.juke-queue-item[data-queue-track-id]') : null;
+            } catch (_) {
+                item = null;
+            }
+            if (!item) return;
+
+            var tid = null;
+            try {
+                tid = item.getAttribute('data-queue-track-id');
+            } catch (_) {
+                tid = null;
+            }
+            if (!tid) return;
+
+            var trackObj = null;
+            try {
+                trackObj = (queueTracks || []).find(function (t) { return t && String(t.id) === String(tid); }) || null;
+            } catch (_) {
+                trackObj = null;
+            }
+
+            try {
+                if (trackObj && window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
+                    window.JukePlayer.playTrack(trackObj, { autoShowVideo: !!trackObj.video_url });
+                } else if (typeof playTrackById === 'function') {
+                    playTrackById(String(tid));
+                }
+            } catch (_) {
+            }
+
+            try {
+                updateQueueUi();
+            } catch (_) {
+            }
+        });
+
+        return root;
+    }
+
+    function updateQueueUi() {
+        var root = getQueueRoot();
+        if (!root) return;
+        try {
+            var list = root.querySelector('.juke-queue-list');
+            if (!list) return;
+            list.innerHTML = buildQueueListHtml();
+        } catch (_) {
+        }
+    }
+
+    function openQueue() {
+        try {
+            var root = ensureQueueUi();
+            updateQueueUi();
+            try {
+                requestAnimationFrame(function () {
+                    try {
+                        root.classList.add('open');
+                    } catch (_) {
+                    }
+                });
+            } catch (_) {
+                try {
+                    root.classList.add('open');
+                } catch (_) {
+                }
+            }
+        } catch (_) {
+        }
+    }
+
+    function closeQueue() {
+        var root = getQueueRoot();
+        if (!root) return;
+        try {
+            root.classList.remove('open');
+        } catch (_) {
+        }
+    }
+
+    function toggleQueue() {
+        var root = getQueueRoot();
+        var isOpen = false;
+        try {
+            isOpen = !!(root && root.classList && root.classList.contains('open'));
+        } catch (_) {
+            isOpen = false;
+        }
+        if (isOpen) closeQueue();
+        else openQueue();
     }
 
     function findCurrentTrackIndex() {
@@ -1177,6 +1379,7 @@
         var fsPrev = document.getElementById('fsPrev');
         var fsNext = document.getElementById('fsNext');
         var fsShare = document.getElementById('fsShare');
+        var fsQueue = document.getElementById('fsQueue');
         var fsProgressBar = document.getElementById('fsProgressBar');
 
         if (miniPlay && !miniPlay.dataset.bound) {
@@ -1188,6 +1391,16 @@
                     audio.play().catch(function(){});
                 } else {
                     audio.pause();
+                }
+            });
+        }
+
+        if (fsQueue && !fsQueue.dataset.bound) {
+            fsQueue.dataset.bound = '1';
+            fsQueue.addEventListener('click', function () {
+                try {
+                    openQueue();
+                } catch (_) {
                 }
             });
         }

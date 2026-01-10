@@ -645,14 +645,14 @@ async function renderStoriesBar() {
                 }
 
                 try {
-                    var first = (u && u.tracks && u.tracks[0]) ? u.tracks[0] : null;
-                    if (first) {
-                        setActiveTrack(first);
+                    var initial = (u && u.tracks && u.tracks[0]) ? u.tracks[0] : null;
+                    if (initial) {
+                        setActiveTrack(initial);
                         try {
                             if (window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
-                                window.JukePlayer.playTrack(first, { autoShowVideo: !!first.video_url });
-                            } else if (first && first.id && typeof playTrack === 'function') {
-                                playTrack(String(first.id));
+                                window.JukePlayer.playTrack(initial, { autoShowVideo: !!initial.video_url });
+                            } else if (initial && initial.id && typeof playTrack === 'function') {
+                                playTrack(String(initial.id));
                             }
                         } catch (_) {
                         }
@@ -968,6 +968,13 @@ async function loadFeedStream(reset) {
         } catch (_) {
         }
 
+        try {
+            if (window.JukePlayer && typeof window.JukePlayer.setQueueTracks === 'function') {
+                window.JukePlayer.setQueueTracks(tracks);
+            }
+        } catch (_) {
+        }
+
         // If user opened a shared link like #/feed?track=123, auto-play it once
         maybeAutoPlaySharedTrack();
 
@@ -1007,6 +1014,12 @@ function displayFeedTracks(tracks) {
         }
     } catch (_) {}
 
+    try {
+        if (window.JukePlayer && typeof window.JukePlayer.setQueueTracks === 'function') {
+            window.JukePlayer.setQueueTracks(tracks);
+        }
+    } catch (_) {}
+
     tracks.forEach(track => {
         const trackCard = createFeedPostCard(track);
         musicGrid.appendChild(trackCard);
@@ -1040,6 +1053,12 @@ function displayCollectionTracks(tracks) {
         if (window.JukePlayer && typeof window.JukePlayer.setTrackList === 'function') {
             const trackIds = tracks.map(t => String(t.id));
             window.JukePlayer.setTrackList(trackIds);
+        }
+    } catch (_) {}
+
+    try {
+        if (window.JukePlayer && typeof window.JukePlayer.setQueueTracks === 'function') {
+            window.JukePlayer.setQueueTracks(tracks);
         }
     } catch (_) {}
 
