@@ -144,7 +144,7 @@
 
 .music-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(247, 33, 147, 0.25);
+    border-color: rgba(220, 220, 220, 0.14);
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 
