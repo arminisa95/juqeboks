@@ -451,7 +451,7 @@ async function renderStoriesBar() {
                     id: t.uploader_id,
                     username: t.uploader_username,
                     avatar: t.cover_image_url || null,
-                    hasNew: true,
+                    hasNew: false,
                     tracks: []
                 });
             }
@@ -489,6 +489,21 @@ async function renderStoriesBar() {
             storiesBar.style.display = 'none';
             return;
         }
+
+        // Mark as "new" if latest upload is within last 24h
+        try {
+            var nowTs = Date.now();
+            uploaderArr.forEach(function (u) {
+                try {
+                    var latest = (u && u.tracks && u.tracks[0]) ? parseTrackDate(u.tracks[0]) : null;
+                    var ts = latest ? latest.getTime() : 0;
+                    u.hasNew = !!(ts && (nowTs - ts) < (24 * 60 * 60 * 1000));
+                } catch (_) {
+                    u.hasNew = false;
+                }
+            });
+        } catch (_) {
+        }
         
         function openStoriesTray(u) {
             try {
@@ -500,26 +515,31 @@ async function renderStoriesBar() {
                 root.id = 'jukeStoriesTrayRoot';
                 root.className = 'juke-stories-tray-root';
 
+                function buildListHtml(tracksArr) {
+                    var listHtml = '';
+                    (tracksArr || []).slice(0, 20).forEach(function (t) {
+                        var cover = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
+                        var safeTitle = t && t.title ? String(t.title) : 'Untitled';
+                        var safeArtist = (t && (t.artist_name || t.uploader_username)) ? String(t.artist_name || t.uploader_username) : '';
+                        var dateTxt = formatTrackDateShort(t);
+                        listHtml += '' +
+                            '<div class="juke-story-track" role="button" tabindex="0" data-track-id="' + String(t.id) + '">' +
+                            '  <img class="juke-story-track-cover" src="' + cover + '" alt="">' +
+                            '  <div class="juke-story-track-meta">' +
+                            '    <div class="juke-story-track-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                            '    <div class="juke-story-track-sub">' +
+                            '      <span class="juke-story-track-artist">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
+                            (dateTxt ? ('<span class="juke-story-track-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>') : '') +
+                            '    </div>' +
+                            '  </div>' +
+                            '  <button type="button" class="juke-story-track-share" data-share-track-id="' + String(t.id) + '" aria-label="Share"><i class="far fa-paper-plane"></i></button>' +
+                            '</div>';
+                    });
+                    return listHtml || '<div class="empty-state">No recent tracks</div>';
+                }
+
                 var title = u.username ? ('@' + String(u.username)) : 'Stories';
-                var listHtml = '';
-                (u.tracks || []).slice(0, 20).forEach(function (t) {
-                    var cover = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
-                    var safeTitle = t && t.title ? String(t.title) : 'Untitled';
-                    var safeArtist = (t && (t.artist_name || t.uploader_username)) ? String(t.artist_name || t.uploader_username) : '';
-                    var dateTxt = formatTrackDateShort(t);
-                    listHtml += '' +
-                        '<div class="juke-story-track" role="button" tabindex="0" data-track-id="' + String(t.id) + '">' +
-                        '  <img class="juke-story-track-cover" src="' + cover + '" alt="">' +
-                        '  <div class="juke-story-track-meta">' +
-                        '    <div class="juke-story-track-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-                        '    <div class="juke-story-track-sub">' +
-                        '      <span class="juke-story-track-artist">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
-                        (dateTxt ? ('<span class="juke-story-track-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>') : '') +
-                        '    </div>' +
-                        '  </div>' +
-                        '  <button type="button" class="juke-story-track-share" data-share-track-id="' + String(t.id) + '" aria-label="Share"><i class="far fa-paper-plane"></i></button>' +
-                        '</div>';
-                });
+                var listHtml = buildListHtml(u.tracks || []);
 
                 root.innerHTML = '' +
                     '<div class="juke-stories-tray-backdrop" data-juke-stories-close="1"></div>' +
@@ -530,16 +550,136 @@ async function renderStoriesBar() {
                     '      <i class="fas fa-times"></i>' +
                     '    </button>' +
                     '  </div>' +
-                    '  <div class="juke-stories-tray-list">' + (listHtml || '<div class="empty-state">No recent tracks</div>') + '</div>' +
+                    '  <div class="juke-stories-tray-list">' + listHtml + '</div>' +
                     '</div>';
 
                 document.body.appendChild(root);
 
+                try {
+                    requestAnimationFrame(function () {
+                        try {
+                            root.classList.add('open');
+                        } catch (_) {
+                        }
+                    });
+                } catch (_) {
+                }
+
                 function close() {
                     try {
-                        if (root && root.parentNode) root.parentNode.removeChild(root);
+                        if (!root) return;
+                        try {
+                            root.classList.remove('open');
+                        } catch (_) {
+                        }
+                        try {
+                            root.classList.add('closing');
+                        } catch (_) {
+                        }
+
+                        var removed = false;
+                        function finalize() {
+                            if (removed) return;
+                            removed = true;
+                            try {
+                                if (root && root.parentNode) root.parentNode.removeChild(root);
+                            } catch (_) {
+                            }
+                        }
+
+                        try {
+                            var sheet = root.querySelector('.juke-stories-tray-sheet');
+                            if (sheet) {
+                                sheet.addEventListener('transitionend', finalize, { once: true });
+                                setTimeout(finalize, 350);
+                                return;
+                            }
+                        } catch (_) {
+                        }
+
+                        finalize();
                     } catch (_) {
                     }
+                }
+
+                // Fetch full recent tracks for that user when authenticated
+                (async function () {
+                    try {
+                        var token = getAuthToken();
+                        if (!token || !u || !u.id) return;
+                        var listEl = root.querySelector('.juke-stories-tray-list');
+                        if (listEl) listEl.innerHTML = '<div class="empty-state">Loading...</div>';
+                        var userTracks = await apiFetchJson('/tracks/user/' + encodeURIComponent(String(u.id)), {
+                            headers: { Authorization: 'Bearer ' + token }
+                        }, function (d) { return Array.isArray(d); });
+                        try {
+                            userTracks = (userTracks || []).slice().sort(function (a, b) {
+                                var da = parseTrackDate(a);
+                                var db = parseTrackDate(b);
+                                var ta = da ? da.getTime() : 0;
+                                var tb = db ? db.getTime() : 0;
+                                return tb - ta;
+                            });
+                        } catch (_) {
+                        }
+                        if (listEl) listEl.innerHTML = buildListHtml(userTracks);
+                        try {
+                            u.tracks = userTracks;
+                        } catch (_) {
+                        }
+                    } catch (_) {
+                        try {
+                            var listEl2 = root.querySelector('.juke-stories-tray-list');
+                            if (listEl2) listEl2.innerHTML = buildListHtml(u.tracks || []);
+                        } catch (_) {
+                        }
+                    }
+                })();
+
+                // Swipe-down to close
+                try {
+                    var sheetEl = root.querySelector('.juke-stories-tray-sheet');
+                    var headerEl = root.querySelector('.juke-stories-tray-header');
+                    var dragEl = headerEl || sheetEl;
+                    if (sheetEl && dragEl) {
+                        var startY = 0;
+                        var dragging = false;
+                        dragEl.addEventListener('touchstart', function (e) {
+                            try {
+                                if (!e || !e.touches || !e.touches[0]) return;
+                                dragging = true;
+                                startY = e.touches[0].clientY;
+                            } catch (_) {
+                            }
+                        }, { passive: true });
+
+                        dragEl.addEventListener('touchmove', function (e) {
+                            try {
+                                if (!dragging || !e || !e.touches || !e.touches[0]) return;
+                                var dy = e.touches[0].clientY - startY;
+                                if (dy < 0) dy = 0;
+                                sheetEl.style.transform = 'translate(-50%, ' + dy + 'px)';
+                            } catch (_) {
+                            }
+                        }, { passive: true });
+
+                        dragEl.addEventListener('touchend', function () {
+                            try {
+                                if (!dragging) return;
+                                dragging = false;
+                                var m = sheetEl.style.transform || '';
+                                var match = m.match(/,\s*([0-9.]+)px\)/);
+                                var dy = match ? parseFloat(match[1]) : 0;
+                                if (dy > 90) {
+                                    close();
+                                    return;
+                                }
+                                sheetEl.style.transform = '';
+                            } catch (_) {
+                            }
+                        });
+                    }
+                } catch (_) {
                 }
 
                 root.addEventListener('click', function (e) {
@@ -595,6 +735,41 @@ async function renderStoriesBar() {
         }
 
         storiesBar.innerHTML = '';
+
+        // "Your story" bubble first (upload shortcut)
+        try {
+            var cu = null;
+            try {
+                if (typeof getCurrentUser === 'function') cu = getCurrentUser();
+            } catch (_) {
+                cu = null;
+            }
+            var myUsername = (cu && cu.username) ? String(cu.username) : '';
+            if (myUsername) {
+                const your = document.createElement('div');
+                your.className = 'story-item';
+                your.innerHTML = `
+                    <div class="story-avatar your-story">
+                        <img src="${resolveAssetUrl(null, 'images/juke.png')}" alt="${myUsername}">
+                        <div class="story-plus-badge">+</div>
+                    </div>
+                    <div class="story-username">Your story</div>
+                `;
+                your.addEventListener('click', function () {
+                    try {
+                        if (isSpaMode()) {
+                            window.location.hash = '#/upload';
+                        } else {
+                            window.location.href = 'upload.html';
+                        }
+                    } catch (_) {
+                    }
+                });
+                storiesBar.appendChild(your);
+            }
+        } catch (_) {
+        }
+
         uploaderArr.forEach(function (u) {
             const item = document.createElement('div');
             item.className = 'story-item';
