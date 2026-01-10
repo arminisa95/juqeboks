@@ -110,6 +110,16 @@ function resolveAssetUrl(url, fallback) {
     return url;
 }
 
+function resolveLocalAssetUrl(pathFromRoot) {
+    try {
+        var p = (window.location && window.location.pathname) ? String(window.location.pathname).replace(/\\/g, '/') : '';
+        var base = p.includes('/html/') ? '..' : '.';
+        return base + '/' + String(pathFromRoot || '').replace(/^\//, '');
+    } catch (_) {
+        return pathFromRoot;
+    }
+}
+
 function parseTrackDate(track) {
     try {
         var v = track && (track.created_at || track.createdAt || track.created);
@@ -518,7 +528,7 @@ async function renderStoriesBar() {
                 function buildListHtml(tracksArr) {
                     var listHtml = '';
                     (tracksArr || []).slice(0, 20).forEach(function (t) {
-                        var cover = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
+                        var cover = resolveAssetUrl(t.cover_image_url, resolveLocalAssetUrl('images/juke.png'));
                         var safeTitle = t && t.title ? String(t.title) : 'Untitled';
                         var safeArtist = (t && (t.artist_name || t.uploader_username)) ? String(t.artist_name || t.uploader_username) : '';
                         var dateTxt = formatTrackDateShort(t);
@@ -600,7 +610,7 @@ async function renderStoriesBar() {
                         }
                         if (!mediaHost) return;
 
-                        var cover = resolveAssetUrl(track.cover_image_url, 'images/juke.png');
+                        var cover = resolveAssetUrl(track.cover_image_url, resolveLocalAssetUrl('images/juke.png'));
                         var safeTitle = track && track.title ? String(track.title) : 'Untitled';
                         var safeArtist = (track && (track.artist_name || track.uploader_username)) ? String(track.artist_name || track.uploader_username) : '';
                         var dateTxt = formatTrackDateShort(track);
@@ -622,6 +632,14 @@ async function renderStoriesBar() {
                             '  </div>' +
                             (dateTxt ? ('<div class="juke-story-media-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>') : '') +
                             '</div>';
+
+                        try {
+                            var v = mediaHost.querySelector('video');
+                            if (v && typeof v.play === 'function') {
+                                v.play().catch(function () { });
+                            }
+                        } catch (_) {
+                        }
                     } catch (_) {
                     }
                 }
@@ -631,7 +649,11 @@ async function renderStoriesBar() {
                     if (first) {
                         setActiveTrack(first);
                         try {
-                            if (first && first.id && typeof playTrack === 'function') playTrack(String(first.id));
+                            if (window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
+                                window.JukePlayer.playTrack(first, { autoShowVideo: !!first.video_url });
+                            } else if (first && first.id && typeof playTrack === 'function') {
+                                playTrack(String(first.id));
+                            }
                         } catch (_) {
                         }
                     }
@@ -811,11 +833,23 @@ async function renderStoriesBar() {
                                 if (tt2) setActiveTrack(tt2);
                             } catch (_) {
                             }
-                            if (typeof playTrack === 'function') {
-                                try {
+                            try {
+                                if (window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
+                                    var trackObj = null;
+                                    try {
+                                        trackObj = tt2 || findTrackById(tid);
+                                    } catch (_) {
+                                        trackObj = null;
+                                    }
+                                    if (trackObj) {
+                                        window.JukePlayer.playTrack(trackObj, { autoShowVideo: !!trackObj.video_url });
+                                    } else if (typeof playTrack === 'function') {
+                                        playTrack(String(tid));
+                                    }
+                                } else if (typeof playTrack === 'function') {
                                     playTrack(String(tid));
-                                } catch (_) {
                                 }
+                            } catch (_) {
                             }
                         }
                     }
@@ -840,7 +874,7 @@ async function renderStoriesBar() {
                 your.className = 'story-item';
                 your.innerHTML = `
                     <div class="story-avatar your-story">
-                        <img src="${resolveAssetUrl(null, 'images/juke.png')}" alt="${myUsername}">
+                        <img src="${resolveAssetUrl(null, resolveLocalAssetUrl('images/juke.png'))}" alt="${myUsername}">
                         <div class="story-plus-badge">+</div>
                     </div>
                     <div class="story-username">Your story</div>
@@ -865,7 +899,7 @@ async function renderStoriesBar() {
             item.className = 'story-item';
             item.innerHTML = `
                 <div class="story-avatar ${u.hasNew ? '' : 'no-story'}">
-                    <img src="${resolveAssetUrl(u.avatar, 'images/juke.png')}" alt="${u.username}">
+                    <img src="${resolveAssetUrl(u.avatar, resolveLocalAssetUrl('images/juke.png'))}" alt="${u.username}">
                 </div>
                 <div class="story-username">${u.username}</div>
             `;

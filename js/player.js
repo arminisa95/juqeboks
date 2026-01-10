@@ -276,6 +276,85 @@
         }
     }
 
+    function playTrackFromObject(track, opts) {
+        try {
+            if (!track || typeof track !== 'object') return;
+            var autoShowVideo = false;
+            try {
+                if (opts === true) {
+                    autoShowVideo = true;
+                } else if (opts && typeof opts === 'object') {
+                    autoShowVideo = !!opts.autoShowVideo;
+                }
+            } catch (_) {
+                autoShowVideo = false;
+            }
+            var audioUrl = track.audio_url ? resolveAssetUrl(track.audio_url) : null;
+            if (!audioUrl) return;
+
+            state.trackId = track.id != null ? track.id : state.trackId;
+            state.title = track.title || 'Unknown Title';
+            state.artist = (track.artist_name || track.uploader_username) ? String(track.artist_name || track.uploader_username) : 'Unknown Artist';
+            state.coverUrl = resolveAssetUrl(track.cover_image_url) || getImageUrl('images/juke.png');
+            state.audioUrl = audioUrl;
+            state.videoUrl = track.video_url ? resolveAssetUrl(track.video_url) : null;
+            state.currentTime = 0;
+            state.showVideo = !!(autoShowVideo && state.videoUrl);
+
+            updateVideoToggleVisibility();
+
+            audio.src = audioUrl;
+            audio.currentTime = 0;
+            audio.volume = state.volume;
+
+            state.isPlaying = true;
+            saveState();
+
+            var p = null;
+            try {
+                p = audio.play();
+            } catch (_) {
+                p = null;
+            }
+
+            if (p && typeof p.then === 'function') {
+                p.then(function () {
+                    state.isPlaying = true;
+                    saveState();
+                    try {
+                        if (window.JukePlayer && typeof window.JukePlayer.render === 'function') window.JukePlayer.render();
+                    } catch (_) {
+                    }
+                    try {
+                        if (typeof updateMobilePlayer === 'function') updateMobilePlayer();
+                    } catch (_) {
+                    }
+                }).catch(function () {
+                    state.isPlaying = false;
+                    saveState();
+                    try {
+                        if (window.JukePlayer && typeof window.JukePlayer.render === 'function') window.JukePlayer.render();
+                    } catch (_) {
+                    }
+                    try {
+                        if (typeof updateMobilePlayer === 'function') updateMobilePlayer();
+                    } catch (_) {
+                    }
+                });
+            }
+
+            try {
+                if (window.JukePlayer && typeof window.JukePlayer.render === 'function') window.JukePlayer.render();
+            } catch (_) {
+            }
+            try {
+                if (typeof updateMobilePlayer === 'function') updateMobilePlayer();
+            } catch (_) {
+            }
+        } catch (_) {
+        }
+    }
+
     function loadState() {
         var raw = localStorage.getItem(STORAGE_KEY);
         var parsed = raw ? safeParse(raw) : null;
@@ -342,7 +421,7 @@
             document.body.appendChild(el);
         }
 
-        var hasControls = el.querySelector('#play') && el.querySelector('.progress-bar') && el.querySelector('.volume-slider');
+        var hasControls = el.querySelector('#play') && el.querySelector('.progress-bar') && el.querySelector('.volume-slider') && el.querySelector('.volume-btn') && el.querySelector('.share-btn') && el.querySelector('#playerVideoContainer');
         if (!hasControls) {
             el.innerHTML = `
                 <div class="player-video-container" id="playerVideoContainer">
@@ -927,6 +1006,7 @@
         // Do not overwrite JukePlayer object (mobile + queue helpers attach onto it)
         window.JukePlayer = window.JukePlayer || {};
         window.JukePlayer.playTrackById = playTrackById;
+        window.JukePlayer.playTrack = playTrackFromObject;
         window.JukePlayer.stop = function () { stopPlayback(true); };
         window.JukePlayer.render = bound.render;
 
