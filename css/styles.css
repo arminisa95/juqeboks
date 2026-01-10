@@ -659,9 +659,9 @@ margin-left: 120px;
     width: 1px;
     background: linear-gradient(180deg, 
         transparent 0%, 
-        rgba(220, 220, 220, 0.18) 10%, 
-        rgba(220, 220, 220, 0.10) 50%,
-        rgba(220, 220, 220, 0.08) 80%,
+        rgba(247, 33, 147, 0.16) 10%, 
+        rgba(247, 33, 147, 0.10) 50%,
+        rgba(247, 33, 147, 0.06) 80%,
         transparent 100%);
     pointer-events: none;
     z-index: 1;

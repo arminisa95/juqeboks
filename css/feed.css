@@ -37,7 +37,7 @@
     height: 84px;
     border-radius: 50%;
     padding: 4px;
-    background: linear-gradient(135deg, #00ff85, #00ffcc, #9dff57, #00c853, #00ff85);
+    background: linear-gradient(135deg, #062415, #0a3a22, #0f5a33, #0a3a22, #062415);
     background-size: 200% 200%;
     animation: gradientShift 3s ease infinite;
     position: relative;
