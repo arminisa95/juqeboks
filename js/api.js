@@ -728,7 +728,7 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
             '      <i class="fas fa-times"></i>' +
             '    </button>' +
             '  </div>' +
-            '  <div class="juke-stories-tray-media"></div>' +
+            '  <div class="juke-stories-tray-media juke-story-split"></div>' +
             '</div>';
 
         document.body.appendChild(root);
@@ -1264,7 +1264,7 @@ async function renderStoriesBar() {
                     '      <i class="fas fa-times"></i>' +
                     '    </button>' +
                     '  </div>' +
-                    '  <div class="juke-stories-tray-media"></div>' +
+                    '  <div class="juke-stories-tray-media juke-story-split"></div>' +
                     '  <div class="juke-stories-tray-list">' + listHtml + '</div>' +
                     '</div>';
 
@@ -1388,46 +1388,57 @@ async function renderStoriesBar() {
                             liked = false;
                         }
 
+                        var likeCount = 0;
+                        try {
+                            likeCount = (typeof track.like_count === 'number') ? track.like_count : 0;
+                        } catch (_) {
+                            likeCount = 0;
+                        }
+                        var likeCountTxt = (liked || likeCount > 0) ? String(likeCount) : '';
+
                         mediaHost.innerHTML = '' +
-                            '<div class="juke-story-media-layout">' +
-                            '  <button type="button" class="juke-story-side juke-story-side-prev" data-juke-story-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
-                            '  <div class="juke-story-media-frame">' + mediaEl + '</div>' +
-                            '  <button type="button" class="juke-story-side juke-story-side-next" data-juke-story-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
-                            '</div>' +
-                            '<div class="juke-story-actions">' +
-                            '  <button class="post-action like-btn ' + (liked ? 'liked' : '') + '" data-track-id="' + String(track.id) + '" type="button" aria-label="Like">' +
-                            '    <i class="' + (liked ? 'fas' : 'far') + ' fa-heart"></i>' +
-                            '  </button>' +
-                            '  <button class="post-action juke-story-comment-toggle" type="button" aria-label="Comments" data-juke-story-comments-toggle="1">' +
-                            '    <i class="far fa-comment"></i>' +
-                            '  </button>' +
-                            '  <button class="post-action juke-story-share" type="button" aria-label="Share" data-share-track-id="' + String(track.id) + '">' +
-                            '    <i class="far fa-paper-plane"></i>' +
-                            '  </button>' +
-                            '</div>' +
-                            '<div class="juke-story-comments">' +
-                            '  <div class="post-comments-title">Comments</div>' +
-                            '  <div class="post-comments-list" data-track-id="' + String(track.id) + '"></div>' +
-                            '  <div class="post-comment-compose">' +
-                            '    <input type="text" class="post-comment-input" placeholder="Add a comment…" data-track-id="' + String(track.id) + '">' +
-                            '    <button type="button" class="post-comment-send" data-track-id="' + String(track.id) + '">Post</button>' +
+                            '<div class="juke-story-left">' +
+                            '  <div class="juke-story-media-layout">' +
+                            '    <button type="button" class="juke-story-side juke-story-side-prev" data-juke-story-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
+                            '    <div class="juke-story-media-frame">' + mediaEl + '</div>' +
+                            '    <button type="button" class="juke-story-side juke-story-side-next" data-juke-story-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
                             '  </div>' +
-                            '</div>' +
-                            '<div class="juke-story-media-meta">' +
-                            '  <div style="min-width:0;flex:1;">' +
-                            '    <div class="juke-story-media-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-                            '    <div class="juke-story-media-sub">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                            '  <div class="juke-story-actions">' +
+                            '    <button class="post-action like-btn ' + (liked ? 'liked' : '') + '" data-track-id="' + String(track.id) + '" type="button" aria-label="Like">' +
+                            '      <i class="' + (liked ? 'fas' : 'far') + ' fa-heart"></i>' +
+                            '      <span class="like-count" data-track-id="' + String(track.id) + '">' + likeCountTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
+                            '    </button>' +
+                            '    <button class="post-action" type="button" aria-label="Comments" data-juke-story-comments-toggle="1">' +
+                            '      <i class="far fa-comment"></i>' +
+                            '    </button>' +
+                            '    <button class="post-action" type="button" aria-label="Share" data-share-track-id="' + String(track.id) + '">' +
+                            '      <i class="far fa-paper-plane"></i>' +
+                            '    </button>' +
                             '  </div>' +
+                            '  <div class="juke-story-media-meta">' +
+                            '    <div style="min-width:0;flex:1;">' +
+                            '      <div class="juke-story-media-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                            '      <div class="juke-story-media-sub">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                            '    </div>' +
                             (dateTxt ? ('<div class="juke-story-media-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>') : '') +
+                            '  </div>' +
+                            '</div>' +
+                            '<div class="juke-story-right">' +
+                            '  <div class="juke-story-comments">' +
+                            '    <div class="post-comments-title">Comments</div>' +
+                            '    <div class="post-comments-list" data-track-id="' + String(track.id) + '"></div>' +
+                            '    <div class="post-comment-compose">' +
+                            '      <input type="text" class="post-comment-input" placeholder="Add a comment…" data-track-id="' + String(track.id) + '">' +
+                            '      <button type="button" class="post-comment-send" data-track-id="' + String(track.id) + '">Post</button>' +
+                            '    </div>' +
+                            '  </div>' +
                             '</div>';
 
                         try {
-                            if (commentsWereOpen && mediaHost.classList) {
-                                mediaHost.classList.add('comments-open');
-                                var listElAuto = mediaHost.querySelector('.post-comments-list[data-track-id]');
-                                var tidAuto = listElAuto ? listElAuto.getAttribute('data-track-id') : null;
-                                if (tidAuto) loadAndRenderTrackComments(tidAuto, listElAuto);
-                            }
+                            if (mediaHost.classList) mediaHost.classList.add('comments-open');
+                            var listElAuto = mediaHost.querySelector('.post-comments-list[data-track-id]');
+                            var tidAuto = listElAuto ? listElAuto.getAttribute('data-track-id') : null;
+                            if (tidAuto) loadAndRenderTrackComments(tidAuto, listElAuto);
                         } catch (_) {
                         }
 
