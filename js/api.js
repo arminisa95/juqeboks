@@ -89,7 +89,7 @@ let likedTrackIds = new Set();
 
 window.isTrackLiked = function (trackId) {
     try {
-        return likedTrackIds.has(trackId);
+        return likedTrackIds.has(String(trackId));
     } catch (_) {
         return false;
     }
@@ -135,7 +135,7 @@ async function loadLikedTrackIds() {
             return !!d && typeof d === 'object' && !Array.isArray(d);
         });
         const favorites = (profile && profile.favorites) ? profile.favorites : [];
-        likedTrackIds = new Set(favorites.map((t) => t.id));
+        likedTrackIds = new Set(favorites.map((t) => String(t && t.id)));
     } catch (e) {
         likedTrackIds = new Set();
     }
@@ -525,7 +525,8 @@ function createFeedPostCard(track) {
     } catch (_) {
         isAdmin = false;
     }
-    const isLiked = likedTrackIds.has(track.id);
+    const trackIdStr = String(track.id);
+    const isLiked = likedTrackIds.has(trackIdStr);
     const canDelete = !!isAdmin || (!!currentUserId && !!uploaderId && String(uploaderId) === String(currentUserId));
 
     const safeTitle = (track && track.title) ? String(track.title) : '';
@@ -610,10 +611,10 @@ function createFeedPostCard(track) {
                         heart.classList.add('animate');
                         setTimeout(() => heart.classList.remove('animate'), 800);
                     }
-                    if (!likedTrackIds.has(track.id)) {
-                        likeTrack(String(track.id));
+                    if (!likedTrackIds.has(trackIdStr)) {
+                        likeTrack(trackIdStr);
                         // Immediately update UI for double-tap like
-                        const isLiked = likedTrackIds.has(String(track.id));
+                        const isLiked = likedTrackIds.has(trackIdStr);
                         if (likeBtn) {
                             const icon = likeBtn.querySelector('i');
                             if (icon) {
@@ -640,9 +641,9 @@ function createFeedPostCard(track) {
         if (likeBtn && !likeBtn.dataset.bound) {
             likeBtn.dataset.bound = '1';
             likeBtn.addEventListener('click', function () {
-                likeTrack(String(track.id));
+                likeTrack(trackIdStr);
                 // Immediately update this like button UI
-                const isLiked = likedTrackIds.has(String(track.id));
+                const isLiked = likedTrackIds.has(trackIdStr);
                 const icon = likeBtn.querySelector('i');
                 if (icon) {
                     icon.className = isLiked ? 'fas fa-heart' : 'far fa-heart';
@@ -714,7 +715,7 @@ function createCollectionTrackCard(track) {
 
     const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
     const artistName = track.artist_name || 'Unknown Artist';
-    const isLiked = likedTrackIds.has(track.id);
+    const isLiked = likedTrackIds.has(String(track.id));
     const currentUserId = getCurrentUserId();
     const canDelete = !!currentUserId && !!track.uploader_id && String(track.uploader_id) === String(currentUserId);
 
@@ -733,7 +734,7 @@ function createCollectionTrackCard(track) {
             <div class="track-stats">
                 <span>${track.genre || ''}</span>
                 <div class="track-actions">
-                    <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="likeTrack('${track.id}')">
+                    <button class="action-btn ${isLiked ? 'liked' : ''}" data-track-id="${track.id}" onclick="likeTrack('${track.id}')">
                         <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
                     </button>
                     ${canDelete ? `
@@ -816,6 +817,8 @@ async function likeTrack(trackId) {
         return;
     }
 
+    trackId = String(trackId);
+
     // Optimistically toggle local state before API
     const wasLiked = likedTrackIds.has(trackId);
     const newLiked = !wasLiked;
@@ -823,6 +826,26 @@ async function likeTrack(trackId) {
         likedTrackIds.add(trackId);
     } else {
         likedTrackIds.delete(trackId);
+    }
+
+    try {
+        document.querySelectorAll(`.like-btn[data-track-id="${CSS.escape(String(trackId))}"], .action-btn[data-track-id="${CSS.escape(String(trackId))}"]`).forEach((btn) => {
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = newLiked ? 'fas fa-heart' : 'far fa-heart';
+            }
+            if (btn && btn.classList) {
+                btn.classList.toggle('liked', !!newLiked);
+            }
+        });
+    } catch (_) {
+    }
+
+    try {
+        window.dispatchEvent(new CustomEvent('tracks:liked-changed', {
+            detail: { trackId: trackId, liked: !!newLiked }
+        }));
+    } catch (_) {
     }
 
     try {
@@ -852,10 +875,13 @@ async function likeTrack(trackId) {
         }
 
         try {
-            document.querySelectorAll(`.like-btn[data-track-id="${CSS.escape(String(trackId))}"]`).forEach((btn) => {
+            document.querySelectorAll(`.like-btn[data-track-id="${CSS.escape(String(trackId))}"], .action-btn[data-track-id="${CSS.escape(String(trackId))}"]`).forEach((btn) => {
                 const icon = btn.querySelector('i');
                 if (icon) {
                     icon.className = (data && data.liked) ? 'fas fa-heart' : 'far fa-heart';
+                }
+                if (btn && btn.classList) {
+                    btn.classList.toggle('liked', !!(data && data.liked));
                 }
             });
         } catch (_) {
@@ -867,6 +893,28 @@ async function likeTrack(trackId) {
         } else {
             likedTrackIds.delete(trackId);
         }
+
+        try {
+            const revertedLiked = !!wasLiked;
+            document.querySelectorAll(`.like-btn[data-track-id="${CSS.escape(String(trackId))}"], .action-btn[data-track-id="${CSS.escape(String(trackId))}"]`).forEach((btn) => {
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.className = revertedLiked ? 'fas fa-heart' : 'far fa-heart';
+                }
+                if (btn && btn.classList) {
+                    btn.classList.toggle('liked', revertedLiked);
+                }
+            });
+        } catch (_) {
+        }
+
+        try {
+            window.dispatchEvent(new CustomEvent('tracks:liked-changed', {
+                detail: { trackId: trackId, liked: !!wasLiked }
+            }));
+        } catch (_) {
+        }
+
         console.error('Liking track failed:', e);
     }
 }
