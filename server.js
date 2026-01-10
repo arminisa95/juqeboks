@@ -158,6 +158,7 @@ async function initializeDatabase() {
                 album_id UUID REFERENCES albums(id) ON DELETE SET NULL,
                 album VARCHAR(200) DEFAULT 'Single',
                 cover_image_url VARCHAR(500),
+                video_url VARCHAR(500),
                 file_path VARCHAR(500) NOT NULL,
                 file_size BIGINT,
                 duration_seconds INTEGER NOT NULL DEFAULT 0,
@@ -232,6 +233,7 @@ async function initializeDatabase() {
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS uploader_id UUID REFERENCES users(id) ON DELETE SET NULL');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500)');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)');
         await db.query("ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album VARCHAR(200) DEFAULT 'Single'");
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
@@ -1447,7 +1449,7 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
         const { id: trackId } = req.params;
 
         const track = await db.get(
-            'SELECT id, uploader_id, file_path, cover_image_url, metadata FROM tracks WHERE id = $1',
+            'SELECT id, uploader_id, file_path, cover_image_url, video_url, metadata FROM tracks WHERE id = $1',
             [trackId]
         );
 
@@ -1466,11 +1468,12 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
             if (meta && typeof meta === 'object') {
                 if (meta.audio_key) await deleteS3KeyIfAny(meta.audio_key);
                 if (meta.cover_key) await deleteS3KeyIfAny(meta.cover_key);
+                if (meta.video_key) await deleteS3KeyIfAny(meta.video_key);
             }
         } catch (_) {
         }
 
-        const candidates = [track.file_path, track.cover_image_url]
+        const candidates = [track.file_path, track.cover_image_url, track.video_url]
             .filter(Boolean)
             .map((p) => String(p));
 

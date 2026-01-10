@@ -64,6 +64,7 @@ CREATE TABLE tracks (
     album VARCHAR(200) DEFAULT 'Single',
     cover_image_url VARCHAR(500),
     audio_url VARCHAR(500),
+    video_url VARCHAR(500),
     file_path VARCHAR(500) NOT NULL,
     file_size BIGINT,
     duration_seconds INTEGER NOT NULL,
