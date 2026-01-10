@@ -201,7 +201,7 @@
                             <h4 class="now-playing-title">Not Playing</h4>
                             <p class="now-playing-artist">-</p>
                         </div>
-                        <button class="like-btn" aria-label="Like track">
+                        <button class="like-btn" aria-label="Like track" data-track-id="">
                             <i class="far fa-heart"></i>
                         </button>
                     </div>
@@ -341,6 +341,7 @@
                     likeIcon.className = liked ? 'fas fa-heart' : 'far fa-heart';
                     if (likeBtn && likeBtn.classList) {
                         likeBtn.classList.toggle('liked', !!liked);
+                        likeBtn.setAttribute('data-track-id', state.trackId || '');
                     }
                 }
             } catch (_) {
@@ -400,6 +401,17 @@
                         if (!state.trackId) return;
                         if (typeof window.likeTrack === 'function') {
                             window.likeTrack(state.trackId);
+                        }
+                        // Immediately update player like button UI
+                        if (likeIcon) {
+                            var liked = false;
+                            if (typeof window.isTrackLiked === 'function') {
+                                liked = !!window.isTrackLiked(state.trackId);
+                            }
+                            likeIcon.className = liked ? 'fas fa-heart' : 'far fa-heart';
+                            if (likeBtn && likeBtn.classList) {
+                                likeBtn.classList.toggle('liked', !!liked);
+                            }
                         }
                     } catch (_) {
                     }
