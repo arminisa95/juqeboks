@@ -154,7 +154,12 @@
         <main>
             <div class="lists-shell" id="listsShell">
                 <aside class="lists-nav" aria-label="Lists directories">
-                    <div class="lists-nav-title">_lists</div>
+                    <div class="lists-nav-title">
+                        _lists
+                        <button class="lists-add-btn" type="button" id="addPlaylistBtn" aria-label="Add playlist">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                     <div class="lists-nav-subtitle">Directories</div>
                     <div class="lists-nav-items" role="tablist">
                         <button class="lists-nav-item" type="button" role="tab" data-view="liked">_liked tracks</button>
@@ -174,9 +179,6 @@
                     <div class="lists-panel" id="listsPanelLists" data-panel="lists" role="tabpanel">
                         <div class="lists-panel-header">
                             <div class="lists-panel-title">_lists</div>
-                            <button class="lists-add-btn" type="button" id="addPlaylistBtn" aria-label="Add playlist">
-                                <i class="fas fa-plus"></i>
-                            </button>
                             <div class="lists-panel-hint">Your playlists</div>
                         </div>
                         <div id="myPlaylists" class="cards-grid"></div>
