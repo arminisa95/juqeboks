@@ -710,6 +710,7 @@ var feedState = {
 
 function openTrackMediaViewer(tracksArr, startTrackId) {
     try {
+        console.log('openTrackMediaViewer called with', tracksArr?.length, 'tracks, startId:', startTrackId);
         if (!startTrackId) return;
 
         var existing = document.getElementById('jukeMediaViewerRoot');
@@ -1917,19 +1918,35 @@ async function renderStoriesBar() {
                     isMobile = false;
                 }
                 
+                console.log('Story clicked, isMobile:', isMobile, 'tracks:', u.tracks ? u.tracks.length : 0);
+                
                 if (isMobile) {
                     if (u.tracks && Array.isArray(u.tracks) && u.tracks.length > 0) {
                         // Set the story queue in feed state
                         feedState.queueTracks = u.tracks;
                         // Open media viewer with first story track
-                        if (typeof openTrackMediaViewer === 'function') {
-                            openTrackMediaViewer(u.tracks, u.tracks[0].id);
-                        } else if (typeof playTrack === 'function') {
-                            playTrack(u.tracks[0].id);
+                        try {
+                            if (typeof openTrackMediaViewer === 'function') {
+                                console.log('Calling openTrackMediaViewer');
+                                openTrackMediaViewer(u.tracks, u.tracks[0].id);
+                            } else if (typeof window.openTrackMediaViewer === 'function') {
+                                console.log('Calling window.openTrackMediaViewer');
+                                window.openTrackMediaViewer(u.tracks, u.tracks[0].id);
+                            } else if (typeof playTrack === 'function') {
+                                console.log('Calling playTrack');
+                                playTrack(u.tracks[0].id);
+                            } else {
+                                console.error('No media player function available');
+                            }
+                        } catch (e) {
+                            console.error('Error opening media viewer:', e);
                         }
+                    } else {
+                        console.log('No tracks available for story');
                     }
                 } else {
                     // Desktop: keep existing stories tray behavior
+                    console.log('Desktop mode - opening stories tray');
                     openStoriesTray(u);
                 }
             });

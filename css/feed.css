@@ -211,9 +211,12 @@
     position:absolute;
     inset:0;
     background:rgba(0,0,0,0.55);
-    backdrop-filter:blur(6px);
     opacity: 0;
     transition: opacity 0.22s ease;
+}
+
+.juke-media-viewer-root .juke-stories-tray-backdrop {
+    backdrop-filter: none;
 }
 
 @media (min-width: 769px) {
