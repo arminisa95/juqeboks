@@ -77,6 +77,139 @@
         return m + ':' + String(s).padStart(2, '0');
     }
 
+    function buildShareUrl(trackId) {
+        try {
+            var origin = (window.location && window.location.origin) ? window.location.origin : '';
+            return origin.replace(/\/$/, '') + '/#/feed?track=' + encodeURIComponent(String(trackId));
+        } catch (_) {
+            return '#/feed?track=' + encodeURIComponent(String(trackId));
+        }
+    }
+
+    function ensureShareSheetStyles() {
+        try {
+            if (document.getElementById('jukeShareSheetStyles')) return;
+            var style = document.createElement('style');
+            style.id = 'jukeShareSheetStyles';
+            style.textContent = '' +
+                '.juke-share-root{position:fixed;inset:0;z-index:2000;}' +
+                '.juke-share-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);}' +
+                '.juke-share-sheet{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:min(420px,calc(100vw - 24px));background:rgba(18,18,18,0.92);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:14px 14px 10px;color:#fff;box-shadow:0 18px 44px rgba(0,0,0,0.55);}' +
+                '.juke-share-title{font-weight:700;font-size:0.95rem;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+                '.juke-share-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 6px;}' +
+                '.juke-share-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:10px;color:#fff;padding:10px 12px;cursor:pointer;font-weight:600;}' +
+                '.juke-share-btn:hover{border-color:rgba(255,255,255,0.18);background:rgba(255,255,255,0.09);}' +
+                '.juke-share-close{width:100%;margin-top:8px;background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:rgba(255,255,255,0.85);padding:10px 12px;cursor:pointer;}' +
+                '.juke-share-close:hover{border-color:rgba(255,255,255,0.18);color:#fff;}' +
+                '.juke-share-hint{font-size:0.78rem;color:rgba(255,255,255,0.6);margin:4px 0 0;word-break:break-all;}';
+            document.head.appendChild(style);
+        } catch (_) {
+        }
+    }
+
+    function openShareFallback(opts) {
+        try {
+            ensureShareSheetStyles();
+            var existing = document.getElementById('jukeShareRoot');
+            if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+            var root = document.createElement('div');
+            root.id = 'jukeShareRoot';
+            root.className = 'juke-share-root';
+
+            var titleLine = ((opts && opts.title) ? String(opts.title) : 'Share');
+            if (opts && opts.text) {
+                var t = String(opts.text);
+                if (t) titleLine = titleLine + ' • ' + t;
+            }
+
+            root.innerHTML = '' +
+                '<div class="juke-share-backdrop" data-juke-share-close="1"></div>' +
+                '<div class="juke-share-sheet" role="dialog" aria-modal="true">' +
+                '  <div class="juke-share-title">' + titleLine.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                '  <div class="juke-share-buttons">' +
+                '    <button type="button" class="juke-share-btn" data-share-action="copy"><i class="far fa-copy"></i>Copy link</button>' +
+                '    <button type="button" class="juke-share-btn" data-share-action="whatsapp"><i class="fab fa-whatsapp"></i>WhatsApp</button>' +
+                '    <button type="button" class="juke-share-btn" data-share-action="telegram"><i class="fab fa-telegram"></i>Telegram</button>' +
+                '    <button type="button" class="juke-share-btn" data-share-action="signal"><i class="fas fa-comment-dots"></i>Signal</button>' +
+                '  </div>' +
+                '  <button type="button" class="juke-share-close" data-juke-share-close="1">Close</button>' +
+                '  <div class="juke-share-hint">' + String(opts && opts.url ? opts.url : '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                '</div>';
+
+            document.body.appendChild(root);
+
+            function close() {
+                try {
+                    if (root && root.parentNode) root.parentNode.removeChild(root);
+                } catch (_) {
+                }
+            }
+
+            root.addEventListener('click', function (e) {
+                try {
+                    var target = e && e.target ? e.target : null;
+                    if (!target) return;
+                    if (target && target.getAttribute && target.getAttribute('data-juke-share-close') === '1') {
+                        close();
+                        return;
+                    }
+                    var btn = target.closest ? target.closest('[data-share-action]') : null;
+                    if (!btn) return;
+                    var action = btn.getAttribute('data-share-action');
+                    var url = String(opts && opts.url ? opts.url : '');
+                    var text = String((opts && opts.text) ? opts.text : '');
+                    var title = String((opts && opts.title) ? opts.title : '');
+                    var payload = (title ? title + ' ' : '') + (text ? text + ' ' : '') + url;
+
+                    if (action === 'copy') {
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(url).then(function () {
+                                close();
+                            }).catch(function () {
+                                try {
+                                    window.prompt('Copy this link:', url);
+                                } catch (_) {
+                                }
+                                close();
+                            });
+                        } else {
+                            try {
+                                window.prompt('Copy this link:', url);
+                            } catch (_) {
+                            }
+                            close();
+                        }
+                        return;
+                    }
+
+                    if (action === 'whatsapp') {
+                        window.open('https://wa.me/?text=' + encodeURIComponent(payload), '_blank', 'noopener,noreferrer');
+                        close();
+                        return;
+                    }
+
+                    if (action === 'telegram') {
+                        window.open('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent((title ? title + ' ' : '') + text), '_blank', 'noopener,noreferrer');
+                        close();
+                        return;
+                    }
+
+                    if (action === 'signal') {
+                        try {
+                            window.location.href = 'signal://send?text=' + encodeURIComponent(payload);
+                        } catch (_) {
+                        }
+                        close();
+                        return;
+                    }
+                } catch (_) {
+                }
+            });
+        } catch (_) {
+        }
+    }
+
     function safeParse(json) {
         try {
             return JSON.parse(json);
@@ -228,6 +361,9 @@
                         <button class="like-btn" aria-label="Like track" data-track-id="">
                             <i class="far fa-heart"></i>
                         </button>
+                        <button class="share-btn" aria-label="Share track" data-track-id="">
+                            <i class="far fa-paper-plane"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -293,6 +429,7 @@
         var nextBtn = el.querySelector('#next');
         var likeBtn = el.querySelector('.like-btn');
         var likeIcon = likeBtn ? likeBtn.querySelector('i') : null;
+        var shareBtn = el.querySelector('.share-btn');
         var currentTimeEl = el.querySelector('.current-time');
         var durationEl = el.querySelector('.duration');
         var progressBar = el.querySelector('.progress-bar');
@@ -371,6 +508,13 @@
             } catch (_) {
             }
 
+            try {
+                if (shareBtn) {
+                    shareBtn.setAttribute('data-track-id', state.trackId || '');
+                }
+            } catch (_) {
+            }
+
             if (playIcon) {
                 playIcon.className = state.isPlaying ? 'fas fa-pause' : 'fas fa-play';
             }
@@ -404,6 +548,21 @@
                         } else if (historyIndex > 0) {
                             historyIndex -= 1;
                             playTrackById(history[historyIndex]);
+                        }
+                    } catch (_) {
+                    }
+                });
+            }
+
+            if (shareBtn) {
+                shareBtn.addEventListener('click', function () {
+                    try {
+                        if (!state.trackId) return;
+                        if (typeof window.shareTrackById === 'function') {
+                            window.shareTrackById(state.trackId, {
+                                title: state.title,
+                                text: state.artist
+                            });
                         }
                     } catch (_) {
                     }
@@ -937,6 +1096,7 @@
         var fsPlay = document.getElementById('fsPlay');
         var fsPrev = document.getElementById('fsPrev');
         var fsNext = document.getElementById('fsNext');
+        var fsShare = document.getElementById('fsShare');
         var fsProgressBar = document.getElementById('fsProgressBar');
 
         if (miniPlay && !miniPlay.dataset.bound) {
@@ -1005,6 +1165,22 @@
             });
         }
 
+        if (fsShare && !fsShare.dataset.bound) {
+            fsShare.dataset.bound = '1';
+            fsShare.addEventListener('click', function () {
+                try {
+                    if (!state.trackId) return;
+                    if (typeof window.shareTrackById === 'function') {
+                        window.shareTrackById(state.trackId, {
+                            title: state.title,
+                            text: state.artist
+                        });
+                    }
+                } catch (_) {
+                }
+            });
+        }
+
         if (fsProgressBar && !fsProgressBar.dataset.bound) {
             fsProgressBar.dataset.bound = '1';
             fsProgressBar.addEventListener('click', function(e) {
@@ -1058,4 +1234,39 @@
     window.JukePlayer.playPrev = playPrevTrack;
     window.JukePlayer.playNext = playNextTrack;
     window.JukePlayer.updateMobile = updateMobilePlayer;
+
+    window.shareTrackById = async function (trackId, meta) {
+        var url = buildShareUrl(trackId);
+        var title = (meta && meta.title) ? String(meta.title) : '';
+        var text = (meta && meta.text) ? String(meta.text) : '';
+
+        if (!title || !text) {
+            try {
+                var track = await fetchTrack(trackId);
+                if (track && typeof track === 'object') {
+                    if (!title && track.title) title = String(track.title);
+                    if (!text && (track.artist_name || track.artist)) text = String(track.artist_name || track.artist);
+                }
+            } catch (_) {
+            }
+        }
+
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: title || 'JUKE',
+                    text: text || '',
+                    url: url
+                });
+                return;
+            }
+        } catch (_) {
+        }
+
+        openShareFallback({
+            url: url,
+            title: title || 'JUKE',
+            text: text || ''
+        });
+    };
 })();

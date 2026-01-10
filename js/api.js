@@ -347,8 +347,35 @@ var feedState = {
     done: false,
     bound: false,
     storiesLoaded: false,
-    trackIds: []
+    trackIds: [],
+    sharedTrackPlayed: false
 };
+
+function getHashQueryParam(key) {
+    try {
+        var h = String(window.location.hash || '');
+        var idx = h.indexOf('?');
+        if (idx === -1) return null;
+        var qs = h.slice(idx + 1);
+        var params = new URLSearchParams(qs);
+        return params.get(key);
+    } catch (_) {
+        return null;
+    }
+}
+
+function maybeAutoPlaySharedTrack() {
+    try {
+        if (feedState.sharedTrackPlayed) return;
+        var id = getHashQueryParam('track');
+        if (!id) return;
+        feedState.sharedTrackPlayed = true;
+        if (typeof playTrack === 'function') {
+            playTrack(String(id));
+        }
+    } catch (_) {
+    }
+}
 
 async function renderStoriesBar() {
     try {
@@ -421,6 +448,7 @@ async function loadFeedStream(reset) {
         feedState.done = false;
         feedState.storiesLoaded = false;
         feedState.trackIds = [];
+        feedState.sharedTrackPlayed = false;
         grid.innerHTML = '';
         renderStoriesBar();
     }
@@ -463,6 +491,9 @@ async function loadFeedStream(reset) {
             }
         } catch (_) {
         }
+
+        // If user opened a shared link like #/feed?track=123, auto-play it once
+        maybeAutoPlaySharedTrack();
 
         feedState.offset += tracks.length;
     } catch (e) {
@@ -702,14 +733,11 @@ function createFeedPostCard(track) {
         if (shareBtn && !shareBtn.dataset.bound) {
             shareBtn.dataset.bound = '1';
             shareBtn.addEventListener('click', function () {
-                const url = window.location.origin + '/#/feed?track=' + track.id;
-                if (navigator.share) {
-                    navigator.share({ title: track.title, text: track.artist_name, url: url }).catch(() => {});
-                } else {
-                    navigator.clipboard.writeText(url).then(() => {
-                        shareBtn.style.color = '#00ffd0';
-                        setTimeout(() => shareBtn.style.color = '', 1500);
-                    }).catch(() => {});
+                try {
+                    if (typeof window.shareTrackById === 'function') {
+                        window.shareTrackById(String(track.id), { title: track.title, text: track.artist_name });
+                    }
+                } catch (_) {
                 }
             });
         }
@@ -772,6 +800,9 @@ function createCollectionTrackCard(track) {
                     <button class="action-btn ${isLiked ? 'liked' : ''}" data-track-id="${track.id}" onclick="likeTrack('${track.id}')">
                         <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
                     </button>
+                    <button class="action-btn share-btn" data-track-id="${track.id}" type="button" aria-label="Share">
+                        <i class="far fa-paper-plane"></i>
+                    </button>
                     ${canDelete ? `
                     <button class="action-btn delete-btn" onclick="deleteTrack('${track.id}', event);" aria-label="Delete track">
                         <i class="fas fa-trash"></i>
@@ -781,6 +812,26 @@ function createCollectionTrackCard(track) {
             </div>
         </div>
     `;
+
+    try {
+        const shareBtn = card.querySelector('.share-btn');
+        if (shareBtn && !shareBtn.dataset.bound) {
+            shareBtn.dataset.bound = '1';
+            shareBtn.addEventListener('click', function (e) {
+                try {
+                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                } catch (_) {
+                }
+                try {
+                    if (typeof window.shareTrackById === 'function') {
+                        window.shareTrackById(String(track.id), { title: track.title, text: track.artist_name });
+                    }
+                } catch (_) {
+                }
+            });
+        }
+    } catch (_) {
+    }
 
     return card;
 }
@@ -1194,6 +1245,9 @@ async function loadDisqoFeatured() {
                             <button class="disqo-save-btn" data-track-id="${track.id}">
                                 <i class="far fa-bookmark"></i>
                             </button>
+                            <button class="disqo-save-btn disqo-share-btn" data-track-id="${track.id}" type="button" aria-label="Share">
+                                <i class="far fa-paper-plane"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1208,6 +1262,22 @@ async function loadDisqoFeatured() {
         const saveBtn = featured.querySelector('.disqo-save-btn');
         if (saveBtn) {
             saveBtn.addEventListener('click', () => addToPlaylist(track.id));
+        }
+
+        const shareBtn = featured.querySelector('.disqo-share-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', function (e) {
+                try {
+                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                } catch (_) {
+                }
+                try {
+                    if (typeof window.shareTrackById === 'function') {
+                        window.shareTrackById(String(track.id), { title: track.title, text: track.artist_name });
+                    }
+                } catch (_) {
+                }
+            });
         }
     } catch (e) {
         console.error('Featured load failed:', e);
@@ -1234,16 +1304,41 @@ async function loadDisqoRecommendations() {
                         <div class="recommendation-title">${t.title || 'Untitled'}</div>
                         <div class="recommendation-artist">${t.artist_name || ''}</div>
                         <button class="recommendation-play"><i class="fas fa-play"></i></button>
+                        <button class="recommendation-share" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
                     </div>
                 </div>
             `;
         }).join('');
         
         row.querySelectorAll('.recommendation-card').forEach(card => {
-            card.addEventListener('click', () => {
+            card.addEventListener('click', (e) => {
+                try {
+                    if (e && e.target && e.target.closest && e.target.closest('button.recommendation-share')) return;
+                } catch (_) {
+                }
                 const id = card.dataset.trackId;
                 if (id) playTrack(id);
             });
+
+            const shareBtn = card.querySelector('.recommendation-share');
+            if (shareBtn && !shareBtn.dataset.bound) {
+                shareBtn.dataset.bound = '1';
+                shareBtn.addEventListener('click', function (e) {
+                    try {
+                        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                    } catch (_) {
+                    }
+                    const id = card.dataset.trackId;
+                    if (!id) return;
+                    try {
+                        if (typeof window.shareTrackById === 'function') {
+                            const t = (tracks || []).find(function (x) { return String(x.id) === String(id); });
+                            window.shareTrackById(String(id), { title: t && t.title ? t.title : '', text: t && t.artist_name ? t.artist_name : '' });
+                        }
+                    } catch (_) {
+                    }
+                });
+            }
         });
     } catch (e) {
         console.error('Recommendations load failed:', e);
@@ -1265,6 +1360,7 @@ async function loadDisqoNewReleases() {
             const coverUrl = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
             return `
                 <div class="album-card" data-track-id="${t.id}">
+                    <button class="album-share" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
                     <img class="album-cover" src="${coverUrl}" alt="">
                     <div class="album-title">${t.title || 'Untitled'}</div>
                     <div class="album-artist">${t.artist_name || ''}</div>
@@ -1273,10 +1369,34 @@ async function loadDisqoNewReleases() {
         }).join('');
         
         grid.querySelectorAll('.album-card').forEach(card => {
-            card.addEventListener('click', () => {
+            card.addEventListener('click', (e) => {
+                try {
+                    if (e && e.target && e.target.closest && e.target.closest('button.album-share')) return;
+                } catch (_) {
+                }
                 const id = card.dataset.trackId;
                 if (id) playTrack(id);
             });
+
+            const shareBtn = card.querySelector('.album-share');
+            if (shareBtn && !shareBtn.dataset.bound) {
+                shareBtn.dataset.bound = '1';
+                shareBtn.addEventListener('click', function (e) {
+                    try {
+                        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                    } catch (_) {
+                    }
+                    const id = card.dataset.trackId;
+                    if (!id) return;
+                    try {
+                        if (typeof window.shareTrackById === 'function') {
+                            const t = (tracks || []).find(function (x) { return String(x.id) === String(id); });
+                            window.shareTrackById(String(id), { title: t && t.title ? t.title : '', text: t && t.artist_name ? t.artist_name : '' });
+                        }
+                    } catch (_) {
+                    }
+                });
+            }
         });
     } catch (e) {
         console.error('New releases load failed:', e);

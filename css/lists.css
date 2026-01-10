@@ -120,6 +120,19 @@
     font-size: 0.8rem;
 }
 
+ .card-action-btn {
+     background: none;
+     border: none;
+     color: rgba(255, 255, 255, 0.6);
+     cursor: pointer;
+     padding: 0;
+     line-height: 1;
+ }
+
+ .card-action-btn:hover {
+     color: #fff;
+ }
+
 .empty-state {
     color: #a0a0a0;
     font-size: 0.95rem;

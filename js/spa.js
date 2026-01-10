@@ -5,6 +5,13 @@
         return hash;
     }
 
+    function normalizeRoute(route) {
+        if (!route || typeof route !== 'string') return '#/feed';
+        var idx = route.indexOf('?');
+        if (idx === -1) return route;
+        return route.slice(0, idx) || '#/feed';
+    }
+
     function isAuthRoute(route) {
         return route === '#/login' || route === '#/register';
     }
@@ -22,6 +29,7 @@
     }
 
     function routeToTemplate(route) {
+        route = normalizeRoute(route);
         if (parseUserKoleqtionRoute(route)) {
             return { templateId: 'tpl-koleqtion', file: 'html/koleqtion.html', selector: 'main' };
         }
@@ -91,15 +99,17 @@
         var app = document.getElementById('app');
         if (!app) return;
 
+        var baseRoute = normalizeRoute(route);
+
         var authed = (typeof isLoggedIn === 'function')
             ? isLoggedIn()
             : !!localStorage.getItem('juke_token');
-        if (requiresAuth(route) && !authed) {
+        if (requiresAuth(baseRoute) && !authed) {
             window.location.hash = '#/login';
             return;
         }
 
-        var tpl = routeToTemplate(route);
+        var tpl = routeToTemplate(baseRoute);
 
         if (tpl.templateId) {
             var templateEl = document.getElementById(tpl.templateId);
@@ -107,13 +117,13 @@
                 app.innerHTML = '';
                 app.appendChild(templateEl.content.cloneNode(true));
                 normalizeLinks(app);
-                setActiveNav(route);
+                setActiveNav(baseRoute);
 
-                document.dispatchEvent(new CustomEvent('spa:navigate', { detail: { route: route } }));
+                document.dispatchEvent(new CustomEvent('spa:navigate', { detail: { route: baseRoute, fullRoute: route } }));
 
                 if (typeof updateAuthUI === 'function') updateAuthUI();
 
-                if (route === '#/koleqtion') {
+                if (baseRoute === '#/koleqtion') {
                     if (window.JukeApi && typeof window.JukeApi.loadMyTracks === 'function') {
                         window.JukeApi.loadMyTracks();
                     } else if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
@@ -123,14 +133,14 @@
                     }
                 }
 
-                var userK = parseUserKoleqtionRoute(route);
+                var userK = parseUserKoleqtionRoute(baseRoute);
                 if (userK) {
                     if (window.JukeApi && typeof window.JukeApi.loadUserTracks === 'function') {
                         window.JukeApi.loadUserTracks(userK);
                     }
                 }
 
-                if (route === '#/feed') {
+                if (baseRoute === '#/feed') {
                     if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
                         window.JukeApi.loadTracks();
                     } else if (typeof loadTracks === 'function') {
@@ -138,7 +148,7 @@
                     }
                 }
                 
-                if (route === '#/disqo') {
+                if (baseRoute === '#/disqo') {
                     if (window.JukeApi && typeof window.JukeApi.loadDisqoPage === 'function') {
                         window.JukeApi.loadDisqoPage();
                     } else if (typeof loadDisqoPage === 'function') {
@@ -146,7 +156,7 @@
                     }
                 }
                 
-                if (route === '#/koleqtion') {
+                if (baseRoute === '#/koleqtion') {
                     if (window.JukeApi && typeof window.JukeApi.setupKoleqtionTabs === 'function') {
                         window.JukeApi.setupKoleqtionTabs();
                     } else if (typeof setupKoleqtionTabs === 'function') {
@@ -154,7 +164,7 @@
                     }
                 }
 
-                if (route === '#/lists') {
+                if (baseRoute === '#/lists') {
                     if (window.JukeLists && typeof window.JukeLists.loadLists === 'function') {
                         window.JukeLists.loadLists();
                     } else if (typeof loadLists === 'function') {
@@ -162,21 +172,21 @@
                     }
                 }
 
-                if (route === '#/upload') {
+                if (baseRoute === '#/upload') {
                     if (window.JukeUpload && typeof window.JukeUpload.init === 'function') {
                         window.JukeUpload.init();
                     }
                 }
 
-                if (route === '#/profile') {
+                if (baseRoute === '#/profile') {
                     if (typeof setupProfilePage === 'function') setupProfilePage();
                 }
 
-                if (route === '#/login') {
+                if (baseRoute === '#/login') {
                     if (typeof setupLoginForm === 'function') setupLoginForm();
                 }
 
-                if (route === '#/register') {
+                if (baseRoute === '#/register') {
                     if (typeof setupRegisterForm === 'function') setupRegisterForm();
                 }
 
@@ -201,13 +211,13 @@
 
         app.innerHTML = node.outerHTML;
         normalizeLinks(app);
-        setActiveNav(route);
+        setActiveNav(baseRoute);
 
-        document.dispatchEvent(new CustomEvent('spa:navigate', { detail: { route: route } }));
+        document.dispatchEvent(new CustomEvent('spa:navigate', { detail: { route: baseRoute, fullRoute: route } }));
 
         if (typeof updateAuthUI === 'function') updateAuthUI();
 
-        if (route === '#/koleqtion') {
+        if (baseRoute === '#/koleqtion') {
             if (window.JukeApi && typeof window.JukeApi.loadMyTracks === 'function') {
                 window.JukeApi.loadMyTracks();
             } else if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
@@ -217,14 +227,14 @@
             }
         }
 
-        var userK = parseUserKoleqtionRoute(route);
+        var userK = parseUserKoleqtionRoute(baseRoute);
         if (userK) {
             if (window.JukeApi && typeof window.JukeApi.loadUserTracks === 'function') {
                 window.JukeApi.loadUserTracks(userK);
             }
         }
 
-        if (route === '#/feed') {
+        if (baseRoute === '#/feed') {
             if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
                 window.JukeApi.loadTracks();
             } else if (typeof loadTracks === 'function') {
@@ -232,7 +242,7 @@
             }
         }
         
-        if (route === '#/disqo') {
+        if (baseRoute === '#/disqo') {
             if (window.JukeApi && typeof window.JukeApi.loadDisqoPage === 'function') {
                 window.JukeApi.loadDisqoPage();
             } else if (typeof loadDisqoPage === 'function') {
@@ -240,7 +250,7 @@
             }
         }
         
-        if (route === '#/koleqtion') {
+        if (baseRoute === '#/koleqtion') {
             if (window.JukeApi && typeof window.JukeApi.setupKoleqtionTabs === 'function') {
                 window.JukeApi.setupKoleqtionTabs();
             } else if (typeof setupKoleqtionTabs === 'function') {
@@ -248,7 +258,7 @@
             }
         }
 
-        if (route === '#/lists') {
+        if (baseRoute === '#/lists') {
             if (window.JukeLists && typeof window.JukeLists.loadLists === 'function') {
                 window.JukeLists.loadLists();
             } else if (typeof loadLists === 'function') {
@@ -256,21 +266,21 @@
             }
         }
 
-        if (route === '#/upload') {
+        if (baseRoute === '#/upload') {
             if (window.JukeUpload && typeof window.JukeUpload.init === 'function') {
                 window.JukeUpload.init();
             }
         }
 
-        if (route === '#/profile') {
+        if (baseRoute === '#/profile') {
             if (typeof setupProfilePage === 'function') setupProfilePage();
         }
 
-        if (route === '#/login') {
+        if (baseRoute === '#/login') {
             if (typeof setupLoginForm === 'function') setupLoginForm();
         }
 
-        if (route === '#/register') {
+        if (baseRoute === '#/register') {
             if (typeof setupRegisterForm === 'function') setupRegisterForm();
         }
     }

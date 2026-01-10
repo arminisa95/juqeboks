@@ -167,13 +167,34 @@ MUSIC PLAYER - Enhanced Modern Design
     justify-content: center;
 }
 
+.music-player .share-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .music-player .like-btn i {
     font-size: 1.45rem;
     color: rgba(255, 255, 255, 0.55);
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
+.music-player .share-btn i {
+    font-size: 1.45rem;
+    color: rgba(255, 255, 255, 0.55);
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
 .music-player .like-btn:hover i {
+    transform: scale(1.06);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.music-player .share-btn:hover i {
     transform: scale(1.06);
     color: rgba(255, 255, 255, 0.9);
 }

@@ -396,6 +396,7 @@ async function openPlaylist(playlist) {
                 </div>
                 <div class="lists-track-actions">
                     <button class="lists-track-action" type="button" aria-label="Like"><i class="far fa-heart"></i></button>
+                    <button class="lists-track-action lists-track-share" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
                     <button class="lists-track-action" type="button" aria-label="More"><i class="fas fa-ellipsis-h"></i></button>
                 </div>
                 <div class="lists-track-duration">3:45</div>
@@ -418,6 +419,19 @@ async function openPlaylist(playlist) {
                     const icon = this.querySelector('i');
                     if (icon) {
                         icon.className = this.classList.contains('liked') ? 'fas fa-heart' : 'far fa-heart';
+                    }
+                });
+            }
+
+            const shareBtn = row.querySelector('.lists-track-share');
+            if (shareBtn) {
+                shareBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    try {
+                        if (typeof window.shareTrackById === 'function') {
+                            window.shareTrackById(String(t.id), { title: safeTitle, text: safeArtist });
+                        }
+                    } catch (_) {
                     }
                 });
             }
@@ -523,6 +537,8 @@ function renderTrackCard(t) {
 
     const div = document.createElement('div');
     div.className = 'card';
+    div.tabIndex = 0;
+    div.setAttribute('role', 'button');
     div.innerHTML = `
         <div class="card-cover">
             <img src="${coverUrl}" alt="${t.title}">
@@ -532,10 +548,55 @@ function renderTrackCard(t) {
             <div class="card-subtitle">${t.artist_name || ''}</div>
             <div class="card-meta">
                 <span>${t.duration_seconds ? `${Math.floor(t.duration_seconds / 60)}:${String(t.duration_seconds % 60).padStart(2, '0')}` : ''}</span>
-                <span></span>
+                <span>
+                    <button class="card-action-btn card-share-btn" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
+                </span>
             </div>
         </div>
     `;
+
+    div.addEventListener('click', function (e) {
+        try {
+            if (e && e.target && e.target.closest && e.target.closest('button')) return;
+        } catch (_) {
+        }
+        try {
+            if (typeof window.playTrack === 'function') {
+                window.playTrack(t.id);
+            }
+        } catch (_) {
+        }
+    });
+
+    div.addEventListener('keydown', function (e) {
+        if (!e) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            try {
+                if (typeof window.playTrack === 'function') {
+                    window.playTrack(t.id);
+                }
+            } catch (_) {
+            }
+        }
+    });
+
+    try {
+        const shareBtn = div.querySelector('.card-share-btn');
+        if (shareBtn && !shareBtn.dataset.bound) {
+            shareBtn.dataset.bound = '1';
+            shareBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                try {
+                    if (typeof window.shareTrackById === 'function') {
+                        window.shareTrackById(String(t.id), { title: t.title, text: t.artist_name });
+                    }
+                } catch (_) {
+                }
+            });
+        }
+    } catch (_) {
+    }
     return div;
 }
 
