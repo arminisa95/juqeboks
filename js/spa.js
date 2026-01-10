@@ -264,6 +264,21 @@
             } else if (typeof loadLists === 'function') {
                 loadLists();
             }
+            
+            // Add event listener for add playlist button in SPA mode
+            setTimeout(() => {
+                const addPlaylistBtn = document.getElementById('addPlaylistBtn');
+                if (addPlaylistBtn) {
+                    addPlaylistBtn.addEventListener('click', () => {
+                        const name = prompt('Enter playlist name:');
+                        if (!name || !name.trim()) return;
+                        
+                        if (typeof createPlaylist === 'function') {
+                            createPlaylist(name.trim());
+                        }
+                    });
+                }
+            }, 100);
         }
 
         if (baseRoute === '#/upload') {

@@ -528,6 +528,28 @@
     transform: scale(1.1);
 }
 
+/* Lists Add Button */
+.lists-add-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 180, 150, 0.92);
+    border: none;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, background 0.2s ease;
+    margin-left: auto;
+}
+
+.lists-add-btn:hover {
+    transform: scale(1.06);
+    background: rgba(0, 180, 150, 1);
+}
+
 .playlist-control-btn.active {
     color: #00ffd0;
 }

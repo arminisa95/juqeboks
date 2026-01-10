@@ -743,6 +743,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadLists();
+    
+    // Add event listener for add playlist button
+    const addPlaylistBtn = document.getElementById('addPlaylistBtn');
+    if (addPlaylistBtn) {
+        addPlaylistBtn.addEventListener('click', () => {
+            const name = prompt('Enter playlist name:');
+            if (!name || !name.trim()) return;
+            
+            createPlaylist(name.trim());
+        });
+    }
 });
 
 window.JukeLists = {
