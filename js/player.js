@@ -148,17 +148,16 @@
         var parsed = raw ? safeParse(raw) : null;
         if (!parsed) return;
 
-        state = {
-            trackId: parsed.trackId || null,
-            title: parsed.title || 'Not Playing',
-            artist: parsed.artist || '-',
-            coverUrl: parsed.coverUrl || null,
-            audioUrl: parsed.audioUrl || null,
-            isPlaying: !!parsed.isPlaying,
-            currentTime: Number.isFinite(parsed.currentTime) ? parsed.currentTime : 0,
-            volume: Number.isFinite(parsed.volume) ? parsed.volume : 0.7,
-            muted: !!parsed.muted
-        };
+        // Merge into existing state so newer fields (e.g. videoUrl/showVideo) are preserved
+        state.trackId = parsed.trackId || null;
+        state.title = parsed.title || 'Not Playing';
+        state.artist = parsed.artist || '-';
+        state.coverUrl = parsed.coverUrl || null;
+        state.audioUrl = parsed.audioUrl || null;
+        state.isPlaying = !!parsed.isPlaying;
+        state.currentTime = Number.isFinite(parsed.currentTime) ? parsed.currentTime : 0;
+        state.volume = Number.isFinite(parsed.volume) ? parsed.volume : 0.7;
+        state.muted = !!parsed.muted;
 
         audio.volume = state.volume;
         audio.muted = !!state.muted;
@@ -559,11 +558,86 @@
     }
 
     async function fetchTrack(trackId) {
-        var res = await fetch(getApiBase() + '/tracks/' + encodeURIComponent(trackId));
-        if (!res.ok) {
-            throw new Error('Failed to load track');
+        var token = null;
+        try {
+            token = localStorage.getItem('juke_token');
+        } catch (_) {
+            token = null;
         }
-        return res.json();
+
+        var bases = [];
+        try {
+            bases = [getApiBase(), 'https://juke-api.onrender.com/api'];
+        } catch (_) {
+            bases = ['https://juke-api.onrender.com/api'];
+        }
+        // de-dupe
+        bases = bases.filter(function (v, i, a) {
+            return !!v && a.indexOf(v) === i;
+        });
+
+        var lastErr = null;
+        for (var i = 0; i < bases.length; i++) {
+            var base = bases[i];
+            try {
+                var headers = {};
+                if (token) headers.Authorization = 'Bearer ' + token;
+                var res = await fetch(base + '/tracks/' + encodeURIComponent(trackId), {
+                    headers: headers
+                });
+                if (!res.ok) {
+                    lastErr = new Error('Failed to load track (' + res.status + ')');
+                    continue;
+                }
+                var data = await res.json();
+                try {
+                    localStorage.setItem('juke_api_base', base);
+                } catch (_) {
+                }
+                return data;
+            } catch (e) {
+                lastErr = e;
+            }
+        }
+
+        throw lastErr || new Error('Failed to load track');
+    }
+
+    async function hydrateTrackMetaFromId(trackId) {
+        if (!trackId) return;
+        try {
+            var track = await fetchTrack(trackId);
+            if (!track || typeof track !== 'object') return;
+
+            if (!state.title || state.title === 'Not Playing') {
+                state.title = track.title || state.title || 'Unknown Title';
+            }
+            if (!state.artist || state.artist === '-') {
+                state.artist = track.artist_name || state.artist || 'Unknown Artist';
+            }
+            if (!state.coverUrl) {
+                state.coverUrl = resolveAssetUrl(track.cover_image_url) || state.coverUrl || getImageUrl('images/juke.png');
+            }
+            if (!state.audioUrl && track.audio_url) {
+                state.audioUrl = resolveAssetUrl(track.audio_url) || null;
+            }
+            state.videoUrl = track.video_url ? resolveAssetUrl(track.video_url) : (state.videoUrl || null);
+
+            saveState();
+
+            try {
+                if (window.JukePlayer && typeof window.JukePlayer.render === 'function') {
+                    window.JukePlayer.render();
+                }
+            } catch (_) {
+            }
+
+            try {
+                if (typeof updateMobilePlayer === 'function') updateMobilePlayer();
+            } catch (_) {
+            }
+        } catch (_) {
+        }
     }
 
     async function playTrackById(trackId) {
@@ -722,6 +796,14 @@
 
         try {
             if (typeof updateMobilePlayer === 'function') updateMobilePlayer();
+        } catch (_) {
+        }
+
+        // If we restored playback but metadata is missing (older saved state), hydrate it
+        try {
+            if (state.trackId && (!state.title || state.title === 'Not Playing' || !state.artist || state.artist === '-' || !state.coverUrl)) {
+                hydrateTrackMetaFromId(state.trackId);
+            }
         } catch (_) {
         }
 
