@@ -766,6 +766,24 @@ text-overflow: ellipsis;
     }
 }
 
+@media (max-width: 768px) {
+    .juke-story-split{
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .juke-story-right{
+        border-left: none;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding-left: 0;
+        padding-top: 12px;
+    }
+
+    .juke-story-right .post-comments-list{
+        max-height: 240px;
+    }
+}
+
 /* Comments list */
 .post-comments-list {
     max-height: 200px;
