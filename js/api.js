@@ -550,6 +550,7 @@ async function renderStoriesBar() {
                     '      <i class="fas fa-times"></i>' +
                     '    </button>' +
                     '  </div>' +
+                    '  <div class="juke-stories-tray-media"></div>' +
                     '  <div class="juke-stories-tray-list">' + listHtml + '</div>' +
                     '</div>';
 
@@ -562,6 +563,78 @@ async function renderStoriesBar() {
                         } catch (_) {
                         }
                     });
+                } catch (_) {
+                }
+
+                var activeTrackId = null;
+
+                function findTrackById(trackId) {
+                    try {
+                        var idStr = String(trackId);
+                        return (u && u.tracks && Array.isArray(u.tracks)) ? (u.tracks || []).find(function (x) { return x && String(x.id) === idStr; }) : null;
+                    } catch (_) {
+                        return null;
+                    }
+                }
+
+                function setActiveTrack(track) {
+                    try {
+                        if (!track || !track.id) return;
+                        activeTrackId = String(track.id);
+
+                        try {
+                            root.querySelectorAll('.juke-story-track[data-track-id]').forEach(function (el) {
+                                try {
+                                    el.classList.toggle('active', String(el.getAttribute('data-track-id')) === activeTrackId);
+                                } catch (_) {
+                                }
+                            });
+                        } catch (_) {
+                        }
+
+                        var mediaHost = null;
+                        try {
+                            mediaHost = root.querySelector('.juke-stories-tray-media');
+                        } catch (_) {
+                            mediaHost = null;
+                        }
+                        if (!mediaHost) return;
+
+                        var cover = resolveAssetUrl(track.cover_image_url, 'images/juke.png');
+                        var safeTitle = track && track.title ? String(track.title) : 'Untitled';
+                        var safeArtist = (track && (track.artist_name || track.uploader_username)) ? String(track.artist_name || track.uploader_username) : '';
+                        var dateTxt = formatTrackDateShort(track);
+                        var videoUrl = track && track.video_url ? resolveAssetUrl(track.video_url, '') : '';
+
+                        var mediaEl = '';
+                        if (videoUrl) {
+                            mediaEl = '<video src="' + String(videoUrl).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" playsinline muted autoplay loop></video>';
+                        } else {
+                            mediaEl = '<img src="' + String(cover).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" alt="">';
+                        }
+
+                        mediaHost.innerHTML = '' +
+                            '<div class="juke-story-media-frame">' + mediaEl + '</div>' +
+                            '<div class="juke-story-media-meta">' +
+                            '  <div style="min-width:0;flex:1;">' +
+                            '    <div class="juke-story-media-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                            '    <div class="juke-story-media-sub">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                            '  </div>' +
+                            (dateTxt ? ('<div class="juke-story-media-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>') : '') +
+                            '</div>';
+                    } catch (_) {
+                    }
+                }
+
+                try {
+                    var first = (u && u.tracks && u.tracks[0]) ? u.tracks[0] : null;
+                    if (first) {
+                        setActiveTrack(first);
+                        try {
+                            if (first && first.id && typeof playTrack === 'function') playTrack(String(first.id));
+                        } catch (_) {
+                        }
+                    }
                 } catch (_) {
                 }
 
@@ -625,6 +698,14 @@ async function renderStoriesBar() {
                         if (listEl) listEl.innerHTML = buildListHtml(userTracks);
                         try {
                             u.tracks = userTracks;
+                        } catch (_) {
+                        }
+
+                        try {
+                            var nextActive = null;
+                            if (activeTrackId) nextActive = findTrackById(activeTrackId);
+                            if (!nextActive && userTracks && userTracks[0]) nextActive = userTracks[0];
+                            if (nextActive) setActiveTrack(nextActive);
                         } catch (_) {
                         }
                     } catch (_) {
@@ -724,10 +805,19 @@ async function renderStoriesBar() {
                     }
                     if (trackBtn) {
                         var tid = trackBtn.getAttribute('data-track-id');
-                        if (tid && typeof playTrack === 'function') {
-                            playTrack(String(tid));
+                        if (tid) {
+                            try {
+                                var tt2 = findTrackById(tid);
+                                if (tt2) setActiveTrack(tt2);
+                            } catch (_) {
+                            }
+                            if (typeof playTrack === 'function') {
+                                try {
+                                    playTrack(String(tid));
+                                } catch (_) {
+                                }
+                            }
                         }
-                        close();
                     }
                 });
             } catch (_) {
