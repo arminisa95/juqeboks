@@ -136,6 +136,11 @@
             state.currentTime = 0;
             saveState();
         }
+
+        try {
+            if (typeof updateMobilePlayer === 'function') updateMobilePlayer();
+        } catch (_) {
+        }
     }
 
     function loadState() {
@@ -178,7 +183,27 @@
     }
 
     function ensurePlayerElement() {
-        var el = document.querySelector('.music-player');
+        var els = null;
+        try {
+            els = document.querySelectorAll('.music-player');
+        } catch (_) {
+            els = null;
+        }
+
+        var el = (els && els.length) ? els[0] : null;
+
+        // Ensure we only ever have one desktop player element
+        if (els && els.length > 1) {
+            try {
+                for (var i = 1; i < els.length; i++) {
+                    if (els[i] && els[i].parentNode) {
+                        els[i].parentNode.removeChild(els[i]);
+                    }
+                }
+            } catch (_) {
+            }
+        }
+
         if (!el) {
             el = document.createElement('div');
             el.className = 'music-player';
@@ -587,6 +612,11 @@
         if (window.JukePlayer && typeof window.JukePlayer.render === 'function') {
             window.JukePlayer.render();
         }
+
+        try {
+            if (typeof updateMobilePlayer === 'function') updateMobilePlayer();
+        } catch (_) {
+        }
     }
 
     function updateVideoToggleVisibility() {
@@ -661,11 +691,11 @@
             }
         });
 
-        window.JukePlayer = {
-            playTrackById: playTrackById,
-            stop: function () { stopPlayback(true); },
-            render: bound.render
-        };
+        // Do not overwrite JukePlayer object (mobile + queue helpers attach onto it)
+        window.JukePlayer = window.JukePlayer || {};
+        window.JukePlayer.playTrackById = playTrackById;
+        window.JukePlayer.stop = function () { stopPlayback(true); };
+        window.JukePlayer.render = bound.render;
 
         window.playTrack = function (trackId) {
             return playTrackById(trackId);
@@ -677,6 +707,10 @@
             audio.volume = state.volume;
             saveState();
             bound.render();
+            try {
+                if (typeof updateMobilePlayer === 'function') updateMobilePlayer();
+            } catch (_) {
+            }
             if (state.isPlaying) {
                 audio.play().catch(function () {
                     state.isPlaying = false;
@@ -684,6 +718,11 @@
                     bound.render();
                 });
             }
+        }
+
+        try {
+            if (typeof updateMobilePlayer === 'function') updateMobilePlayer();
+        } catch (_) {
         }
 
         return bound;
