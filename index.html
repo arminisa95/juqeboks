@@ -154,13 +154,11 @@
         <main>
             <div class="lists-shell" id="listsShell">
                 <aside class="lists-nav" aria-label="Lists directories">
-                    <div class="lists-nav-title">U_lists</div>
+                    <div class="lists-nav-title">_lists</div>
                     <div class="lists-nav-subtitle">Directories</div>
                     <div class="lists-nav-items" role="tablist">
-                        <button class="lists-nav-item" type="button" role="tab" data-view="liked">_liked</button>
+                        <button class="lists-nav-item" type="button" role="tab" data-view="liked">_liked tracks</button>
                         <button class="lists-nav-item" type="button" role="tab" data-view="lists">_lists</button>
-                        <button class="lists-nav-item" type="button" role="tab" data-view="curry">_curry</button>
-                        <button class="lists-nav-item" type="button" role="tab" data-view="random">random</button>
                     </div>
                     <div class="lists-nav-footer">Switch with ↑/↓, open with Enter</div>
                 </aside>
@@ -168,7 +166,7 @@
                 <section class="lists-content" aria-label="Lists content">
                     <div class="lists-panel" id="listsPanelLiked" data-panel="liked" role="tabpanel">
                         <div class="lists-panel-header">
-                            <div class="lists-panel-title">_liked</div>
+                            <div class="lists-panel-title">_liked tracks</div>
                             <div class="lists-panel-hint">Your liked tracks</div>
                         </div>
                         <div id="likedTracks" class="cards-grid"></div>
@@ -180,22 +178,6 @@
                             <div class="lists-panel-hint">Your playlists</div>
                         </div>
                         <div id="myPlaylists" class="cards-grid"></div>
-                    </div>
-
-                    <div class="lists-panel" id="listsPanelCurry" data-panel="curry" role="tabpanel">
-                        <div class="lists-panel-header">
-                            <div class="lists-panel-title">_curry</div>
-                            <div class="lists-panel-hint">Curated picks</div>
-                        </div>
-                        <div id="curatedPlaylists" class="cards-grid"></div>
-                    </div>
-
-                    <div class="lists-panel" id="listsPanelRandom" data-panel="random" role="tabpanel">
-                        <div class="lists-panel-header">
-                            <div class="lists-panel-title">random</div>
-                            <div class="lists-panel-hint">Public playlists, shuffled</div>
-                        </div>
-                        <div id="randomPlaylists" class="cards-grid"></div>
                     </div>
 
                     <div class="lists-panel" id="listsPanelPlaylist" data-panel="playlist" role="tabpanel" style="display:none;">
