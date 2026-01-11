@@ -442,9 +442,11 @@ async function openPlaylist(playlist) {
                     ${dateTxt ? `<div class="lists-track-date">${dateTxt}</div>` : ''}
                 </div>
                 <div class="lists-track-actions">
-                    <button class="lists-track-action" type="button" aria-label="Like"><i class="far fa-heart"></i></button>
-                    <button class="lists-track-action lists-track-share" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
-                    <button class="lists-track-action" type="button" aria-label="More"><i class="fas fa-ellipsis-h"></i></button>
+                    <button class="lists-track-action like-btn" data-track-id="${t.id}" type="button" aria-label="Like"><i class="far fa-heart"></i></button>
+                    <button class="lists-track-action comment-btn" data-track-id="${t.id}" type="button" aria-label="Comment"><i class="far fa-comment"></i></button>
+                    <button class="lists-track-action lists-track-share" data-track-id="${t.id}" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
+                    <button class="lists-track-action edit-btn" data-track-id="${t.id}" type="button" aria-label="Edit"><i class="fas fa-edit"></i></button>
+                    <button class="lists-track-action delete-btn" data-track-id="${t.id}" type="button" aria-label="Delete"><i class="fas fa-trash"></i></button>
                 </div>
                 <div class="lists-track-duration">3:45</div>
             `;
@@ -458,15 +460,32 @@ async function openPlaylist(playlist) {
                 } catch (_) {}
             });
             
-            const likeBtn = row.querySelector('.lists-track-action');
+            // Add event listeners for all action buttons
+            const likeBtn = row.querySelector('.like-btn');
             if (likeBtn) {
                 likeBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
+                    const trackId = this.getAttribute('data-track-id');
                     this.classList.toggle('liked');
                     const icon = this.querySelector('i');
                     if (icon) {
                         icon.className = this.classList.contains('liked') ? 'fas fa-heart' : 'far fa-heart';
                     }
+                    // Call global like function if available
+                    if (typeof window.likeTrack === 'function') {
+                        window.likeTrack(trackId);
+                    }
+                });
+            }
+
+            const commentBtn = row.querySelector('.comment-btn');
+            if (commentBtn) {
+                commentBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const trackId = this.getAttribute('data-track-id');
+                    console.log('Comment button clicked for track:', trackId);
+                    // TODO: Implement comment functionality
+                    alert('Comment functionality coming soon!');
                 });
             }
 
@@ -474,11 +493,38 @@ async function openPlaylist(playlist) {
             if (shareBtn) {
                 shareBtn.addEventListener('click', function (e) {
                     e.stopPropagation();
+                    const trackId = this.getAttribute('data-track-id');
                     try {
                         if (typeof window.shareTrackById === 'function') {
                             window.shareTrackById(String(t.id), { title: safeTitle, text: safeArtist });
                         }
                     } catch (_) {
+                    }
+                });
+            }
+
+            const editBtn = row.querySelector('.edit-btn');
+            if (editBtn) {
+                editBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const trackId = this.getAttribute('data-track-id');
+                    console.log('Edit button clicked for track:', trackId);
+                    // TODO: Implement edit functionality
+                    alert('Edit functionality coming soon!');
+                });
+            }
+
+            const deleteBtn = row.querySelector('.delete-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const trackId = this.getAttribute('data-track-id');
+                    console.log('Delete button clicked for track:', trackId);
+                    // Call global delete function if available
+                    if (typeof window.deleteTrack === 'function') {
+                        window.deleteTrack(trackId, e);
+                    } else {
+                        alert('Delete functionality coming soon!');
                     }
                 });
             }

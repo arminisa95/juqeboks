@@ -581,10 +581,27 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 32px;
+    height: 32px;
 }
 
 .lists-track-action:hover {
     background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.lists-track-action.like-btn.liked {
+    color: #1ed760;
+}
+
+.lists-track-action.edit-btn:hover {
+    background: #1ed760;
+    color: #fff;
+}
+
+.lists-track-action.delete-btn:hover {
+    background: #f44336;
     color: #fff;
 }
 
