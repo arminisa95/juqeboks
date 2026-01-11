@@ -187,6 +187,9 @@
                     <label for="coverInput">Cover Image (optional)</label>
                     <input type="file" id="coverInput" class="form-control" accept="image/*">
                     <div class="file-info" id="coverInfo">No cover selected</div>
+                    <button type="button" id="openEditorBtn" class="btn-upload" style="margin-top: 10px; background: #1db954;">
+                        <i class="fas fa-edit"></i> Open Media Editor
+                    </button>
                 </div>
                 
                 <div class="form-group">
@@ -244,6 +247,44 @@
             const coverInput = document.getElementById('coverInput');
             const coverInfo = document.getElementById('coverInfo');
             const uploadForm = document.getElementById('uploadForm');
+            const openEditorBtn = document.getElementById('openEditorBtn');
+            
+            // Debug: Check if media editor is available
+            console.log('Media editor available:', typeof openMediaEditor === 'function');
+            
+            // Handle manual media editor button
+            if (openEditorBtn) {
+                openEditorBtn.addEventListener('click', () => {
+                    console.log('Manual editor button clicked');
+                    
+                    // Create a sample file for testing
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 400;
+                    canvas.height = 300;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Create a simple test image
+                    ctx.fillStyle = '#1db954';
+                    ctx.fillRect(0, 0, 400, 300);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '30px Arial';
+                    ctx.fillText('Test Image', 100, 150);
+                    
+                    canvas.toBlob((blob) => {
+                        const testFile = new File([blob], 'test-image.jpg', { type: 'image/jpeg' });
+                        console.log('Opening media editor with test file:', testFile);
+                        
+                        if (typeof openMediaEditor === 'function') {
+                            openMediaEditor(testFile, (processedFile) => {
+                                console.log('Media editor processed file:', processedFile);
+                                alert('Media editor test completed! File processed: ' + processedFile.name);
+                            });
+                        } else {
+                            alert('Media editor not available');
+                        }
+                    }, 'image/jpeg');
+                });
+            }
             
             // Handle click on drop zone
             dropZone.addEventListener('click', () => {
