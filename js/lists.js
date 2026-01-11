@@ -887,18 +887,14 @@ async function loadLists() {
             myPlaylists.forEach((playlist, index) => {
                 console.log(`Creating navigation item ${index + 1}:`, playlist.name);
                 
-                // Create navigation item container like the header structure
+                // Create navigation item that mimics lists-nav-title structure
                 const navItemContainer = document.createElement('div');
                 navItemContainer.className = 'lists-nav-item-container';
-                navItemContainer.style.position = 'relative';
-                
-                // Create a wrapper that mimics the lists-nav-title structure
-                const navItemWrapper = document.createElement('div');
-                navItemWrapper.style.display = 'flex';
-                navItemWrapper.style.alignItems = 'center';
-                navItemWrapper.style.justifyContent = 'space-between';
-                navItemWrapper.style.gap = '0.5rem';
-                navItemWrapper.style.marginBottom = '2px';
+                navItemContainer.style.display = 'flex';
+                navItemContainer.style.alignItems = 'center';
+                navItemContainer.style.justifyContent = 'space-between';
+                navItemContainer.style.gap = '0.5rem';
+                navItemContainer.style.marginBottom = '2px';
                 
                 const navBtn = document.createElement('button');
                 navBtn.className = 'lists-nav-item';
@@ -929,11 +925,12 @@ async function loadLists() {
                         deletePlaylist(playlist.id, playlist.name);
                     };
                     
-                    navItemWrapper.appendChild(deleteBtn);
+                    navItemContainer.appendChild(navBtn);
+                    navItemContainer.appendChild(deleteBtn);
+                } else {
+                    navItemContainer.appendChild(navBtn);
                 }
                 
-                navItemWrapper.appendChild(navBtn);
-                navItemContainer.appendChild(navItemWrapper);
                 navItemsEl.appendChild(navItemContainer);
                 console.log(`Added navigation item for: ${playlist.name}`);
                 
@@ -1036,18 +1033,14 @@ async function createPlaylist(name) {
             // Add the new playlist as a navigation item with delete button positioned like add button
             const navItemsEl = document.querySelector('.lists-nav-items');
             if (navItemsEl) {
-                // Create navigation item container like the header structure
+                // Create navigation item that mimics lists-nav-title structure
                 const navItemContainer = document.createElement('div');
                 navItemContainer.className = 'lists-nav-item-container';
-                navItemContainer.style.position = 'relative';
-                
-                // Create a wrapper that mimics the lists-nav-title structure
-                const navItemWrapper = document.createElement('div');
-                navItemWrapper.style.display = 'flex';
-                navItemWrapper.style.alignItems = 'center';
-                navItemWrapper.style.justifyContent = 'space-between';
-                navItemWrapper.style.gap = '0.5rem';
-                navItemWrapper.style.marginBottom = '2px';
+                navItemContainer.style.display = 'flex';
+                navItemContainer.style.alignItems = 'center';
+                navItemContainer.style.justifyContent = 'space-between';
+                navItemContainer.style.gap = '0.5rem';
+                navItemContainer.style.marginBottom = '2px';
                 
                 const navBtn = document.createElement('button');
                 navBtn.className = 'lists-nav-item';
@@ -1077,9 +1070,8 @@ async function createPlaylist(name) {
                     deletePlaylist(response.id, response.name);
                 };
                 
-                navItemWrapper.appendChild(deleteBtn);
-                navItemWrapper.appendChild(navBtn);
-                navItemContainer.appendChild(navItemWrapper);
+                navItemContainer.appendChild(navBtn);
+                navItemContainer.appendChild(deleteBtn);
                 navItemsEl.appendChild(navItemContainer);
                 
                 // Create corresponding panel
