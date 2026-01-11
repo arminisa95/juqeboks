@@ -1019,44 +1019,35 @@ async function loadLists() {
                     loadPlaylistContent(playlist);
                 });
                 
-                // Add action buttons for owned playlists (positioned like add button)
-                const isOwner = !playlist.owner_username || playlist.owner_username === getCurrentUsername();
-                console.log('Playlist owner_username:', playlist.owner_username);
-                console.log('Current username:', getCurrentUsername());
-                console.log('Is owner of playlist:', playlist.name, isOwner);
+                // Add action buttons for all playlists (temporarily remove ownership check)
+                const menuBtn = document.createElement('button');
+                menuBtn.className = 'lists-menu-btn';
+                menuBtn.innerHTML = '⋮';
+                menuBtn.title = 'Playlist options';
+                menuBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    console.log('Menu button clicked for:', playlist.name);
+                    showPlaylistMenu(playlist, e.target);
+                };
                 
-                if (isOwner) {
-                    const menuBtn = document.createElement('button');
-                    menuBtn.className = 'lists-menu-btn';
-                    menuBtn.innerHTML = '⋮';
-                    menuBtn.title = 'Playlist options';
-                    menuBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        console.log('Menu button clicked for:', playlist.name);
-                        showPlaylistMenu(playlist, e.target);
-                    };
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'lists-delete-btn';
-                    deleteBtn.innerHTML = '-';
-                    deleteBtn.title = 'Delete playlist';
-                    deleteBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        console.log('Quick delete button clicked for:', playlist.name);
-                        deletePlaylist(playlist.id, playlist.name);
-                    };
-                    
-                    console.log('Created menu button:', menuBtn);
-                    console.log('Created delete button:', deleteBtn);
-                    
-                    navItemContainer.appendChild(navBtn);
-                    navItemContainer.appendChild(menuBtn);
-                    navItemContainer.appendChild(deleteBtn);
-                    
-                    console.log('Added buttons to container. Children count:', navItemContainer.children.length);
-                } else {
-                    navItemContainer.appendChild(navBtn);
-                }
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'lists-delete-btn';
+                deleteBtn.innerHTML = '-';
+                deleteBtn.title = 'Delete playlist';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    console.log('Quick delete button clicked for:', playlist.name);
+                    deletePlaylist(playlist.id, playlist.name);
+                };
+                
+                console.log('Created menu button:', menuBtn);
+                console.log('Created delete button:', deleteBtn);
+                
+                navItemContainer.appendChild(navBtn);
+                navItemContainer.appendChild(menuBtn);
+                navItemContainer.appendChild(deleteBtn);
+                
+                console.log('Added buttons to container. Children count:', navItemContainer.children.length);
                 
                 navItemsEl.appendChild(navItemContainer);
                 console.log(`Added navigation item for: ${playlist.name}`);
