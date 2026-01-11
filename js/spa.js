@@ -267,23 +267,35 @@
             
             // Add event listener for add playlist button in SPA mode
             setTimeout(() => {
-                const addPlaylistBtn = document.getElementById('addPlaylistBtn');
-                if (addPlaylistBtn) {
-                    console.log('SPA: Add playlist button found, binding click event');
-                    addPlaylistBtn.addEventListener('click', () => {
-                        console.log('SPA: Add playlist button clicked');
-                        const name = prompt('Enter playlist name:');
-                        if (!name || !name.trim()) return;
-                        
-                        console.log('SPA: Creating playlist:', name.trim());
-                        if (typeof createPlaylist === 'function') {
-                            createPlaylist(name.trim());
-                        } else {
-                            console.error('SPA: createPlaylist function not found');
-                        }
-                    });
-                } else {
-                    console.log('SPA: Add playlist button not found');
+                const bindAddButton = () => {
+                    const addPlaylistBtn = document.getElementById('addPlaylistBtn');
+                    if (addPlaylistBtn) {
+                        console.log('SPA: Add playlist button found, binding click event');
+                        addPlaylistBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('SPA: Add playlist button clicked');
+                            const name = prompt('Enter playlist name:');
+                            if (!name || !name.trim()) return;
+                            
+                            console.log('SPA: Creating playlist:', name.trim());
+                            if (typeof createPlaylist === 'function') {
+                                createPlaylist(name.trim());
+                            } else if (typeof window.createPlaylist === 'function') {
+                                window.createPlaylist(name.trim());
+                            } else {
+                                console.error('SPA: createPlaylist function not found');
+                                alert('Error: createPlaylist function not available');
+                            }
+                        });
+                        return true;
+                    }
+                    return false;
+                };
+                
+                // Try to bind immediately and retry if needed
+                if (!bindAddButton()) {
+                    setTimeout(bindAddButton, 50);
                 }
                 
                 // Ensure lists panel is shown by default

@@ -737,12 +737,17 @@ async function loadLists() {
 
 async function createPlaylist(name) {
     try {
+        console.log('createPlaylist called with:', name);
+        
         const token = getAuthToken();
         if (!token) {
+            console.log('No auth token found');
             alert('Please login to create a playlist');
             return;
         }
 
+        console.log('Making API call to create playlist...');
+        
         const response = await apiFetchJson('/playlists', {
             method: 'POST',
             headers: {
@@ -755,17 +760,24 @@ async function createPlaylist(name) {
             })
         });
 
+        console.log('API response:', response);
+
         if (response && response.id) {
             console.log('Playlist created successfully:', response);
+            alert('Playlist created successfully!');
             // Reload the lists to show the new playlist
-            loadLists();
+            if (typeof loadLists === 'function') {
+                loadLists();
+            } else if (window.JukeLists && typeof window.JukeLists.loadLists === 'function') {
+                window.JukeLists.loadLists();
+            }
         } else {
-            console.error('Failed to create playlist:', response);
-            alert('Failed to create playlist');
+            console.error('Failed to create playlist - invalid response:', response);
+            alert('Failed to create playlist. Please try again.');
         }
     } catch (error) {
         console.error('Error creating playlist:', error);
-        alert('Error creating playlist');
+        alert('Error creating playlist: ' + (error.message || 'Unknown error'));
     }
 }
 
@@ -778,24 +790,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadLists();
     
-    // Add event listener for add playlist button
-    const addPlaylistBtn = document.getElementById('addPlaylistBtn');
-    if (addPlaylistBtn) {
-        console.log('Add playlist button found, binding click event');
-        addPlaylistBtn.addEventListener('click', () => {
-            console.log('Add playlist button clicked');
-            const name = prompt('Enter playlist name:');
-            if (!name || !name.trim()) return;
-            
-            console.log('Creating playlist:', name.trim());
-            if (typeof createPlaylist === 'function') {
-                createPlaylist(name.trim());
-            } else {
-                console.error('createPlaylist function not found');
-            }
-        });
-    } else {
-        console.log('Add playlist button not found');
+    // Add event listener for add playlist button with retry mechanism
+    const bindAddButton = () => {
+        const addPlaylistBtn = document.getElementById('addPlaylistBtn');
+        if (addPlaylistBtn) {
+            console.log('Add playlist button found, binding click event');
+            addPlaylistBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Add playlist button clicked');
+                const name = prompt('Enter playlist name:');
+                if (!name || !name.trim()) return;
+                
+                console.log('Creating playlist:', name.trim());
+                if (typeof createPlaylist === 'function') {
+                    createPlaylist(name.trim());
+                } else {
+                    console.error('createPlaylist function not found');
+                    alert('Error: createPlaylist function not available');
+                }
+            });
+            return true;
+        }
+        return false;
+    };
+    
+    // Try to bind immediately
+    if (!bindAddButton()) {
+        // Retry after a short delay (for SPA mode)
+        setTimeout(bindAddButton, 100);
     }
 });
 
