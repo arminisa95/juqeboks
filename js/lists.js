@@ -579,6 +579,62 @@ function editPlaylist(playlistId, currentName) {
     }
 }
 
+function showPlaylistMenu(playlist, button) {
+    // Remove any existing dropdowns
+    const existingDropdown = document.querySelector('.playlist-dropdown');
+    if (existingDropdown) {
+        existingDropdown.remove();
+    }
+
+    // Create dropdown menu
+    const dropdown = document.createElement('div');
+    dropdown.className = 'playlist-dropdown';
+    
+    // Add menu items
+    const items = [
+        { text: 'Add Post', action: () => addPostToPlaylist(playlist) },
+        { text: 'Edit Listname', action: () => editPlaylist(playlist.id, playlist.name) },
+        { text: 'Delete List', action: () => deletePlaylist(playlist.id, playlist.name) }
+    ];
+    
+    items.forEach(item => {
+        const menuItem = document.createElement('div');
+        menuItem.className = 'playlist-dropdown-item';
+        menuItem.textContent = item.text;
+        menuItem.onclick = () => {
+            dropdown.remove();
+            item.action();
+        };
+        dropdown.appendChild(menuItem);
+    });
+    
+    // Position the dropdown
+    const buttonRect = button.getBoundingClientRect();
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = buttonRect.bottom + 'px';
+    dropdown.style.left = (buttonRect.right - dropdown.offsetWidth) + 'px';
+    
+    // Add to DOM
+    document.body.appendChild(dropdown);
+    
+    // Close on click outside
+    const closeHandler = (e) => {
+        if (!dropdown.contains(e.target) && e.target !== button) {
+            dropdown.remove();
+            document.removeEventListener('click', closeHandler);
+        }
+    };
+    setTimeout(() => {
+        document.addEventListener('click', closeHandler);
+    }, 100);
+}
+
+function addPostToPlaylist(playlist) {
+    // TODO: Implement add post functionality
+    console.log('Add post to playlist:', playlist.name);
+    alert('Add post functionality coming soon!');
+}
+
 function deletePlaylist(playlistId, playlistName) {
     if (confirm(`Are you sure you want to delete "${playlistName}"? This action cannot be undone.`)) {
         const token = getAuthToken();
@@ -588,10 +644,13 @@ function deletePlaylist(playlistId, playlistName) {
         }
 
         // Show loading state
-        const navBtn = document.querySelector(`[data-view="playlist-${playlistId}"]`);
-        if (navBtn) {
-            navBtn.textContent = 'Deleting...';
-            navBtn.disabled = true;
+        const navContainer = document.querySelector(`[data-view="playlist-${playlistId}"]`).parentElement;
+        if (navContainer) {
+            const menuBtn = navContainer.querySelector('.lists-menu-btn');
+            if (menuBtn) {
+                menuBtn.innerHTML = '...';
+                menuBtn.disabled = true;
+            }
         }
 
         // Make API call to delete playlist
@@ -604,9 +663,9 @@ function deletePlaylist(playlistId, playlistName) {
         }).then(response => {
             console.log('Playlist deleted successfully:', response);
             
-            // Remove navigation button
-            if (navBtn) {
-                navBtn.remove();
+            // Remove navigation container
+            if (navContainer) {
+                navContainer.remove();
             }
             
             // Remove panel
@@ -629,9 +688,12 @@ function deletePlaylist(playlistId, playlistName) {
             console.error('Error deleting playlist:', error);
             
             // Restore button state
-            if (navBtn) {
-                navBtn.textContent = playlistName;
-                navBtn.disabled = false;
+            if (navContainer) {
+                const menuBtn = navContainer.querySelector('.lists-menu-btn');
+                if (menuBtn) {
+                    menuBtn.innerHTML = '⋮';
+                    menuBtn.disabled = false;
+                }
             }
             
             alert(`Failed to delete "${playlistName}". Please try again.`);
@@ -912,21 +974,21 @@ async function loadLists() {
                     loadPlaylistContent(playlist);
                 });
                 
-                // Add delete button for owned playlists (positioned like add button)
+                // Add 3-dot menu button for owned playlists (positioned like add button)
                 const isOwner = !playlist.owner_username || playlist.owner_username === getCurrentUsername();
                 if (isOwner) {
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'lists-delete-btn';
-                    deleteBtn.innerHTML = '-';
-                    deleteBtn.title = 'Delete playlist';
-                    deleteBtn.onclick = (e) => {
+                    const menuBtn = document.createElement('button');
+                    menuBtn.className = 'lists-menu-btn';
+                    menuBtn.innerHTML = '⋮';
+                    menuBtn.title = 'Playlist options';
+                    menuBtn.onclick = (e) => {
                         e.stopPropagation();
-                        console.log('Delete button clicked for:', playlist.name);
-                        deletePlaylist(playlist.id, playlist.name);
+                        console.log('Menu button clicked for:', playlist.name);
+                        showPlaylistMenu(playlist, e.target);
                     };
                     
                     navItemContainer.appendChild(navBtn);
-                    navItemContainer.appendChild(deleteBtn);
+                    navItemContainer.appendChild(menuBtn);
                 } else {
                     navItemContainer.appendChild(navBtn);
                 }
@@ -1059,19 +1121,19 @@ async function createPlaylist(name) {
                     loadPlaylistContent(response);
                 });
                 
-                // Add delete button positioned like add button
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'lists-delete-btn';
-                deleteBtn.innerHTML = '-';
-                deleteBtn.title = 'Delete playlist';
-                deleteBtn.onclick = (e) => {
+                // Add 3-dot menu button positioned like add button
+                const menuBtn = document.createElement('button');
+                menuBtn.className = 'lists-menu-btn';
+                menuBtn.innerHTML = '⋮';
+                menuBtn.title = 'Playlist options';
+                menuBtn.onclick = (e) => {
                     e.stopPropagation();
-                    console.log('Delete button clicked for new playlist:', response.name);
-                    deletePlaylist(response.id, response.name);
+                    console.log('Menu button clicked for new playlist:', response.name);
+                    showPlaylistMenu(response, e.target);
                 };
                 
                 navItemContainer.appendChild(navBtn);
-                navItemContainer.appendChild(deleteBtn);
+                navItemContainer.appendChild(menuBtn);
                 navItemsEl.appendChild(navItemContainer);
                 
                 // Create corresponding panel

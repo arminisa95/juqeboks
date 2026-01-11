@@ -272,6 +272,55 @@
     transform: scale(1.1);
 }
 
+/* Menu Button */
+.lists-menu-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.lists-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+/* Dropdown Menu */
+.playlist-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 4px 0;
+    min-width: 150px;
+    z-index: 1000;
+    backdrop-filter: blur(20px);
+}
+
+.playlist-dropdown-item {
+    padding: 8px 16px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.playlist-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
 /* Empty State */
 .empty-state {
     color: rgba(255, 255, 255, 0.6);
