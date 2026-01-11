@@ -57,6 +57,7 @@
                 <div class="lists-nav-subtitle">Directories</div>
                 <div class="lists-nav-items" role="tablist">
                     <button class="lists-nav-item" type="button" role="tab" data-view="liked">_liked tracks</button>
+                    <button class="lists-nav-item" type="button" role="tab" data-view="liked-playlists">_liked playlists</button>
                 </div>
                 <div class="lists-nav-footer">Switch with ↑/↓, open with Enter</div>
             </aside>
@@ -68,6 +69,14 @@
                         <div class="lists-panel-hint">Your liked tracks</div>
                     </div>
                     <div id="likedTracks" class="cards-grid"></div>
+                </div>
+
+                <div class="lists-panel" id="listsPanelLikedPlaylists" data-panel="liked-playlists" role="tabpanel">
+                    <div class="lists-panel-header">
+                        <div class="lists-panel-title">_liked playlists</div>
+                        <div class="lists-panel-hint">Your liked playlists</div>
+                    </div>
+                    <div id="likedPlaylists" class="cards-grid"></div>
                 </div>
 
                 <div class="lists-panel" id="listsPanelLists" data-panel="lists" role="tabpanel">

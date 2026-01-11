@@ -122,16 +122,10 @@ function ensureLikedPlaylistsHost(likedEl) {
     return host;
 }
 
-async function loadLikedPlaylistsInto(likedTracksEl) {
+async function loadLikedPlaylistsInto(likedPlaylistsEl) {
     const token = getAuthToken();
     if (!token) return;
-    if (!likedTracksEl) return;
-
-    var host = ensureLikedPlaylistsHost(likedTracksEl);
-    if (!host) return;
-    host.innerHTML = '<div class="lists-subsection-title">Liked playlists</div><div class="cards-grid" id="likedPlaylistsGrid"></div>';
-    var grid = host.querySelector('#likedPlaylistsGrid');
-    if (!grid) return;
+    if (!likedPlaylistsEl) return;
 
     try {
         const liked = await apiFetchJson('/playlists/liked', {
@@ -142,18 +136,18 @@ async function loadLikedPlaylistsInto(likedTracksEl) {
             return Array.isArray(d);
         });
 
-        grid.innerHTML = '';
+        likedPlaylistsEl.innerHTML = '';
         if (!liked || liked.length === 0) {
-            grid.innerHTML = '<div class="empty-state">No liked playlists yet.</div>';
+            setEmpty(likedPlaylistsEl, 'No liked playlists yet.');
             return;
         }
 
         liked.forEach(function (p) {
-            grid.appendChild(renderPlaylistCard(p));
+            likedPlaylistsEl.appendChild(renderPlaylistCard(p));
         });
     } catch (e) {
         console.error(e);
-        grid.innerHTML = '<div class="empty-state">Failed to load liked playlists.</div>';
+        setEmpty(likedPlaylistsEl, 'Failed to load liked playlists.');
     }
 }
 
@@ -651,14 +645,16 @@ async function loadLists() {
     const myPlaylistsEl = document.getElementById('myPlaylists');
     const curatedEl = document.getElementById('curatedPlaylists');
     const likedEl = document.getElementById('likedTracks');
+    const likedPlaylistsEl = document.getElementById('likedPlaylists');
     const randomEl = document.getElementById('randomPlaylists');
 
     bindListsNavigatorUi();
-    showPanel('lists');
+    showPanel('liked'); // Show liked tracks by default
 
     setEmpty(myPlaylistsEl, 'Loading...');
     setEmpty(curatedEl, 'Loading...');
     setEmpty(likedEl, 'Loading...');
+    setEmpty(likedPlaylistsEl, 'Loading...');
     setEmpty(randomEl, 'Loading...');
 
     try {
@@ -672,6 +668,7 @@ async function loadLists() {
 
         myPlaylistsEl.innerHTML = '';
         likedEl.innerHTML = '';
+        likedPlaylistsEl.innerHTML = '';
 
         const myPlaylists = profile.playlists || [];
         if (myPlaylists.length === 0) {
@@ -687,9 +684,11 @@ async function loadLists() {
             favorites.forEach((t) => likedEl.appendChild(renderTrackCard(t)));
         }
 
+        // Load liked playlists separately
         try {
-            await loadLikedPlaylistsInto(likedEl);
+            await loadLikedPlaylistsInto(likedPlaylistsEl);
         } catch (_) {
+            setEmpty(likedPlaylistsEl, 'No liked playlists yet.');
         }
     } catch (e) {
         console.error(e);

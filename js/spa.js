@@ -329,8 +329,8 @@
                 const listsPanel = document.getElementById('listsPanelLists');
                 const likedPanel = document.getElementById('listsPanelLiked');
                 if (listsPanel && likedPanel) {
-                    listsPanel.style.display = '';
-                    likedPanel.style.display = 'none';
+                    listsPanel.classList.remove('active');
+                    likedPanel.classList.add('active');
                 }
             }, 100);
         }
