@@ -251,6 +251,27 @@
     transform: scale(1.1);
 }
 
+/* Delete Button */
+.lists-delete-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+}
+
+.lists-delete-btn:hover {
+    background: #d32f2f;
+    transform: scale(1.1);
+}
+
 /* Empty State */
 .empty-state {
     color: rgba(255, 255, 255, 0.6);

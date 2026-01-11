@@ -923,33 +923,13 @@ async function loadLists() {
                     actionsContainer.style.marginLeft = '8px';
                     
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'lists-nav-action-btn delete-btn';
-                    deleteBtn.innerHTML = '🗑️';
+                    deleteBtn.className = 'lists-delete-btn';
+                    deleteBtn.innerHTML = '-';
                     deleteBtn.title = 'Delete playlist';
-                    deleteBtn.style.width = '24px';
-                    deleteBtn.style.height = '24px';
-                    deleteBtn.style.borderRadius = '4px';
-                    deleteBtn.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-                    deleteBtn.style.background = 'rgba(244, 67, 54, 0.8)';
-                    deleteBtn.style.color = '#fff';
-                    deleteBtn.style.cursor = 'pointer';
-                    deleteBtn.style.display = 'flex';
-                    deleteBtn.style.alignItems = 'center';
-                    deleteBtn.style.justifyContent = 'center';
-                    deleteBtn.style.fontSize = '12px';
                     deleteBtn.onclick = (e) => {
                         e.stopPropagation();
                         console.log('Delete button clicked for:', playlist.name);
                         deletePlaylist(playlist.id, playlist.name);
-                    };
-                    
-                    deleteBtn.onmouseover = () => {
-                        deleteBtn.style.background = '#f44336';
-                        deleteBtn.style.transform = 'scale(1.1)';
-                    };
-                    deleteBtn.onmouseout = () => {
-                        deleteBtn.style.background = 'rgba(244, 67, 54, 0.8)';
-                        deleteBtn.style.transform = 'scale(1)';
                     };
                     
                     actionsContainer.appendChild(deleteBtn);
@@ -1102,33 +1082,13 @@ async function createPlaylist(name) {
                 actionsContainer.style.marginLeft = '8px';
                 
                 const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'lists-nav-action-btn delete-btn';
-                deleteBtn.innerHTML = '🗑️';
+                deleteBtn.className = 'lists-delete-btn';
+                deleteBtn.innerHTML = '-';
                 deleteBtn.title = 'Delete playlist';
-                deleteBtn.style.width = '24px';
-                deleteBtn.style.height = '24px';
-                deleteBtn.style.borderRadius = '4px';
-                deleteBtn.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-                deleteBtn.style.background = 'rgba(244, 67, 54, 0.8)';
-                deleteBtn.style.color = '#fff';
-                deleteBtn.style.cursor = 'pointer';
-                deleteBtn.style.display = 'flex';
-                deleteBtn.style.alignItems = 'center';
-                deleteBtn.style.justifyContent = 'center';
-                deleteBtn.style.fontSize = '12px';
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();
                     console.log('Delete button clicked for new playlist:', response.name);
                     deletePlaylist(response.id, response.name);
-                };
-                
-                deleteBtn.onmouseover = () => {
-                    deleteBtn.style.background = '#f44336';
-                    deleteBtn.style.transform = 'scale(1.1)';
-                };
-                deleteBtn.onmouseout = () => {
-                    deleteBtn.style.background = 'rgba(244, 67, 54, 0.8)';
-                    deleteBtn.style.transform = 'scale(1)';
                 };
                 
                 actionsContainer.appendChild(deleteBtn);
