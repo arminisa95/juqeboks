@@ -253,7 +253,7 @@
 .card-cover {
     position: relative;
     padding-top: 100%;
-    background: linear-gradient(135deg, #1a1540, #2d1b69);
+    background: linear-gradient(135deg, #2d2d3d, #3a3a4a);
 }
 
 .card-cover img {
