@@ -3,43 +3,50 @@
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 */
 
-/* Main Layout */
+/* Main Layout - Remove Container Structure */
 .lists-shell {
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    gap: 32px;
-    height: calc(100vh - 180px);
-    padding: 32px;
-    max-width: 1400px;
-    margin: 0 auto;
+    display: block;
+    padding: 20px;
+    max-width: none;
+    margin: 0;
+    height: auto;
 }
 
-/* Lists Layout - Feed Style */
+/* Lists Layout - Floating Content */
 .lists {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
+    display: block;
+    height: auto;
+    overflow: visible;
 }
 
 .lists-nav {
     width: 280px;
-    flex-shrink: 0;
-    overflow-y: auto;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    float: left;
+    margin-right: 32px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    padding: 24px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 20px;
+    height: fit-content;
 }
 
 .lists-content {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    margin-left: 312px;
+    overflow: visible;
+    display: block;
 }
 
 .lists-panel {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
     display: none;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    padding: 32px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 32px;
 }
 
 .lists-panel.active {
@@ -48,19 +55,8 @@
 
 /* Feed-style content layout */
 .lists-panel-content {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.lists-nav {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    padding: 24px;
-    height: fit-content;
-    position: sticky;
-    top: 32px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-width: none;
+    margin: 0;
 }
 
 .lists-nav-title {
@@ -128,24 +124,6 @@
     font-size: 0.75rem;
     text-align: center;
     line-height: 1.4;
-}
-
-/* Main Content Area */
-.lists-content {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-    padding: 32px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    overflow-y: auto;
-}
-
-.lists-panel {
-    display: none;
-}
-
-.lists-panel.active {
-    display: block;
 }
 
 .lists-panel-header {
