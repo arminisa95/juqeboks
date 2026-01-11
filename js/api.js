@@ -1910,43 +1910,58 @@ async function renderStoriesBar() {
                 <div class="story-username">${u.username}</div>
             `;
             item.addEventListener('click', () => {
-                // For mobile, open media player with story queue instead of stories tray
-                var isMobile = false;
-                try {
-                    isMobile = !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
-                } catch (_) {
-                    isMobile = false;
-                }
+                // Always open media player directly like miniplayer behavior
+                console.log('Story avatar clicked, tracks:', u.tracks ? u.tracks.length : 0);
                 
-                console.log('Story clicked, isMobile:', isMobile, 'tracks:', u.tracks ? u.tracks.length : 0);
-                
-                if (isMobile) {
-                    if (u.tracks && Array.isArray(u.tracks) && u.tracks.length > 0) {
-                        // Set the story queue in feed state
-                        feedState.queueTracks = u.tracks;
-                        // Open media viewer with first story track
-                        try {
-                            if (typeof openTrackMediaViewer === 'function') {
-                                console.log('Calling openTrackMediaViewer');
-                                openTrackMediaViewer(u.tracks, u.tracks[0].id);
-                            } else if (typeof window.openTrackMediaViewer === 'function') {
-                                console.log('Calling window.openTrackMediaViewer');
-                                window.openTrackMediaViewer(u.tracks, u.tracks[0].id);
-                            } else if (typeof playTrack === 'function') {
-                                console.log('Calling playTrack');
-                                playTrack(u.tracks[0].id);
-                            } else {
-                                console.error('No media player function available');
-                            }
-                        } catch (e) {
-                            console.error('Error opening media viewer:', e);
-                        }
+                if (u.tracks && Array.isArray(u.tracks) && u.tracks.length > 0) {
+                    // Set the story queue in feed state
+                    feedState.queueTracks = u.tracks;
+                    
+                    // Play the first track directly (like miniplayer behavior)
+                    const firstTrack = u.tracks[0];
+                    console.log('Playing story track:', firstTrack.id, firstTrack.title);
+                    
+                    if (typeof playTrack === 'function') {
+                        playTrack(firstTrack.id);
+                    } else if (typeof window.playTrack === 'function') {
+                        window.playTrack(firstTrack.id);
                     } else {
-                        console.log('No tracks available for story');
+                        console.error('No playTrack function available');
+                        // Fallback to stories tray if playTrack is not available
+                        openStoriesTray(u);
                     }
                 } else {
-                    // Desktop: keep existing stories tray behavior
-                    console.log('Desktop mode - opening stories tray');
+                    console.log('No tracks available for story');
+                    // Fallback to stories tray if no tracks
+                    openStoriesTray(u);
+                }
+            });
+            
+            // Also add touch event listener for mobile
+            item.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                console.log('Story avatar touchend, tracks:', u.tracks ? u.tracks.length : 0);
+                
+                if (u.tracks && Array.isArray(u.tracks) && u.tracks.length > 0) {
+                    // Set the story queue in feed state
+                    feedState.queueTracks = u.tracks;
+                    
+                    // Play the first track directly (like miniplayer behavior)
+                    const firstTrack = u.tracks[0];
+                    console.log('Playing story track via touch:', firstTrack.id, firstTrack.title);
+                    
+                    if (typeof playTrack === 'function') {
+                        playTrack(firstTrack.id);
+                    } else if (typeof window.playTrack === 'function') {
+                        window.playTrack(firstTrack.id);
+                    } else {
+                        console.error('No playTrack function available for touch');
+                        // Fallback to stories tray if playTrack is not available
+                        openStoriesTray(u);
+                    }
+                } else {
+                    console.log('No tracks available for story via touch');
+                    // Fallback to stories tray if no tracks
                     openStoriesTray(u);
                 }
             });
