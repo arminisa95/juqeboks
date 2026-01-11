@@ -1921,11 +1921,46 @@ async function renderStoriesBar() {
                     const firstTrack = u.tracks[0];
                     console.log('Playing story track:', firstTrack.id, firstTrack.title);
                     
-                    if (typeof playTrack === 'function') {
+                    // Set global track list for prev/next functionality
+                    try {
+                        if (window.JukePlayer && typeof window.JukePlayer.setTrackList === 'function') {
+                            const trackIds = u.tracks.map(t => String(t.id));
+                            window.JukePlayer.setTrackList(trackIds);
+                            console.log('Set track list for prev/next:', trackIds);
+                        }
+                    } catch (_) {}
+                    
+                    // Set queue tracks
+                    try {
+                        if (window.JukePlayer && typeof window.JukePlayer.setQueueTracks === 'function') {
+                            window.JukePlayer.setQueueTracks(u.tracks);
+                            console.log('Set queue tracks:', u.tracks.length);
+                        }
+                    } catch (_) {}
+                    
+                    // Try multiple methods to play the track
+                    let played = false;
+                    
+                    // Method 1: Try JukePlayer.playTrackById
+                    if (window.JukePlayer && typeof window.JukePlayer.playTrackById === 'function') {
+                        console.log('Using JukePlayer.playTrackById');
+                        window.JukePlayer.playTrackById(firstTrack.id);
+                        played = true;
+                    }
+                    // Method 2: Try global playTrack function
+                    else if (typeof playTrack === 'function') {
+                        console.log('Using global playTrack function');
                         playTrack(firstTrack.id);
-                    } else if (typeof window.playTrack === 'function') {
+                        played = true;
+                    }
+                    // Method 3: Try window.playTrack
+                    else if (typeof window.playTrack === 'function') {
+                        console.log('Using window.playTrack function');
                         window.playTrack(firstTrack.id);
-                    } else {
+                        played = true;
+                    }
+                    
+                    if (!played) {
                         console.error('No playTrack function available');
                         // Fallback to stories tray if playTrack is not available
                         openStoriesTray(u);
