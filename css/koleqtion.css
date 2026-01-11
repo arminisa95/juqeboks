@@ -5,25 +5,25 @@
 
 /* Main Layout */
 .library-container {
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    gap: 32px;
-    height: calc(100vh - 180px);
-    padding: 32px;
-    max-width: 1400px;
-    margin: 0 auto;
+    display: grid !important;
+    grid-template-columns: 240px 1fr !important;
+    gap: 32px !important;
+    height: calc(100vh - 180px) !important;
+    padding: 32px !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
 }
 
 /* Left Navigation */
 .library-nav {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    padding: 24px;
-    height: fit-content;
-    position: sticky;
-    top: 32px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 24px !important;
+    height: fit-content !important;
+    position: sticky !important;
+    top: 32px !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .library-nav-title {
@@ -91,20 +91,20 @@
 
 /* Main Content Area */
 .library-content {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
-    padding: 32px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-radius: 12px !important;
+    padding: 32px !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    overflow-y: auto !important;
 }
 
 .library-panel {
-    display: none;
+    display: none !important;
 }
 
 .library-panel.active {
-    display: block;
+    display: block !important;
 }
 
 .library-panel-header {
