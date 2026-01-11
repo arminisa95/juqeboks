@@ -167,22 +167,9 @@
     color: rgba(255, 255, 255, 0.5);
 }
 
+/* Remove filter button styles */
 .filter-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    padding: 12px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-}
-
-.filter-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    display: none !important;
 }
 
 /* Tabs */
@@ -213,6 +200,11 @@
 .tab.active {
     color: #fff;
     border-bottom-color: #1db954;
+}
+
+/* Remove pagination */
+.pagination {
+    display: none !important;
 }
 
 /* Cards Grid */

@@ -55,7 +55,6 @@
                     <button class="library-nav-item active" type="button" role="tab" data-view="tracks">_tracks</button>
                     <button class="library-nav-item" type="button" role="tab" data-view="playlists">_playlists</button>
                     <button class="library-nav-item" type="button" role="tab" data-view="albums">_albums</button>
-                    <button class="library-nav-item" type="button" role="tab" data-view="likes">_likes</button>
                 </div>
                 <div class="library-nav-footer">Switch with ↑/↓, open with Enter</div>
             </aside>
@@ -69,21 +68,10 @@
                     <div class="library-header">
                         <div class="library-actions">
                             <input type="text" class="search-library" placeholder="Search your library...">
-                            <button class="filter-btn">
-                                <i class="fas fa-sliders-h"></i>
-                                <span>Filters</span>
-                            </button>
                         </div>
                     </div>
                     <div class="tracks-grid" id="tracksGrid">
                         <!-- Track cards will be dynamically inserted here -->
-                    </div>
-                    <div class="pagination">
-                        <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
-                        <button class="page-btn active">1</button>
-                        <button class="page-btn">2</button>
-                        <button class="page-btn">3</button>
-                        <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
                     </div>
                 </div>
 
@@ -104,16 +92,6 @@
                     </div>
                     <div class="tracks-grid" id="albumsGrid">
                         <!-- Album cards will be dynamically inserted here -->
-                    </div>
-                </div>
-
-                <div class="library-panel" id="libraryPanelLikes" data-panel="likes" role="tabpanel">
-                    <div class="library-panel-header">
-                        <div class="library-panel-title">_likes</div>
-                        <div class="library-panel-hint">Your liked content</div>
-                    </div>
-                    <div class="tracks-grid" id="likesGrid">
-                        <!-- Liked items will be dynamically inserted here -->
                     </div>
                 </div>
             </section>
