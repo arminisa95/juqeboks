@@ -1910,95 +1910,16 @@ async function renderStoriesBar() {
                 <div class="story-username">${u.username}</div>
             `;
             item.addEventListener('click', () => {
-                // Always open media player directly like miniplayer behavior
-                console.log('Story avatar clicked, tracks:', u.tracks ? u.tracks.length : 0);
-                
-                if (u.tracks && Array.isArray(u.tracks) && u.tracks.length > 0) {
-                    // Set the story queue in feed state
-                    feedState.queueTracks = u.tracks;
-                    
-                    // Play the first track directly (like miniplayer behavior)
-                    const firstTrack = u.tracks[0];
-                    console.log('Playing story track:', firstTrack.id, firstTrack.title);
-                    
-                    // Set global track list for prev/next functionality
-                    try {
-                        if (window.JukePlayer && typeof window.JukePlayer.setTrackList === 'function') {
-                            const trackIds = u.tracks.map(t => String(t.id));
-                            window.JukePlayer.setTrackList(trackIds);
-                            console.log('Set track list for prev/next:', trackIds);
-                        }
-                    } catch (_) {}
-                    
-                    // Set queue tracks
-                    try {
-                        if (window.JukePlayer && typeof window.JukePlayer.setQueueTracks === 'function') {
-                            window.JukePlayer.setQueueTracks(u.tracks);
-                            console.log('Set queue tracks:', u.tracks.length);
-                        }
-                    } catch (_) {}
-                    
-                    // Try multiple methods to play the track
-                    let played = false;
-                    
-                    // Method 1: Try JukePlayer.playTrackById
-                    if (window.JukePlayer && typeof window.JukePlayer.playTrackById === 'function') {
-                        console.log('Using JukePlayer.playTrackById');
-                        window.JukePlayer.playTrackById(firstTrack.id);
-                        played = true;
-                    }
-                    // Method 2: Try global playTrack function
-                    else if (typeof playTrack === 'function') {
-                        console.log('Using global playTrack function');
-                        playTrack(firstTrack.id);
-                        played = true;
-                    }
-                    // Method 3: Try window.playTrack
-                    else if (typeof window.playTrack === 'function') {
-                        console.log('Using window.playTrack function');
-                        window.playTrack(firstTrack.id);
-                        played = true;
-                    }
-                    
-                    if (!played) {
-                        console.error('No playTrack function available');
-                        // Fallback to stories tray if playTrack is not available
-                        openStoriesTray(u);
-                    }
-                } else {
-                    console.log('No tracks available for story');
-                    // Fallback to stories tray if no tracks
-                    openStoriesTray(u);
-                }
+                // Always open stories tray with media viewer
+                console.log('Story avatar clicked, opening stories tray with tracks:', u.tracks ? u.tracks.length : 0);
+                openStoriesTray(u);
             });
             
             // Also add touch event listener for mobile
             item.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                console.log('Story avatar touchend, tracks:', u.tracks ? u.tracks.length : 0);
-                
-                if (u.tracks && Array.isArray(u.tracks) && u.tracks.length > 0) {
-                    // Set the story queue in feed state
-                    feedState.queueTracks = u.tracks;
-                    
-                    // Play the first track directly (like miniplayer behavior)
-                    const firstTrack = u.tracks[0];
-                    console.log('Playing story track via touch:', firstTrack.id, firstTrack.title);
-                    
-                    if (typeof playTrack === 'function') {
-                        playTrack(firstTrack.id);
-                    } else if (typeof window.playTrack === 'function') {
-                        window.playTrack(firstTrack.id);
-                    } else {
-                        console.error('No playTrack function available for touch');
-                        // Fallback to stories tray if playTrack is not available
-                        openStoriesTray(u);
-                    }
-                } else {
-                    console.log('No tracks available for story via touch');
-                    // Fallback to stories tray if no tracks
-                    openStoriesTray(u);
-                }
+                console.log('Story avatar touchend, opening stories tray with tracks:', u.tracks ? u.tracks.length : 0);
+                openStoriesTray(u);
             });
             storiesBar.appendChild(item);
         });
