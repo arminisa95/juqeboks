@@ -674,19 +674,38 @@ async function loadLists() {
             favorites.forEach((t) => likedEl.appendChild(renderTrackCard(t)));
         }
 
-        // Load user playlists into liked playlists section
+        // Load user playlists into liked lists section
         const myPlaylists = profile.playlists || [];
-        if (myPlaylists.length === 0) {
-            setEmpty(likedPlaylistsEl, 'No playlists yet.');
-        } else {
-            myPlaylists.forEach((p) => likedPlaylistsEl.appendChild(renderPlaylistCard(p)));
-        }
+        const allPlaylists = [...myPlaylists]; // Start with user playlists
 
-        // Load liked playlists separately
+        // Load liked playlists separately and add them to the combined list
         try {
-            await loadLikedPlaylistsInto(likedPlaylistsEl);
+            const liked = await apiFetchJson('/playlists/liked', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }, function (d) {
+                return Array.isArray(d);
+            });
+            
+            if (liked && liked.length > 0) {
+                // Add liked playlists that aren't already in the user's playlists
+                liked.forEach(function (p) {
+                    if (!myPlaylists.find(up => up.id === p.id)) {
+                        allPlaylists.push(p);
+                    }
+                });
+            }
         } catch (_) {
             // If no liked playlists, the user playlists will still show
+        }
+
+        // Display all playlists
+        likedPlaylistsEl.innerHTML = '';
+        if (allPlaylists.length === 0) {
+            setEmpty(likedPlaylistsEl, 'No playlists yet.');
+        } else {
+            allPlaylists.forEach((p) => likedPlaylistsEl.appendChild(renderPlaylistCard(p)));
         }
     } catch (e) {
         console.error(e);
