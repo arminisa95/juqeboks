@@ -865,8 +865,23 @@ async function createPlaylist(name) {
                 }
                 
                 // Add the new playlist card directly
-                likedPlaylistsEl.appendChild(renderPlaylistCard(response));
-                console.log('New playlist added to display');
+                const newCard = renderPlaylistCard(response);
+                newCard.style.border = '2px solid #1ed760';
+                newCard.style.boxShadow = '0 0 20px rgba(30, 215, 96, 0.5)';
+                likedPlaylistsEl.appendChild(newCard);
+                console.log('New playlist added to display with highlight');
+                
+                // Force switch to the liked lists panel to show the new playlist
+                setTimeout(() => {
+                    console.log('Switching to liked lists panel to show new playlist');
+                    showPanel('liked-playlists');
+                    
+                    // Remove highlight after 3 seconds
+                    setTimeout(() => {
+                        newCard.style.border = '';
+                        newCard.style.boxShadow = '';
+                    }, 3000);
+                }, 100);
             }
             
             // Wait a moment for the server to process, then reload the lists
