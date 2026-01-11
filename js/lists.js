@@ -642,7 +642,6 @@ async function loadLists() {
         return;
     }
 
-    const myPlaylistsEl = document.getElementById('myPlaylists');
     const curatedEl = document.getElementById('curatedPlaylists');
     const likedEl = document.getElementById('likedTracks');
     const likedPlaylistsEl = document.getElementById('likedPlaylists');
@@ -651,7 +650,6 @@ async function loadLists() {
     bindListsNavigatorUi();
     showPanel('liked'); // Show liked tracks by default
 
-    setEmpty(myPlaylistsEl, 'Loading...');
     setEmpty(curatedEl, 'Loading...');
     setEmpty(likedEl, 'Loading...');
     setEmpty(likedPlaylistsEl, 'Loading...');
@@ -666,16 +664,8 @@ async function loadLists() {
             return !!d && typeof d === 'object' && !Array.isArray(d);
         });
 
-        myPlaylistsEl.innerHTML = '';
         likedEl.innerHTML = '';
         likedPlaylistsEl.innerHTML = '';
-
-        const myPlaylists = profile.playlists || [];
-        if (myPlaylists.length === 0) {
-            setEmpty(myPlaylistsEl, 'No playlists yet.');
-        } else {
-            myPlaylists.forEach((p) => myPlaylistsEl.appendChild(renderPlaylistCard(p)));
-        }
 
         const favorites = profile.favorites || [];
         if (favorites.length === 0) {
@@ -684,15 +674,22 @@ async function loadLists() {
             favorites.forEach((t) => likedEl.appendChild(renderTrackCard(t)));
         }
 
+        // Load user playlists into liked playlists section
+        const myPlaylists = profile.playlists || [];
+        if (myPlaylists.length === 0) {
+            setEmpty(likedPlaylistsEl, 'No playlists yet.');
+        } else {
+            myPlaylists.forEach((p) => likedPlaylistsEl.appendChild(renderPlaylistCard(p)));
+        }
+
         // Load liked playlists separately
         try {
             await loadLikedPlaylistsInto(likedPlaylistsEl);
         } catch (_) {
-            setEmpty(likedPlaylistsEl, 'No liked playlists yet.');
+            // If no liked playlists, the user playlists will still show
         }
     } catch (e) {
         console.error(e);
-        setEmpty(myPlaylistsEl, 'Failed to load your playlists.');
         setEmpty(likedEl, 'Failed to load liked tracks.');
     }
 
@@ -769,12 +766,22 @@ async function createPlaylist(name) {
             // Wait a moment for the server to process, then reload the lists
             setTimeout(() => {
                 // Reload the lists to show the new playlist
-                if (typeof loadLists === 'function') {
-                    loadLists();
-                } else if (window.JukeLists && typeof window.JukeLists.loadLists === 'function') {
-                    window.JukeLists.loadLists();
+                try {
+                    if (typeof loadLists === 'function') {
+                        console.log('Calling loadLists function');
+                        loadLists();
+                    } else if (window.JukeLists && typeof window.JukeLists.loadLists === 'function') {
+                        console.log('Calling window.JukeLists.loadLists function');
+                        window.JukeLists.loadLists();
+                    } else {
+                        console.error('loadLists function not found');
+                        alert('Playlist created! Please refresh the page to see it.');
+                    }
+                } catch (error) {
+                    console.error('Error reloading lists:', error);
+                    alert('Playlist created! Please refresh the page to see it.');
                 }
-            }, 500);
+            }, 1000); // Increased timeout to 1 second
         } else {
             console.error('Failed to create playlist - invalid response:', response);
             alert('Failed to create playlist. Please try again.');
