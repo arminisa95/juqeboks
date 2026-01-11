@@ -186,6 +186,101 @@
     background: #f44336;
 }
 
+/* Track Actions - Side by Side Layout */
+.track-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.action-btn {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.action-btn.liked {
+    color: #1ed760;
+}
+
+.action-btn.delete-btn:hover {
+    background: #f44336;
+}
+
+/* Card Meta - Side by Side Layout */
+.card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.card-meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.card-action-btn.card-comment-btn,
+.card-action-btn.card-share-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+}
+
+/* Playlist Actions - Side by Side Layout */
+.playlist-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.playlist-action-btn {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.playlist-action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.playlist-action-btn.danger {
+    border-color: rgba(244, 67, 54, 0.5);
+    color: rgba(244, 67, 54, 0.9);
+}
+
+.playlist-action-btn.danger:hover {
+    background: rgba(244, 67, 54, 0.8);
+    color: #fff;
+}
+
 .card:hover {
     background: rgba(255, 255, 255, 0.08);
     transform: translateY(-4px);

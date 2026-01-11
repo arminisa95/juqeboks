@@ -221,11 +221,15 @@ async function openPlaylist(playlist) {
             actions.innerHTML = `
                 <button class="playlist-action-btn" type="button" data-action="like">Like</button>
                 <button class="playlist-action-btn" type="button" data-action="comment">Comment</button>
+                <button class="playlist-action-btn" type="button" data-action="share">Share</button>
+                <button class="playlist-action-btn" type="button" data-action="edit">Edit</button>
                 <button class="playlist-action-btn danger" type="button" data-action="delete">Delete</button>
             `;
 
             const likeBtn = actions.querySelector('[data-action="like"]');
             const commentBtn = actions.querySelector('[data-action="comment"]');
+            const shareBtn = actions.querySelector('[data-action="share"]');
+            const editBtn = actions.querySelector('[data-action="edit"]');
             const delBtn = actions.querySelector('[data-action="delete"]');
 
             if (likeBtn && !likeBtn.dataset.bound) {
@@ -270,6 +274,41 @@ async function openPlaylist(playlist) {
                     } catch (e) {
                         console.error(e);
                         if (ui.playlistStatus) ui.playlistStatus.textContent = 'Comment failed.';
+                    }
+                });
+            }
+
+            if (shareBtn && !shareBtn.dataset.bound) {
+                shareBtn.dataset.bound = '1';
+                shareBtn.addEventListener('click', function () {
+                    try {
+                        if (!playlist || !playlist.id) return;
+                        const url = `${window.location.origin}${window.location.pathname.split('/').slice(0, -1).join('/')}/playlist.html?id=${encodeURIComponent(playlist.id)}`;
+                        if (navigator.share) {
+                            navigator.share({
+                                title: playlist.name || 'Playlist',
+                                text: playlist.description || 'Check out this playlist',
+                                url: url
+                            });
+                        } else {
+                            navigator.clipboard.writeText(url).then(() => {
+                                alert('Playlist link copied to clipboard!');
+                            });
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                });
+            }
+
+            if (editBtn && !editBtn.dataset.bound) {
+                editBtn.dataset.bound = '1';
+                editBtn.addEventListener('click', function () {
+                    try {
+                        if (!playlist || !playlist.id) return;
+                        editPlaylist(playlist.id, playlist.name);
+                    } catch (e) {
+                        console.error(e);
                     }
                 });
             }
