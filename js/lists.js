@@ -676,6 +676,7 @@ async function loadLists() {
 
         // Load user playlists into liked lists section
         const myPlaylists = profile.playlists || [];
+        console.log('User playlists from profile:', myPlaylists.length, myPlaylists);
         const allPlaylists = [...myPlaylists]; // Start with user playlists
 
         // Load liked playlists separately and add them to the combined list
@@ -687,6 +688,8 @@ async function loadLists() {
             }, function (d) {
                 return Array.isArray(d);
             });
+            
+            console.log('Liked playlists from API:', liked ? liked.length : 0, liked);
             
             if (liked && liked.length > 0) {
                 // Add liked playlists that aren't already in the user's playlists
@@ -700,12 +703,17 @@ async function loadLists() {
             // If no liked playlists, the user playlists will still show
         }
 
+        console.log('All playlists to display:', allPlaylists.length, allPlaylists);
+
         // Display all playlists
         likedPlaylistsEl.innerHTML = '';
         if (allPlaylists.length === 0) {
             setEmpty(likedPlaylistsEl, 'No playlists yet.');
         } else {
-            allPlaylists.forEach((p) => likedPlaylistsEl.appendChild(renderPlaylistCard(p)));
+            allPlaylists.forEach((p) => {
+                console.log('Rendering playlist card:', p.name, p.id);
+                likedPlaylistsEl.appendChild(renderPlaylistCard(p));
+            });
         }
     } catch (e) {
         console.error(e);
@@ -784,6 +792,7 @@ async function createPlaylist(name) {
             
             // Wait a moment for the server to process, then reload the lists
             setTimeout(() => {
+                console.log('Attempting to reload lists...');
                 // Reload the lists to show the new playlist
                 try {
                     if (typeof loadLists === 'function') {
@@ -800,7 +809,7 @@ async function createPlaylist(name) {
                     console.error('Error reloading lists:', error);
                     alert('Playlist created! Please refresh the page to see it.');
                 }
-            }, 1000); // Increased timeout to 1 second
+            }, 1500); // Increased timeout to 1.5 seconds
         } else {
             console.error('Failed to create playlist - invalid response:', response);
             alert('Failed to create playlist. Please try again.');
