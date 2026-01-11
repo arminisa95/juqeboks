@@ -289,7 +289,7 @@
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('SPA: Add playlist button clicked');
-                    const name = prompt('Enter playlist name:');
+                    const name = prompt('Enter playlist name (will be prefixed with "_"):');
                     if (!name || !name.trim()) return;
                     
                     console.log('SPA: Creating playlist:', name.trim());

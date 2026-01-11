@@ -736,6 +736,9 @@ async function createPlaylist(name) {
     try {
         console.log('createPlaylist called with:', name);
         
+        // Add "_" prefix to the name
+        const playlistName = '_' + name;
+        
         const token = getAuthToken();
         if (!token) {
             console.log('No auth token found');
@@ -743,7 +746,7 @@ async function createPlaylist(name) {
             return;
         }
 
-        console.log('Making API call to create playlist...');
+        console.log('Making API call to create playlist with name:', playlistName);
         
         const response = await apiFetchJson('/playlists', {
             method: 'POST',
@@ -752,7 +755,7 @@ async function createPlaylist(name) {
                 Authorization: `Bearer ${token}`
             },
             body: JSON.stringify({
-                name: name,
+                name: playlistName,
                 description: ''
             })
         });
@@ -762,12 +765,16 @@ async function createPlaylist(name) {
         if (response && response.id) {
             console.log('Playlist created successfully:', response);
             alert('Playlist created successfully!');
-            // Reload the lists to show the new playlist
-            if (typeof loadLists === 'function') {
-                loadLists();
-            } else if (window.JukeLists && typeof window.JukeLists.loadLists === 'function') {
-                window.JukeLists.loadLists();
-            }
+            
+            // Wait a moment for the server to process, then reload the lists
+            setTimeout(() => {
+                // Reload the lists to show the new playlist
+                if (typeof loadLists === 'function') {
+                    loadLists();
+                } else if (window.JukeLists && typeof window.JukeLists.loadLists === 'function') {
+                    window.JukeLists.loadLists();
+                }
+            }, 500);
         } else {
             console.error('Failed to create playlist - invalid response:', response);
             alert('Failed to create playlist. Please try again.');
@@ -810,7 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         e.stopPropagation();
         console.log('Add playlist button clicked');
-        const name = prompt('Enter playlist name:');
+        const name = prompt('Enter playlist name (will be prefixed with "_"):');
         if (!name || !name.trim()) return;
         
         console.log('Creating playlist:', name.trim());
@@ -859,7 +866,7 @@ document.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         
-        const name = prompt('Enter playlist name:');
+        const name = prompt('Enter playlist name (will be prefixed with "_"):');
         if (!name || !name.trim()) return;
         
         console.log('Creating playlist via global handler:', name.trim());
