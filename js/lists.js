@@ -716,13 +716,11 @@ async function loadLists() {
 
     const curatedEl = document.getElementById('curatedPlaylists');
     const likedEl = document.getElementById('likedTracks');
-    const songsEl = document.getElementById('songs');
     const randomEl = document.getElementById('randomPlaylists');
 
     console.log('Elements found:', {
         curated: !!curatedEl,
         liked: !!likedEl,
-        songs: !!songsEl,
         random: !!randomEl
     });
 
@@ -732,17 +730,9 @@ async function loadLists() {
     // Check which panel is currently active
     const activePanel = document.querySelector('.lists-panel.active');
     console.log('Currently active panel:', activePanel ? activePanel.id : 'none');
-    
-    // Ensure liked playlists panel exists and is visible
-    const songsPanel = document.getElementById('listsPanelSongs');
-    console.log('Songs panel exists:', !!songsPanel);
-    if (songsPanel) {
-        console.log('Songs panel display:', window.getComputedStyle(songsPanel).display);
-    }
 
     if (curatedEl) setEmpty(curatedEl, 'Loading...');
     if (likedEl) setEmpty(likedEl, 'Loading...');
-    if (songsEl) setEmpty(songsEl, 'Loading...');
     if (randomEl) setEmpty(randomEl, 'Loading...');
 
     try {
@@ -766,33 +756,43 @@ async function loadLists() {
 
         // Load user playlists as separate navigation items
         const navItemsEl = document.querySelector('.lists-nav-items');
+        console.log('Navigation items container found:', !!navItemsEl);
+        
         if (navItemsEl) {
             // Keep the existing _liked tracks button
             const likedTracksBtn = navItemsEl.querySelector('[data-view="liked"]');
+            console.log('Liked tracks button found:', !!likedTracksBtn);
             
             // Clear existing navigation items except _liked tracks
             navItemsEl.innerHTML = '';
             if (likedTracksBtn) {
                 navItemsEl.appendChild(likedTracksBtn);
+                console.log('Re-added liked tracks button');
             }
             
             // Add each playlist as a separate navigation item
             const myPlaylists = profile.playlists || [];
             console.log('User playlists from profile:', myPlaylists.length, myPlaylists);
             
-            myPlaylists.forEach((playlist) => {
+            myPlaylists.forEach((playlist, index) => {
+                console.log(`Creating navigation item ${index + 1}:`, playlist.name);
+                
                 const navBtn = document.createElement('button');
                 navBtn.className = 'lists-nav-item';
                 navBtn.type = 'button';
                 navBtn.role = 'tab';
                 navBtn.setAttribute('data-view', `playlist-${playlist.id}`);
                 navBtn.textContent = playlist.name;
+                
                 navBtn.addEventListener('click', () => {
+                    console.log('Clicked playlist:', playlist.name);
                     showPanel(`playlist-${playlist.id}`);
                     // Load playlist content when clicked
                     loadPlaylistContent(playlist);
                 });
+                
                 navItemsEl.appendChild(navBtn);
+                console.log(`Added navigation button for: ${playlist.name}`);
                 
                 // Create corresponding panel
                 const panel = document.createElement('div');
@@ -808,7 +808,10 @@ async function loadLists() {
                     <div id="playlist-${playlist.id}" class="cards-grid"></div>
                 `;
                 document.querySelector('.lists-content').appendChild(panel);
+                console.log(`Created panel for: ${playlist.name}`);
             });
+            
+            console.log('Navigation setup complete. Total items:', navItemsEl.children.length);
         }
     } catch (e) {
         console.error(e);
