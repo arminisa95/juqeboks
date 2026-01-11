@@ -362,6 +362,8 @@
         margin-bottom: 0 !important;
         text-transform: none !important;
         letter-spacing: 0 !important;
+        background: none !important;
+        -webkit-text-fill-color: #fff !important;
     }
     
     .library-nav-subtitle {
@@ -379,15 +381,15 @@
         padding: 8px 12px !important;
         border-radius: 20px !important;
         background: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
         color: rgba(255, 255, 255, 0.7) !important;
         font-size: 0.9rem !important;
         font-weight: 600 !important;
-        min-height: auto !important;
+        min-height: 32px !important;
         height: 32px !important;
         display: flex !important;
         align-items: center !important;
         box-shadow: none !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
         margin: 0 !important;
         flex: 1 !important;
     }
