@@ -646,10 +646,10 @@ function deletePlaylist(playlistId, playlistName) {
         // Show loading state
         const navContainer = document.querySelector(`[data-view="playlist-${playlistId}"]`).parentElement;
         if (navContainer) {
-            const menuBtn = navContainer.querySelector('.lists-menu-btn');
-            if (menuBtn) {
-                menuBtn.innerHTML = '...';
-                menuBtn.disabled = true;
+            const deleteBtn = navContainer.querySelector('.lists-delete-btn');
+            if (deleteBtn) {
+                deleteBtn.innerHTML = '...';
+                deleteBtn.disabled = true;
             }
         }
 
@@ -689,10 +689,10 @@ function deletePlaylist(playlistId, playlistName) {
             
             // Restore button state
             if (navContainer) {
-                const menuBtn = navContainer.querySelector('.lists-menu-btn');
-                if (menuBtn) {
-                    menuBtn.innerHTML = '⋮';
-                    menuBtn.disabled = false;
+                const deleteBtn = navContainer.querySelector('.lists-delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.innerHTML = '-';
+                    deleteBtn.disabled = false;
                 }
             }
             
@@ -974,7 +974,7 @@ async function loadLists() {
                     loadPlaylistContent(playlist);
                 });
                 
-                // Add 3-dot menu button for owned playlists (positioned like add button)
+                // Add action buttons for owned playlists (positioned like add button)
                 const isOwner = !playlist.owner_username || playlist.owner_username === getCurrentUsername();
                 if (isOwner) {
                     const menuBtn = document.createElement('button');
@@ -987,8 +987,19 @@ async function loadLists() {
                         showPlaylistMenu(playlist, e.target);
                     };
                     
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'lists-delete-btn';
+                    deleteBtn.innerHTML = '-';
+                    deleteBtn.title = 'Delete playlist';
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        console.log('Quick delete button clicked for:', playlist.name);
+                        deletePlaylist(playlist.id, playlist.name);
+                    };
+                    
                     navItemContainer.appendChild(navBtn);
                     navItemContainer.appendChild(menuBtn);
+                    navItemContainer.appendChild(deleteBtn);
                 } else {
                     navItemContainer.appendChild(navBtn);
                 }
@@ -1121,7 +1132,7 @@ async function createPlaylist(name) {
                     loadPlaylistContent(response);
                 });
                 
-                // Add 3-dot menu button positioned like add button
+                // Add action buttons positioned like add button
                 const menuBtn = document.createElement('button');
                 menuBtn.className = 'lists-menu-btn';
                 menuBtn.innerHTML = '⋮';
@@ -1132,8 +1143,19 @@ async function createPlaylist(name) {
                     showPlaylistMenu(response, e.target);
                 };
                 
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'lists-delete-btn';
+                deleteBtn.innerHTML = '-';
+                deleteBtn.title = 'Delete playlist';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    console.log('Quick delete button clicked for new playlist:', response.name);
+                    deletePlaylist(response.id, response.name);
+                };
+                
                 navItemContainer.appendChild(navBtn);
                 navItemContainer.appendChild(menuBtn);
+                navItemContainer.appendChild(deleteBtn);
                 navItemsEl.appendChild(navItemContainer);
                 
                 // Create corresponding panel
