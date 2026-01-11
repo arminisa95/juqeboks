@@ -119,33 +119,42 @@
     <template id="tpl-koleqtion">
         <main>
             <div class="library-container">
-                <div class="library-header">
-                    <h1>_koleqtion</h1>
-                    <div class="library-actions">
-                        <input type="text" class="search-library" placeholder="Search your library...">
-                        <button class="filter-btn">
-                            <i class="fas fa-sliders-h"></i>
-                            <span>Filters</span>
-                        </button>
+                <aside class="library-nav" aria-label="Library directories">
+                    <div class="library-nav-title">_koleqtion</div>
+                    <div class="library-nav-subtitle">Your Library</div>
+                    <div class="library-nav-items" role="tablist">
+                        <button class="library-nav-item active" type="button" role="tab" data-view="tracks">_tracks</button>
+                        <button class="library-nav-item" type="button" role="tab" data-view="playlists">_playlists</button>
+                        <button class="library-nav-item" type="button" role="tab" data-view="albums">_albums</button>
                     </div>
-                </div>
+                    <div class="library-nav-footer">Switch with ↑/↓, open with Enter</div>
+                </aside>
 
-                <div class="tabs">
-                    <div class="tab active">Tracks</div>
-                    <div class="tab">Playlists</div>
-                    <div class="tab">Albums</div>
-                    <div class="tab">Likes</div>
-                </div>
+                <section class="library-content" aria-label="Library content">
+                    <div class="library-panel active" id="libraryPanelTracks" data-panel="tracks" role="tabpanel">
+                        <div class="library-panel-header">
+                            <div class="library-panel-title">_tracks</div>
+                            <div class="library-panel-hint">Your tracks</div>
+                        </div>
+                        <div class="tracks-grid" id="tracksGrid"></div>
+                    </div>
 
-                <div class="tracks-grid" id="tracksGrid"></div>
+                    <div class="library-panel" id="libraryPanelPlaylists" data-panel="playlists" role="tabpanel">
+                        <div class="library-panel-header">
+                            <div class="library-panel-title">_playlists</div>
+                            <div class="library-panel-hint">Your playlists</div>
+                        </div>
+                        <div class="tracks-grid" id="playlistsGrid"></div>
+                    </div>
 
-                <div class="pagination">
-                    <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
-                    <button class="page-btn active">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                    <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
-                </div>
+                    <div class="library-panel" id="libraryPanelAlbums" data-panel="albums" role="tabpanel">
+                        <div class="library-panel-header">
+                            <div class="library-panel-title">_albums</div>
+                            <div class="library-panel-hint">Your albums</div>
+                        </div>
+                        <div class="tracks-grid" id="albumsGrid"></div>
+                    </div>
+                </section>
             </div>
         </main>
     </template>
