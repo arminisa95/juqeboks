@@ -790,6 +790,22 @@ async function createPlaylist(name) {
             console.log('Playlist created successfully:', response);
             alert('Playlist created successfully!');
             
+            // Add the new playlist directly to the display without waiting for reload
+            const likedPlaylistsEl = document.getElementById('likedPlaylists');
+            if (likedPlaylistsEl) {
+                console.log('Adding new playlist directly to display:', response);
+                
+                // Remove "No playlists yet" message if it exists
+                const emptyState = likedPlaylistsEl.querySelector('.empty-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+                
+                // Add the new playlist card directly
+                likedPlaylistsEl.appendChild(renderPlaylistCard(response));
+                console.log('New playlist added to display');
+            }
+            
             // Wait a moment for the server to process, then reload the lists
             setTimeout(() => {
                 console.log('Attempting to reload lists...');
@@ -803,11 +819,11 @@ async function createPlaylist(name) {
                         window.JukeLists.loadLists();
                     } else {
                         console.error('loadLists function not found');
-                        alert('Playlist created! Please refresh the page to see it.');
+                        // Playlist already added directly, so no need for alert
                     }
                 } catch (error) {
                     console.error('Error reloading lists:', error);
-                    alert('Playlist created! Please refresh the page to see it.');
+                    // Playlist already added directly, so no need for alert
                 }
             }, 1500); // Increased timeout to 1.5 seconds
         } else {
