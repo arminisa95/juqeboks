@@ -178,9 +178,9 @@ function showPanel(panelName) {
         if (!p) return;
         const name = p.getAttribute('data-panel');
         if (name === panelName) {
-            p.style.display = '';
+            p.classList.add('active');
         } else {
-            p.style.display = 'none';
+            p.classList.remove('active');
         }
     });
 
@@ -189,11 +189,9 @@ function showPanel(panelName) {
         const v = btn.getAttribute('data-view');
         if (v === panelName) {
             btn.classList.add('active');
-            btn.setAttribute('aria-selected', 'true');
             btn.tabIndex = 0;
         } else {
             btn.classList.remove('active');
-            btn.setAttribute('aria-selected', 'false');
             btn.tabIndex = -1;
         }
     });
