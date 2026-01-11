@@ -17,7 +17,7 @@
 /* Left Navigation */
 .library-nav {
     background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
+    border-radius: 4px;
     padding: 24px;
     height: fit-content;
     position: sticky;
@@ -47,7 +47,7 @@
 
 .library-nav-item {
     padding: 12px 16px;
-    border-radius: 8px;
+    border-radius: 4px;
     background: transparent;
     border: none;
     color: rgba(255, 255, 255, 0.7);
@@ -92,7 +92,7 @@
 /* Main Content Area */
 .library-content {
     background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
+    border-radius: 4px;
     padding: 32px;
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -132,7 +132,7 @@
 
 .card {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    border-radius: 4px;
     overflow: hidden;
     transition: all 0.3s ease;
     cursor: pointer;
@@ -331,7 +331,7 @@
     
     .card {
         background: rgba(255, 255, 255, 0.05);
-        border-radius: 8px;
+        border-radius: 4px;
         margin-bottom: 0;
     }
     
