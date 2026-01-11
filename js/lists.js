@@ -685,13 +685,13 @@ async function loadLists() {
 
     const curatedEl = document.getElementById('curatedPlaylists');
     const likedEl = document.getElementById('likedTracks');
-    const likedPlaylistsEl = document.getElementById('likedPlaylists');
+    const songsEl = document.getElementById('songs');
     const randomEl = document.getElementById('randomPlaylists');
 
     console.log('Elements found:', {
         curated: !!curatedEl,
         liked: !!likedEl,
-        likedPlaylists: !!likedPlaylistsEl,
+        songs: !!songsEl,
         random: !!randomEl
     });
 
@@ -703,15 +703,15 @@ async function loadLists() {
     console.log('Currently active panel:', activePanel ? activePanel.id : 'none');
     
     // Ensure liked playlists panel exists and is visible
-    const likedPlaylistsPanel = document.getElementById('listsPanelLikedPlaylists');
-    console.log('Liked playlists panel exists:', !!likedPlaylistsPanel);
-    if (likedPlaylistsPanel) {
-        console.log('Liked playlists panel display:', window.getComputedStyle(likedPlaylistsPanel).display);
+    const songsPanel = document.getElementById('listsPanelSongs');
+    console.log('Songs panel exists:', !!songsPanel);
+    if (songsPanel) {
+        console.log('Songs panel display:', window.getComputedStyle(songsPanel).display);
     }
 
     if (curatedEl) setEmpty(curatedEl, 'Loading...');
     if (likedEl) setEmpty(likedEl, 'Loading...');
-    if (likedPlaylistsEl) setEmpty(likedPlaylistsEl, 'Loading...');
+    if (songsEl) setEmpty(songsEl, 'Loading...');
     if (randomEl) setEmpty(randomEl, 'Loading...');
 
     try {
@@ -733,9 +733,9 @@ async function loadLists() {
             }
         }
 
-        // Load user playlists into liked lists section
-        if (likedPlaylistsEl) {
-            likedPlaylistsEl.innerHTML = '';
+        // Load user playlists into songs section
+        if (songsEl) {
+            songsEl.innerHTML = '';
             const myPlaylists = profile.playlists || [];
             console.log('User playlists from profile:', myPlaylists.length, myPlaylists);
             const allPlaylists = [...myPlaylists]; // Start with user playlists
@@ -768,11 +768,11 @@ async function loadLists() {
 
             // Display all playlists
             if (allPlaylists.length === 0) {
-                setEmpty(likedPlaylistsEl, 'No playlists yet.');
+                setEmpty(songsEl, 'No playlists yet.');
             } else {
                 allPlaylists.forEach((p) => {
                     console.log('Rendering playlist card:', p.name, p.id);
-                    likedPlaylistsEl.appendChild(renderPlaylistCard(p));
+                    songsEl.appendChild(renderPlaylistCard(p));
                 });
             }
         }
@@ -854,12 +854,12 @@ async function createPlaylist(name) {
             alert('Playlist created successfully!');
             
             // Add the new playlist directly to the display without waiting for reload
-            const likedPlaylistsEl = document.getElementById('likedPlaylists');
-            if (likedPlaylistsEl) {
+            const songsEl = document.getElementById('songs');
+            if (songsEl) {
                 console.log('Adding new playlist directly to display:', response);
                 
                 // Remove "No playlists yet" message if it exists
-                const emptyState = likedPlaylistsEl.querySelector('.empty-state');
+                const emptyState = songsEl.querySelector('.empty-state');
                 if (emptyState) {
                     emptyState.remove();
                 }
@@ -868,13 +868,13 @@ async function createPlaylist(name) {
                 const newCard = renderPlaylistCard(response);
                 newCard.style.border = '2px solid #1ed760';
                 newCard.style.boxShadow = '0 0 20px rgba(30, 215, 96, 0.5)';
-                likedPlaylistsEl.appendChild(newCard);
+                songsEl.appendChild(newCard);
                 console.log('New playlist added to display with highlight');
                 
-                // Force switch to the liked lists panel to show the new playlist
+                // Force switch to the songs panel to show the new playlist
                 setTimeout(() => {
-                    console.log('Switching to liked lists panel to show new playlist');
-                    showPanel('liked-playlists');
+                    console.log('Switching to songs panel to show new playlist');
+                    showPanel('songs');
                     
                     // Remove highlight after 3 seconds
                     setTimeout(() => {
