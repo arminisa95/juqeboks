@@ -502,11 +502,15 @@ function bindListsNavigatorUi() {
 function getCurrentUsername() {
     try {
         const token = getAuthToken();
+        console.log('Token found:', !!token);
         if (token) {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.username || payload.sub || null;
+            const username = payload.username || payload.sub || null;
+            console.log('Username from token:', username);
+            return username;
         }
-    } catch (_) {
+    } catch (error) {
+        console.error('Error getting username:', error);
     }
     return null;
 }
@@ -978,6 +982,8 @@ async function loadLists() {
                 
                 // Add action buttons for owned playlists (positioned like add button)
                 const isOwner = !playlist.owner_username || playlist.owner_username === getCurrentUsername();
+                console.log('Playlist owner_username:', playlist.owner_username);
+                console.log('Current username:', getCurrentUsername());
                 console.log('Is owner of playlist:', playlist.name, isOwner);
                 
                 if (isOwner) {
