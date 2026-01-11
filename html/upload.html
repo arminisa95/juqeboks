@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="../js/player.js" defer></script>
     <script src="../js/auth.js" defer></script>
-    <script src="../js/media-editor.js" defer></script>
+    <script src="../js/media-editor.js"></script>
     <style>
         /* Upload Page Specific Styles */
         .upload-container {
@@ -250,7 +250,15 @@
             const openEditorBtn = document.getElementById('openEditorBtn');
             
             // Debug: Check if media editor is available
-            console.log('Media editor available:', typeof openMediaEditor === 'function');
+            console.log('Checking media editor availability...');
+            console.log('typeof openMediaEditor:', typeof openMediaEditor);
+            console.log('window.openMediaEditor:', window.openMediaEditor);
+            
+            // Wait a bit for scripts to load
+            setTimeout(() => {
+                console.log('After timeout - typeof openMediaEditor:', typeof openMediaEditor);
+                console.log('After timeout - window.openMediaEditor:', window.openMediaEditor);
+            }, 1000);
             
             // Handle manual media editor button
             if (openEditorBtn) {
