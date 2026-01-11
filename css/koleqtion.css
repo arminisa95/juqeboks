@@ -27,24 +27,22 @@
 }
 
 .library-nav-title {
-    font-size: 1.3rem;
-    font-weight: 800;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: #ffffff;
     margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
 }
 
 .library-nav-subtitle {
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.85rem;
-    margin-bottom: 12px;
+    margin-bottom: 20px;
 }
 
 .library-nav-items {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 2px;
 }
 
 .library-nav-item {
@@ -87,7 +85,14 @@
 }
 
 .library-nav-item.active::before {
-    display: none !important;
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: #1db954;
 }
 
 .library-nav-footer {
