@@ -515,17 +515,127 @@ function editPlaylist(playlistId, currentName) {
     const newName = prompt('Edit playlist name:', currentName.replace(/^_/, ''));
     if (newName && newName.trim()) {
         const finalName = '_' + newName.trim();
-        // TODO: Implement API call to update playlist
-        console.log('Edit playlist:', playlistId, 'to:', finalName);
-        alert('Edit functionality coming soon!');
+        
+        // Check if name actually changed
+        if (finalName === currentName) {
+            return; // No change needed
+        }
+        
+        const token = getAuthToken();
+        if (!token) {
+            alert('Please login to edit playlists');
+            return;
+        }
+
+        // Show loading state
+        const navBtn = document.querySelector(`[data-view="playlist-${playlistId}"]`);
+        if (navBtn) {
+            navBtn.textContent = 'Updating...';
+            navBtn.disabled = true;
+        }
+
+        // Make API call to update playlist
+        apiFetchJson(`/playlists/${playlistId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                name: finalName
+            })
+        }).then(response => {
+            console.log('Playlist updated successfully:', response);
+            
+            // Update navigation button text
+            if (navBtn) {
+                navBtn.textContent = finalName;
+                navBtn.disabled = false;
+            }
+            
+            // Update panel title
+            const panel = document.getElementById(`listsPanelPlaylist${playlistId}`);
+            if (panel) {
+                const titleEl = panel.querySelector('.lists-panel-title');
+                if (titleEl) {
+                    titleEl.textContent = finalName;
+                }
+            }
+            
+            // Show success message
+            alert(`Playlist renamed to "${finalName}" successfully.`);
+            
+        }).catch(error => {
+            console.error('Error updating playlist:', error);
+            
+            // Restore button state
+            if (navBtn) {
+                navBtn.textContent = currentName;
+                navBtn.disabled = false;
+            }
+            
+            alert(`Failed to rename playlist. Please try again.`);
+        });
     }
 }
 
 function deletePlaylist(playlistId, playlistName) {
-    if (confirm(`Are you sure you want to delete "${playlistName}"?`)) {
-        // TODO: Implement API call to delete playlist
-        console.log('Delete playlist:', playlistId);
-        alert('Delete functionality coming soon!');
+    if (confirm(`Are you sure you want to delete "${playlistName}"? This action cannot be undone.`)) {
+        const token = getAuthToken();
+        if (!token) {
+            alert('Please login to delete playlists');
+            return;
+        }
+
+        // Show loading state
+        const navBtn = document.querySelector(`[data-view="playlist-${playlistId}"]`);
+        if (navBtn) {
+            navBtn.textContent = 'Deleting...';
+            navBtn.disabled = true;
+        }
+
+        // Make API call to delete playlist
+        apiFetchJson(`/playlists/${playlistId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            }
+        }).then(response => {
+            console.log('Playlist deleted successfully:', response);
+            
+            // Remove navigation button
+            if (navBtn) {
+                navBtn.remove();
+            }
+            
+            // Remove panel
+            const panel = document.getElementById(`listsPanelPlaylist${playlistId}`);
+            if (panel) {
+                panel.remove();
+            }
+            
+            // Show success message
+            alert(`"${playlistName}" has been deleted successfully.`);
+            
+            // Reload the lists to update navigation
+            setTimeout(() => {
+                if (typeof loadLists === 'function') {
+                    loadLists();
+                }
+            }, 500);
+            
+        }).catch(error => {
+            console.error('Error deleting playlist:', error);
+            
+            // Restore button state
+            if (navBtn) {
+                navBtn.textContent = playlistName;
+                navBtn.disabled = false;
+            }
+            
+            alert(`Failed to delete "${playlistName}". Please try again.`);
+        });
     }
 }
 
