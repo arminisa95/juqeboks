@@ -887,13 +887,18 @@ async function loadLists() {
             myPlaylists.forEach((playlist, index) => {
                 console.log(`Creating navigation item ${index + 1}:`, playlist.name);
                 
-                // Create navigation item container
+                // Create navigation item container like the header structure
                 const navItemContainer = document.createElement('div');
                 navItemContainer.className = 'lists-nav-item-container';
-                navItemContainer.style.display = 'flex';
-                navItemContainer.style.alignItems = 'center';
-                navItemContainer.style.justifyContent = 'space-between';
                 navItemContainer.style.position = 'relative';
+                
+                // Create a wrapper that mimics the lists-nav-title structure
+                const navItemWrapper = document.createElement('div');
+                navItemWrapper.style.display = 'flex';
+                navItemWrapper.style.alignItems = 'center';
+                navItemWrapper.style.justifyContent = 'space-between';
+                navItemWrapper.style.gap = '0.5rem';
+                navItemWrapper.style.marginBottom = '2px';
                 
                 const navBtn = document.createElement('button');
                 navBtn.className = 'lists-nav-item';
@@ -911,17 +916,9 @@ async function loadLists() {
                     loadPlaylistContent(playlist);
                 });
                 
-                // Add edit/delete buttons for owned playlists
+                // Add delete button for owned playlists (positioned like add button)
                 const isOwner = !playlist.owner_username || playlist.owner_username === getCurrentUsername();
                 if (isOwner) {
-                    const actionsContainer = document.createElement('div');
-                    actionsContainer.className = 'lists-nav-actions';
-                    actionsContainer.style.display = 'flex';
-                    actionsContainer.style.gap = '4px';
-                    actionsContainer.style.opacity = '0';
-                    actionsContainer.style.transition = 'opacity 0.2s ease';
-                    actionsContainer.style.marginLeft = '8px';
-                    
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'lists-delete-btn';
                     deleteBtn.innerHTML = '-';
@@ -932,20 +929,11 @@ async function loadLists() {
                         deletePlaylist(playlist.id, playlist.name);
                     };
                     
-                    actionsContainer.appendChild(deleteBtn);
-                    
-                    // Show actions on hover
-                    navItemContainer.onmouseover = () => {
-                        actionsContainer.style.opacity = '1';
-                    };
-                    navItemContainer.onmouseout = () => {
-                        actionsContainer.style.opacity = '0';
-                    };
-                    
-                    navItemContainer.appendChild(actionsContainer);
+                    navItemWrapper.appendChild(deleteBtn);
                 }
                 
-                navItemContainer.appendChild(navBtn);
+                navItemWrapper.appendChild(navBtn);
+                navItemContainer.appendChild(navItemWrapper);
                 navItemsEl.appendChild(navItemContainer);
                 console.log(`Added navigation item for: ${playlist.name}`);
                 
@@ -1045,16 +1033,21 @@ async function createPlaylist(name) {
             console.log('Playlist created successfully:', response);
             alert('Playlist created successfully!');
             
-            // Add the new playlist as a navigation item with edit/delete buttons
+            // Add the new playlist as a navigation item with delete button positioned like add button
             const navItemsEl = document.querySelector('.lists-nav-items');
             if (navItemsEl) {
-                // Create navigation item container
+                // Create navigation item container like the header structure
                 const navItemContainer = document.createElement('div');
                 navItemContainer.className = 'lists-nav-item-container';
-                navItemContainer.style.display = 'flex';
-                navItemContainer.style.alignItems = 'center';
-                navItemContainer.style.justifyContent = 'space-between';
                 navItemContainer.style.position = 'relative';
+                
+                // Create a wrapper that mimics the lists-nav-title structure
+                const navItemWrapper = document.createElement('div');
+                navItemWrapper.style.display = 'flex';
+                navItemWrapper.style.alignItems = 'center';
+                navItemWrapper.style.justifyContent = 'space-between';
+                navItemWrapper.style.gap = '0.5rem';
+                navItemWrapper.style.marginBottom = '2px';
                 
                 const navBtn = document.createElement('button');
                 navBtn.className = 'lists-nav-item';
@@ -1073,14 +1066,7 @@ async function createPlaylist(name) {
                     loadPlaylistContent(response);
                 });
                 
-                // Add delete button
-                const actionsContainer = document.createElement('div');
-                actionsContainer.className = 'lists-nav-actions';
-                actionsContainer.style.display = 'flex';
-                actionsContainer.style.gap = '4px';
-                actionsContainer.style.opacity = '1'; // Show immediately for new playlist
-                actionsContainer.style.marginLeft = '8px';
-                
+                // Add delete button positioned like add button
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'lists-delete-btn';
                 deleteBtn.innerHTML = '-';
@@ -1091,18 +1077,9 @@ async function createPlaylist(name) {
                     deletePlaylist(response.id, response.name);
                 };
                 
-                actionsContainer.appendChild(deleteBtn);
-                
-                // Show actions on hover
-                navItemContainer.onmouseover = () => {
-                    actionsContainer.style.opacity = '1';
-                };
-                navItemContainer.onmouseout = () => {
-                    actionsContainer.style.opacity = '0';
-                };
-                
-                navItemContainer.appendChild(actionsContainer);
-                navItemContainer.appendChild(navBtn);
+                navItemWrapper.appendChild(deleteBtn);
+                navItemWrapper.appendChild(navBtn);
+                navItemContainer.appendChild(navItemWrapper);
                 navItemsEl.appendChild(navItemContainer);
                 
                 // Create corresponding panel
