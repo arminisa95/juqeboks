@@ -589,42 +589,370 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    /* Mobile Layout - Similar to Koleqtion */
     .lists-shell {
-        grid-template-columns: 1fr;
-        gap: 16px;
-        padding: 16px;
+        display: block;
+        padding: 0;
+        margin: 0;
         height: auto;
+        background: #000;
     }
     
+    /* Mobile Navigation - Horizontal Scrolling */
     .lists-nav {
-        position: static;
-        padding: 16px;
-        margin-bottom: 16px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px 16px 8px;
+        width: 100%;
+        margin: 0;
+        border-radius: 0;
+        height: auto;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
     }
     
+    .lists-nav::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+    
+    .lists-nav-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 8px;
+        text-transform: none;
+        letter-spacing: 0;
+        background: none;
+        -webkit-text-fill-color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+    
+    .lists-nav-subtitle {
+        display: none;
+    }
+    
+    .lists-nav-items {
+        display: flex;
+        flex-direction: row;
+        gap: 0;
+        margin: 0;
+        padding: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .lists-nav-items::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .lists-nav-item {
+        padding: 8px 12px;
+        border-radius: 20px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        font-weight: 600;
+        min-height: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        box-shadow: none;
+        margin: 0;
+        flex: 1;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    
+    .lists-nav-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        transform: none;
+        box-shadow: none;
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .lists-nav-item.active {
+        background: rgba(29, 185, 84, 0.2);
+        color: #fff;
+        border: 1px solid rgba(29, 185, 84, 0.4);
+        box-shadow: none;
+    }
+    
+    .lists-nav-item.active:hover {
+        background: rgba(29, 185, 84, 0.3);
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .lists-nav-item.active::before {
+        display: none;
+    }
+    
+    .lists-nav-footer {
+        display: none;
+    }
+    
+    /* Mobile Content */
     .lists-content {
-        padding: 16px;
+        margin: 0;
+        padding: 60px 16px 16px;
+        background: #000;
+        border-radius: 0;
+        border: none;
+        overflow: visible;
+        display: block;
     }
     
-    .cards-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 16px;
+    .lists-panel {
+        display: block;
+        background: transparent;
+        border-radius: 0;
+        padding: 0;
+        margin: 0;
+        border: none;
+        backdrop-filter: none;
+    }
+    
+    .lists-panel.active {
+        display: block;
+    }
+    
+    .lists-panel-header {
+        margin-bottom: 16px;
+        padding: 0;
     }
     
     .lists-panel-title {
         font-size: 1.5rem;
-    }
-    
-    .lists-nav-items {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.6rem;
-    }
-    
-    .lists-panel-header {
-        grid-template-columns: 1fr;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 4px;
     }
     
     .lists-panel-hint {
-        text-align: left;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+        padding: 0;
+    }
+    
+    .card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        margin-bottom: 0;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .card-body {
+        padding: 12px;
+    }
+    
+    .card-title {
+        font-size: 0.9rem;
+        margin: 0 0 2px;
+    }
+    
+    .card-subtitle {
+        font-size: 0.8rem;
+        margin: 0;
+    }
+    
+    /* Mobile Track List */
+    .lists-tracklist {
+        display: grid;
+        gap: 1px;
+        padding: 0;
+    }
+    
+    .lists-track-row {
+        display: grid;
+        grid-template-columns: 48px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.02);
+        transition: background 0.2s ease;
+    }
+    
+    .lists-track-row:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .lists-track-title {
+        font-size: 0.9rem;
+        margin-bottom: 1px;
+    }
+    
+    .lists-track-artist {
+        font-size: 0.8rem;
+    }
+    
+    .lists-track-meta {
+        font-size: 0.8rem;
+    }
+    
+    .lists-track-actions {
+        gap: 6px;
+    }
+    
+    .lists-track-action {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+    }
+    
+    /* Mobile Buttons */
+    .lists-add-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+    
+    .lists-delete-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
+    }
+    
+    .lists-menu-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
+    }
+    
+    /* Mobile Back Button */
+    .lists-back {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        margin-bottom: 16px;
+    }
+    
+    /* Hide header on mobile (already handled by main styles.css) */
+    header {
+        display: none;
+    }
+    
+    /* Adjust main for mobile */
+    main {
+        padding-top: 0;
+    }
+    
+    /* Hide footer on mobile */
+    footer {
+        display: none;
+    }
+    
+    /* Mobile Bottom Navigation - Similar to Spotify */
+    .mobile-bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.98);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 8px 0;
+        z-index: 1000;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        height: 60px;
+    }
+    
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        color: rgba(255, 255, 255, 0.6);
+        text-decoration: none;
+        font-size: 0.7rem;
+        transition: color 0.2s ease;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    
+    .mobile-nav-item:hover,
+    .mobile-nav-item.active {
+        color: #fff;
+    }
+    
+    .mobile-nav-item i {
+        font-size: 1.2rem;
+    }
+    
+    /* Add spacing for bottom nav */
+    .lists-shell {
+        padding-bottom: 60px;
+    }
+    
+    /* Mobile Search Bar */
+    .mobile-search-bar {
+        position: fixed;
+        top: 60px;
+        left: 16px;
+        right: 16px;
+        z-index: 999;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: #fff;
+        font-size: 0.9rem;
+        backdrop-filter: blur(20px);
+        display: none;
+    }
+    
+    .mobile-search-bar::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .mobile-search-bar:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Show search when needed */
+    .mobile-search-active .mobile-search-bar {
+        display: block;
+    }
+    
+    .mobile-search-active .lists-nav {
+        top: 100px;
+    }
+    
+    .mobile-search-active .lists-content {
+        padding-top: 100px;
     }
 }

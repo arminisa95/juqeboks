@@ -16,6 +16,73 @@
     <script src="../js/player.js?v=20250111-FIX" defer></script>
     <script src="../js/auth.js?v=20250111-FIX" defer></script>
     <script src="../js/lists.js?v=20250111-FIX" defer></script>
+    <script>
+        // Mobile functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile search toggle
+            const mobileSearchBar = document.querySelector('.mobile-search-bar');
+            const listsShell = document.querySelector('.lists-shell');
+            
+            if (mobileSearchBar && listsShell) {
+                // Show search when focused
+                mobileSearchBar.addEventListener('focus', () => {
+                    listsShell.classList.add('mobile-search-active');
+                });
+                
+                // Hide search when blurred
+                mobileSearchBar.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        listsShell.classList.remove('mobile-search-active');
+                    }, 200);
+                });
+                
+                // Handle search
+                mobileSearchBar.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    // You can implement search functionality here
+                    console.log('Searching for:', searchTerm);
+                });
+            }
+            
+            // Mobile navigation active states
+            const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+            mobileNavItems.forEach(item => {
+                if (item.href === window.location.href) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Horizontal scroll with touch for navigation
+            const listsNavItems = document.querySelector('.lists-nav-items');
+            if (listsNavItems) {
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+                
+                listsNavItems.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    startX = e.pageX - listsNavItems.offsetLeft;
+                    scrollLeft = listsNavItems.scrollLeft;
+                });
+                
+                listsNavItems.addEventListener('mouseleave', () => {
+                    isDown = false;
+                });
+                
+                listsNavItems.addEventListener('mouseup', () => {
+                    isDown = false;
+                });
+                
+                listsNavItems.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - listsNavItems.offsetLeft;
+                    const walk = (x - startX) * 2;
+                    listsNavItems.scrollLeft = scrollLeft - walk;
+                });
+            }
+        });
+    </script>
 </head>
 <body>
     <header>
@@ -46,6 +113,9 @@
     </header>
 
     <main>
+        <!-- Mobile Search Bar -->
+        <input type="text" class="mobile-search-bar" placeholder="Search for music, artists...">
+        
         <div class="lists-shell" id="listsShell">
             <aside class="lists-nav" aria-label="Lists directories">
                 <div class="lists-nav-title">
@@ -81,6 +151,30 @@
             </section>
         </div>
     </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+        <a href="user.html" class="mobile-nav-item">
+            <i class="fas fa-home"></i>
+            <span>Feed</span>
+        </a>
+        <a href="lists.html" class="mobile-nav-item active">
+            <i class="fas fa-list"></i>
+            <span>Lists</span>
+        </a>
+        <a href="disqo.html" class="mobile-nav-item">
+            <i class="fas fa-compact-disc"></i>
+            <span>Disqo</span>
+        </a>
+        <a href="koleqtion.html" class="mobile-nav-item">
+            <i class="fas fa-folder"></i>
+            <span>Library</span>
+        </a>
+        <a href="upload.html" class="mobile-nav-item">
+            <i class="fas fa-upload"></i>
+            <span>Upload</span>
+        </a>
+    </nav>
 
     <footer>
         <p class="contact">All rights reserved &copy; 2025 juqeboks</p>
