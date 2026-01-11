@@ -499,10 +499,41 @@ function bindListsNavigatorUi() {
     }
 }
 
+function getCurrentUsername() {
+    try {
+        const token = getAuthToken();
+        if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.username || payload.sub || null;
+        }
+    } catch (_) {
+    }
+    return null;
+}
+
+function editPlaylist(playlistId, currentName) {
+    const newName = prompt('Edit playlist name:', currentName.replace(/^_/, ''));
+    if (newName && newName.trim()) {
+        const finalName = '_' + newName.trim();
+        // TODO: Implement API call to update playlist
+        console.log('Edit playlist:', playlistId, 'to:', finalName);
+        alert('Edit functionality coming soon!');
+    }
+}
+
+function deletePlaylist(playlistId, playlistName) {
+    if (confirm(`Are you sure you want to delete "${playlistName}"?`)) {
+        // TODO: Implement API call to delete playlist
+        console.log('Delete playlist:', playlistId);
+        alert('Delete functionality coming soon!');
+    }
+}
+
 function renderPlaylistCard(p) {
     const coverFallback = isSpaMode() ? 'images/juke.png' : '../images/juke.png';
     const coverUrl = resolveAssetUrl(p.cover_image_url, coverFallback);
     const owner = p.owner_username ? `by ${p.owner_username}` : '';
+    const isOwner = !p.owner_username || p.owner_username === getCurrentUsername(); // Check if current user owns this playlist
 
     const div = document.createElement('div');
     div.className = 'card playlist-card';
@@ -515,6 +546,16 @@ function renderPlaylistCard(p) {
     div.innerHTML = `
         <div class="card-cover">
             <img src="${coverUrl}" alt="${p.name}">
+            ${isOwner ? `
+            <div class="card-actions">
+                <button class="card-action-btn edit-btn" onclick="event.stopPropagation(); editPlaylist('${p.id}', '${p.name.replace(/'/g, "\\'")}')" title="Edit playlist">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="card-action-btn delete-btn" onclick="event.stopPropagation(); deletePlaylist('${p.id}', '${p.name.replace(/'/g, "\\'")}')" title="Delete playlist">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            ` : ''}
         </div>
         <div class="card-body">
             <div class="card-title">${p.name}</div>
@@ -656,6 +697,17 @@ async function loadLists() {
 
     bindListsNavigatorUi();
     showPanel('liked'); // Show liked tracks by default
+
+    // Check which panel is currently active
+    const activePanel = document.querySelector('.lists-panel.active');
+    console.log('Currently active panel:', activePanel ? activePanel.id : 'none');
+    
+    // Ensure liked playlists panel exists and is visible
+    const likedPlaylistsPanel = document.getElementById('listsPanelLikedPlaylists');
+    console.log('Liked playlists panel exists:', !!likedPlaylistsPanel);
+    if (likedPlaylistsPanel) {
+        console.log('Liked playlists panel display:', window.getComputedStyle(likedPlaylistsPanel).display);
+    }
 
     if (curatedEl) setEmpty(curatedEl, 'Loading...');
     if (likedEl) setEmpty(likedEl, 'Loading...');

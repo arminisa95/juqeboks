@@ -141,6 +141,49 @@
     transition: all 0.3s ease;
     cursor: pointer;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.card-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.card:hover .card-actions {
+    opacity: 1;
+}
+
+.card-action-btn {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.card-action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.card-action-btn.edit-btn:hover {
+    background: #1ed760;
+}
+
+.card-action-btn.delete-btn:hover {
+    background: #f44336;
 }
 
 .card:hover {
