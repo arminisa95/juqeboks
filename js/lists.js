@@ -529,6 +529,37 @@ function deletePlaylist(playlistId, playlistName) {
     }
 }
 
+function loadPlaylistContent(playlist) {
+    const token = getAuthToken();
+    if (!token) return;
+    
+    const playlistGridEl = document.getElementById(`playlist-${playlist.id}`);
+    if (!playlistGridEl) return;
+    
+    playlistGridEl.innerHTML = 'Loading...';
+    
+    // Load tracks for this playlist
+    apiFetchJson(`/playlists/${playlist.id}/tracks`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }, function (d) {
+        return Array.isArray(d);
+    }).then(tracks => {
+        playlistGridEl.innerHTML = '';
+        if (!tracks || tracks.length === 0) {
+            setEmpty(playlistGridEl, 'No tracks in this playlist yet.');
+        } else {
+            tracks.forEach((track) => {
+                playlistGridEl.appendChild(renderTrackCard(track));
+            });
+        }
+    }).catch(error => {
+        console.error('Error loading playlist tracks:', error);
+        setEmpty(playlistGridEl, 'Failed to load tracks.');
+    });
+}
+
 function renderPlaylistCard(p) {
     const coverFallback = isSpaMode() ? 'images/juke.png' : '../images/juke.png';
     const coverUrl = resolveAssetUrl(p.cover_image_url, coverFallback);
@@ -733,48 +764,51 @@ async function loadLists() {
             }
         }
 
-        // Load user playlists into songs section
-        if (songsEl) {
-            songsEl.innerHTML = '';
+        // Load user playlists as separate navigation items
+        const navItemsEl = document.querySelector('.lists-nav-items');
+        if (navItemsEl) {
+            // Keep the existing _liked tracks button
+            const likedTracksBtn = navItemsEl.querySelector('[data-view="liked"]');
+            
+            // Clear existing navigation items except _liked tracks
+            navItemsEl.innerHTML = '';
+            if (likedTracksBtn) {
+                navItemsEl.appendChild(likedTracksBtn);
+            }
+            
+            // Add each playlist as a separate navigation item
             const myPlaylists = profile.playlists || [];
             console.log('User playlists from profile:', myPlaylists.length, myPlaylists);
-            const allPlaylists = [...myPlaylists]; // Start with user playlists
-
-            // Load liked playlists separately and add them to the combined list
-            try {
-                const liked = await apiFetchJson('/playlists/liked', {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }, function (d) {
-                    return Array.isArray(d);
+            
+            myPlaylists.forEach((playlist) => {
+                const navBtn = document.createElement('button');
+                navBtn.className = 'lists-nav-item';
+                navBtn.type = 'button';
+                navBtn.role = 'tab';
+                navBtn.setAttribute('data-view', `playlist-${playlist.id}`);
+                navBtn.textContent = playlist.name;
+                navBtn.addEventListener('click', () => {
+                    showPanel(`playlist-${playlist.id}`);
+                    // Load playlist content when clicked
+                    loadPlaylistContent(playlist);
                 });
+                navItemsEl.appendChild(navBtn);
                 
-                console.log('Liked playlists from API:', liked ? liked.length : 0, liked);
-                
-                if (liked && liked.length > 0) {
-                    // Add liked playlists that aren't already in the user's playlists
-                    liked.forEach(function (p) {
-                        if (!myPlaylists.find(up => up.id === p.id)) {
-                            allPlaylists.push(p);
-                        }
-                    });
-                }
-            } catch (_) {
-                // If no liked playlists, the user playlists will still show
-            }
-
-            console.log('All playlists to display:', allPlaylists.length, allPlaylists);
-
-            // Display all playlists
-            if (allPlaylists.length === 0) {
-                setEmpty(songsEl, 'No playlists yet.');
-            } else {
-                allPlaylists.forEach((p) => {
-                    console.log('Rendering playlist card:', p.name, p.id);
-                    songsEl.appendChild(renderPlaylistCard(p));
-                });
-            }
+                // Create corresponding panel
+                const panel = document.createElement('div');
+                panel.className = 'lists-panel';
+                panel.id = `listsPanelPlaylist${playlist.id}`;
+                panel.setAttribute('data-panel', `playlist-${playlist.id}`);
+                panel.setAttribute('role', 'tabpanel');
+                panel.innerHTML = `
+                    <div class="lists-panel-header">
+                        <div class="lists-panel-title">${playlist.name}</div>
+                        <div class="lists-panel-hint">${playlist.description || 'Your playlist'}</div>
+                    </div>
+                    <div id="playlist-${playlist.id}" class="cards-grid"></div>
+                `;
+                document.querySelector('.lists-content').appendChild(panel);
+            });
         }
     } catch (e) {
         console.error(e);
@@ -853,57 +887,53 @@ async function createPlaylist(name) {
             console.log('Playlist created successfully:', response);
             alert('Playlist created successfully!');
             
-            // Add the new playlist directly to the display without waiting for reload
-            const songsEl = document.getElementById('songs');
-            if (songsEl) {
-                console.log('Adding new playlist directly to display:', response);
+            // Add the new playlist as a navigation item
+            const navItemsEl = document.querySelector('.lists-nav-items');
+            if (navItemsEl) {
+                const navBtn = document.createElement('button');
+                navBtn.className = 'lists-nav-item';
+                navBtn.type = 'button';
+                navBtn.role = 'tab';
+                navBtn.setAttribute('data-view', `playlist-${response.id}`);
+                navBtn.textContent = response.name;
+                navBtn.style.border = '2px solid #1ed760';
+                navBtn.style.boxShadow = '0 0 20px rgba(30, 215, 96, 0.5)';
                 
-                // Remove "No playlists yet" message if it exists
-                const emptyState = songsEl.querySelector('.empty-state');
-                if (emptyState) {
-                    emptyState.remove();
-                }
+                navBtn.addEventListener('click', () => {
+                    showPanel(`playlist-${response.id}`);
+                    loadPlaylistContent(response);
+                });
                 
-                // Add the new playlist card directly
-                const newCard = renderPlaylistCard(response);
-                newCard.style.border = '2px solid #1ed760';
-                newCard.style.boxShadow = '0 0 20px rgba(30, 215, 96, 0.5)';
-                songsEl.appendChild(newCard);
-                console.log('New playlist added to display with highlight');
+                navItemsEl.appendChild(navBtn);
                 
-                // Force switch to the songs panel to show the new playlist
+                // Create corresponding panel
+                const panel = document.createElement('div');
+                panel.className = 'lists-panel';
+                panel.id = `listsPanelPlaylist${response.id}`;
+                panel.setAttribute('data-panel', `playlist-${response.id}`);
+                panel.setAttribute('role', 'tabpanel');
+                panel.innerHTML = `
+                    <div class="lists-panel-header">
+                        <div class="lists-panel-title">${response.name}</div>
+                        <div class="lists-panel-hint">${response.description || 'Your playlist'}</div>
+                    </div>
+                    <div id="playlist-${response.id}" class="cards-grid"></div>
+                `;
+                document.querySelector('.lists-content').appendChild(panel);
+                
+                // Switch to the new playlist panel
                 setTimeout(() => {
-                    console.log('Switching to songs panel to show new playlist');
-                    showPanel('songs');
+                    console.log('Switching to new playlist panel');
+                    showPanel(`playlist-${response.id}`);
+                    loadPlaylistContent(response);
                     
                     // Remove highlight after 3 seconds
                     setTimeout(() => {
-                        newCard.style.border = '';
-                        newCard.style.boxShadow = '';
+                        navBtn.style.border = '';
+                        navBtn.style.boxShadow = '';
                     }, 3000);
                 }, 100);
             }
-            
-            // Wait a moment for the server to process, then reload the lists
-            setTimeout(() => {
-                console.log('Attempting to reload lists...');
-                // Reload the lists to show the new playlist
-                try {
-                    if (typeof loadLists === 'function') {
-                        console.log('Calling loadLists function');
-                        loadLists();
-                    } else if (window.JukeLists && typeof window.JukeLists.loadLists === 'function') {
-                        console.log('Calling window.JukeLists.loadLists function');
-                        window.JukeLists.loadLists();
-                    } else {
-                        console.error('loadLists function not found');
-                        // Playlist already added directly, so no need for alert
-                    }
-                } catch (error) {
-                    console.error('Error reloading lists:', error);
-                    // Playlist already added directly, so no need for alert
-                }
-            }, 1500); // Increased timeout to 1.5 seconds
         } else {
             console.error('Failed to create playlist - invalid response:', response);
             alert('Failed to create playlist. Please try again.');
