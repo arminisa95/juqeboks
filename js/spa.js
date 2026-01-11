@@ -265,38 +265,65 @@
                 loadLists();
             }
             
-            // Add event listener for add playlist button in SPA mode
+            // Add event listener for add playlist button in SPA mode with robust binding
             setTimeout(() => {
                 const bindAddButton = () => {
                     const addPlaylistBtn = document.getElementById('addPlaylistBtn');
                     if (addPlaylistBtn) {
                         console.log('SPA: Add playlist button found, binding click event');
-                        addPlaylistBtn.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log('SPA: Add playlist button clicked');
-                            const name = prompt('Enter playlist name:');
-                            if (!name || !name.trim()) return;
-                            
-                            console.log('SPA: Creating playlist:', name.trim());
-                            if (typeof createPlaylist === 'function') {
-                                createPlaylist(name.trim());
-                            } else if (typeof window.createPlaylist === 'function') {
-                                window.createPlaylist(name.trim());
-                            } else {
-                                console.error('SPA: createPlaylist function not found');
-                                alert('Error: createPlaylist function not available');
-                            }
-                        });
+                        
+                        // Remove any existing listeners to prevent duplicates
+                        addPlaylistBtn.removeEventListener('click', handleAddPlaylist);
+                        
+                        // Add the event listener
+                        addPlaylistBtn.addEventListener('click', handleAddPlaylist);
+                        
+                        console.log('SPA: Add playlist button click event bound successfully');
                         return true;
                     }
                     return false;
                 };
                 
-                // Try to bind immediately and retry if needed
-                if (!bindAddButton()) {
-                    setTimeout(bindAddButton, 50);
-                }
+                // Handler function
+                const handleAddPlaylist = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('SPA: Add playlist button clicked');
+                    const name = prompt('Enter playlist name:');
+                    if (!name || !name.trim()) return;
+                    
+                    console.log('SPA: Creating playlist:', name.trim());
+                    if (typeof createPlaylist === 'function') {
+                        createPlaylist(name.trim());
+                    } else if (typeof window.createPlaylist === 'function') {
+                        window.createPlaylist(name.trim());
+                    } else {
+                        console.error('SPA: createPlaylist function not found');
+                        alert('Error: createPlaylist function not available');
+                    }
+                };
+                
+                // Try to bind immediately and retry multiple times if needed
+                let attempts = 0;
+                const maxAttempts = 10;
+                
+                const tryBind = () => {
+                    attempts++;
+                    console.log(`SPA: Attempt ${attempts} to bind add button`);
+                    
+                    if (bindAddButton()) {
+                        console.log('SPA: Add button bound successfully');
+                        return;
+                    }
+                    
+                    if (attempts < maxAttempts) {
+                        setTimeout(tryBind, 200 * attempts); // Exponential backoff
+                    } else {
+                        console.error('SPA: Failed to bind add button after multiple attempts');
+                    }
+                };
+                
+                tryBind();
                 
                 // Ensure lists panel is shown by default
                 const listsPanel = document.getElementById('listsPanelLists');

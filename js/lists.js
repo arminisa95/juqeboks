@@ -788,36 +788,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadLists();
     
-    // Add event listener for add playlist button with retry mechanism
+    // Add event listener for add playlist button with multiple attempts
     const bindAddButton = () => {
         const addPlaylistBtn = document.getElementById('addPlaylistBtn');
         if (addPlaylistBtn) {
             console.log('Add playlist button found, binding click event');
-            addPlaylistBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Add playlist button clicked');
-                const name = prompt('Enter playlist name:');
-                if (!name || !name.trim()) return;
-                
-                console.log('Creating playlist:', name.trim());
-                if (typeof createPlaylist === 'function') {
-                    createPlaylist(name.trim());
-                } else {
-                    console.error('createPlaylist function not found');
-                    alert('Error: createPlaylist function not available');
-                }
-            });
+            
+            // Remove any existing listeners to prevent duplicates
+            addPlaylistBtn.removeEventListener('click', handleAddButton);
+            
+            // Add the event listener
+            addPlaylistBtn.addEventListener('click', handleAddButton);
+            
+            console.log('Add playlist button click event bound successfully');
             return true;
         }
         return false;
     };
     
-    // Try to bind immediately
-    if (!bindAddButton()) {
-        // Retry after a short delay (for SPA mode)
-        setTimeout(bindAddButton, 100);
-    }
+    // Handler function
+    const handleAddButton = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Add playlist button clicked');
+        const name = prompt('Enter playlist name:');
+        if (!name || !name.trim()) return;
+        
+        console.log('Creating playlist:', name.trim());
+        if (typeof createPlaylist === 'function') {
+            createPlaylist(name.trim());
+        } else {
+            console.error('createPlaylist function not found');
+            alert('Error: createPlaylist function not available');
+        }
+    };
+    
+    // Try to bind immediately and retry multiple times if needed
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    const tryBind = () => {
+        attempts++;
+        console.log(`Attempt ${attempts} to bind add button`);
+        
+        if (bindAddButton()) {
+            console.log('Add button bound successfully');
+            return;
+        }
+        
+        if (attempts < maxAttempts) {
+            setTimeout(tryBind, 200 * attempts); // Exponential backoff
+        } else {
+            console.error('Failed to bind add button after multiple attempts');
+        }
+    };
+    
+    tryBind();
 });
 
 window.JukeLists = {
@@ -826,3 +852,23 @@ window.JukeLists = {
 };
 
 window.createPlaylist = createPlaylist;
+
+// Global click handler as fallback
+document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'addPlaylistBtn') {
+        console.log('Global click handler triggered for add button');
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const name = prompt('Enter playlist name:');
+        if (!name || !name.trim()) return;
+        
+        console.log('Creating playlist via global handler:', name.trim());
+        if (typeof createPlaylist === 'function') {
+            createPlaylist(name.trim());
+        } else {
+            console.error('createPlaylist function not found in global handler');
+            alert('Error: createPlaylist function not available');
+        }
+    }
+});
