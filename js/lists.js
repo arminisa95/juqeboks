@@ -608,14 +608,16 @@ function showPlaylistMenu(playlist, button) {
         dropdown.appendChild(menuItem);
     });
     
-    // Position the dropdown
+    // Position the dropdown relative to the button
     const buttonRect = button.getBoundingClientRect();
-    dropdown.style.position = 'fixed';
-    dropdown.style.top = buttonRect.bottom + 'px';
-    dropdown.style.left = (buttonRect.right - dropdown.offsetWidth) + 'px';
+    dropdown.style.position = 'absolute';
+    dropdown.style.top = (buttonRect.bottom - buttonRect.top) + 'px';
+    dropdown.style.right = '0';
     
-    // Add to DOM
-    document.body.appendChild(dropdown);
+    // Make the button container relative for positioning
+    const navContainer = button.parentElement;
+    navContainer.style.position = 'relative';
+    navContainer.appendChild(dropdown);
     
     // Close on click outside
     const closeHandler = (e) => {
@@ -976,6 +978,8 @@ async function loadLists() {
                 
                 // Add action buttons for owned playlists (positioned like add button)
                 const isOwner = !playlist.owner_username || playlist.owner_username === getCurrentUsername();
+                console.log('Is owner of playlist:', playlist.name, isOwner);
+                
                 if (isOwner) {
                     const menuBtn = document.createElement('button');
                     menuBtn.className = 'lists-menu-btn';
@@ -997,9 +1001,14 @@ async function loadLists() {
                         deletePlaylist(playlist.id, playlist.name);
                     };
                     
+                    console.log('Created menu button:', menuBtn);
+                    console.log('Created delete button:', deleteBtn);
+                    
                     navItemContainer.appendChild(navBtn);
                     navItemContainer.appendChild(menuBtn);
                     navItemContainer.appendChild(deleteBtn);
+                    
+                    console.log('Added buttons to container. Children count:', navItemContainer.children.length);
                 } else {
                     navItemContainer.appendChild(navBtn);
                 }
