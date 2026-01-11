@@ -647,13 +647,20 @@ async function loadLists() {
     const likedPlaylistsEl = document.getElementById('likedPlaylists');
     const randomEl = document.getElementById('randomPlaylists');
 
+    console.log('Elements found:', {
+        curated: !!curatedEl,
+        liked: !!likedEl,
+        likedPlaylists: !!likedPlaylistsEl,
+        random: !!randomEl
+    });
+
     bindListsNavigatorUi();
     showPanel('liked'); // Show liked tracks by default
 
-    setEmpty(curatedEl, 'Loading...');
-    setEmpty(likedEl, 'Loading...');
-    setEmpty(likedPlaylistsEl, 'Loading...');
-    setEmpty(randomEl, 'Loading...');
+    if (curatedEl) setEmpty(curatedEl, 'Loading...');
+    if (likedEl) setEmpty(likedEl, 'Loading...');
+    if (likedPlaylistsEl) setEmpty(likedPlaylistsEl, 'Loading...');
+    if (randomEl) setEmpty(randomEl, 'Loading...');
 
     try {
         const profile = await apiFetchJson('/users/profile', {
@@ -664,56 +671,58 @@ async function loadLists() {
             return !!d && typeof d === 'object' && !Array.isArray(d);
         });
 
-        likedEl.innerHTML = '';
-        likedPlaylistsEl.innerHTML = '';
-
-        const favorites = profile.favorites || [];
-        if (favorites.length === 0) {
-            setEmpty(likedEl, 'No liked tracks yet.');
-        } else {
-            favorites.forEach((t) => likedEl.appendChild(renderTrackCard(t)));
+        if (likedEl) {
+            likedEl.innerHTML = '';
+            const favorites = profile.favorites || [];
+            if (favorites.length === 0) {
+                setEmpty(likedEl, 'No liked tracks yet.');
+            } else {
+                favorites.forEach((t) => likedEl.appendChild(renderTrackCard(t)));
+            }
         }
 
         // Load user playlists into liked lists section
-        const myPlaylists = profile.playlists || [];
-        console.log('User playlists from profile:', myPlaylists.length, myPlaylists);
-        const allPlaylists = [...myPlaylists]; // Start with user playlists
+        if (likedPlaylistsEl) {
+            likedPlaylistsEl.innerHTML = '';
+            const myPlaylists = profile.playlists || [];
+            console.log('User playlists from profile:', myPlaylists.length, myPlaylists);
+            const allPlaylists = [...myPlaylists]; // Start with user playlists
 
-        // Load liked playlists separately and add them to the combined list
-        try {
-            const liked = await apiFetchJson('/playlists/liked', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }, function (d) {
-                return Array.isArray(d);
-            });
-            
-            console.log('Liked playlists from API:', liked ? liked.length : 0, liked);
-            
-            if (liked && liked.length > 0) {
-                // Add liked playlists that aren't already in the user's playlists
-                liked.forEach(function (p) {
-                    if (!myPlaylists.find(up => up.id === p.id)) {
-                        allPlaylists.push(p);
+            // Load liked playlists separately and add them to the combined list
+            try {
+                const liked = await apiFetchJson('/playlists/liked', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
                     }
+                }, function (d) {
+                    return Array.isArray(d);
+                });
+                
+                console.log('Liked playlists from API:', liked ? liked.length : 0, liked);
+                
+                if (liked && liked.length > 0) {
+                    // Add liked playlists that aren't already in the user's playlists
+                    liked.forEach(function (p) {
+                        if (!myPlaylists.find(up => up.id === p.id)) {
+                            allPlaylists.push(p);
+                        }
+                    });
+                }
+            } catch (_) {
+                // If no liked playlists, the user playlists will still show
+            }
+
+            console.log('All playlists to display:', allPlaylists.length, allPlaylists);
+
+            // Display all playlists
+            if (allPlaylists.length === 0) {
+                setEmpty(likedPlaylistsEl, 'No playlists yet.');
+            } else {
+                allPlaylists.forEach((p) => {
+                    console.log('Rendering playlist card:', p.name, p.id);
+                    likedPlaylistsEl.appendChild(renderPlaylistCard(p));
                 });
             }
-        } catch (_) {
-            // If no liked playlists, the user playlists will still show
-        }
-
-        console.log('All playlists to display:', allPlaylists.length, allPlaylists);
-
-        // Display all playlists
-        likedPlaylistsEl.innerHTML = '';
-        if (allPlaylists.length === 0) {
-            setEmpty(likedPlaylistsEl, 'No playlists yet.');
-        } else {
-            allPlaylists.forEach((p) => {
-                console.log('Rendering playlist card:', p.name, p.id);
-                likedPlaylistsEl.appendChild(renderPlaylistCard(p));
-            });
         }
     } catch (e) {
         console.error(e);
@@ -724,35 +733,37 @@ async function loadLists() {
         const curated = await apiFetchJson('/playlists/curated', {}, function (d) {
             return Array.isArray(d);
         });
-        curatedEl.innerHTML = '';
-
-        if (!curated || curated.length === 0) {
-            setEmpty(curatedEl, 'No curated playlists available yet.');
-        } else {
-            curated.forEach((p) => curatedEl.appendChild(renderPlaylistCard(p)));
+        if (curatedEl) {
+            curatedEl.innerHTML = '';
+            if (!curated || curated.length === 0) {
+                setEmpty(curatedEl, 'No curated playlists available yet.');
+            } else {
+                curated.forEach((p) => curatedEl.appendChild(renderPlaylistCard(p)));
+            }
         }
     } catch (e) {
         console.error(e);
-        setEmpty(curatedEl, 'Failed to load curated playlists.');
+        if (curatedEl) setEmpty(curatedEl, 'Failed to load curated playlists.');
     }
 
     try {
         const random = await apiFetchJson('/playlists/public', {}, function (d) {
             return Array.isArray(d);
         });
-        randomEl.innerHTML = '';
-
-        if (!random || random.length === 0) {
-            setEmpty(randomEl, 'No public playlists available yet.');
-        } else {
-            const shuffled = random.slice().sort(function () {
-                return Math.random() - 0.5;
-            });
-            shuffled.forEach((p) => randomEl.appendChild(renderPlaylistCard(p)));
+        if (randomEl) {
+            randomEl.innerHTML = '';
+            if (!random || random.length === 0) {
+                setEmpty(randomEl, 'No public playlists available yet.');
+            } else {
+                const shuffled = random.slice().sort(function () {
+                    return Math.random() - 0.5;
+                });
+                shuffled.forEach((p) => randomEl.appendChild(renderPlaylistCard(p)));
+            }
         }
     } catch (e) {
         console.error(e);
-        setEmpty(randomEl, 'Failed to load public playlists.');
+        if (randomEl) setEmpty(randomEl, 'Failed to load public playlists.');
     }
 }
 
