@@ -53,7 +53,33 @@
         }
 
         fileInput.addEventListener('change', function (e) {
-            updateFileInfo(e.target.files);
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const file = files[0];
+                const fileType = file.type.split('/')[0];
+                
+                // Check if file is an image, video, or audio that can be edited
+                if (['image', 'video', 'audio'].includes(fileType)) {
+                    // Open media editor for the file
+                    if (typeof openMediaEditor === 'function') {
+                        openMediaEditor(file, function(processedFile) {
+                            // Update file input with processed file
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(processedFile);
+                            fileInput.files = dataTransfer.files;
+                            updateFileInfo(dataTransfer.files);
+                        });
+                    } else {
+                        // Fallback to original behavior if media editor not available
+                        updateFileInfo(files);
+                    }
+                } else {
+                    // For other file types, use original behavior
+                    updateFileInfo(files);
+                }
+            } else {
+                updateFileInfo([]);
+            }
         });
 
         if (coverInput && coverInfo) {
@@ -63,7 +89,22 @@
                     coverInfo.textContent = 'No cover selected';
                     return;
                 }
-                coverInfo.textContent = 'Selected: ' + files[0].name;
+                
+                const file = files[0];
+                const fileType = file.type.split('/')[0];
+                
+                // If it's an image, open media editor
+                if (fileType === 'image' && typeof openMediaEditor === 'function') {
+                    openMediaEditor(file, function(processedFile) {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(processedFile);
+                        coverInput.files = dataTransfer.files;
+                        coverInfo.textContent = 'Selected: ' + processedFile.name;
+                    });
+                } else {
+                    // Fallback for non-images or if editor not available
+                    coverInfo.textContent = 'Selected: ' + file.name;
+                }
             });
         }
 
@@ -74,7 +115,22 @@
                     videoInfo.textContent = 'No video selected';
                     return;
                 }
-                videoInfo.textContent = 'Selected: ' + files[0].name + ' (' + Math.round(files[0].size / 1024 / 1024) + ' MB)';
+                
+                const file = files[0];
+                const fileType = file.type.split('/')[0];
+                
+                // If it's a video, open media editor
+                if (fileType === 'video' && typeof openMediaEditor === 'function') {
+                    openMediaEditor(file, function(processedFile) {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(processedFile);
+                        videoInput.files = dataTransfer.files;
+                        videoInfo.textContent = 'Selected: ' + processedFile.name + ' (' + Math.round(processedFile.size / 1024 / 1024) + ' MB)';
+                    });
+                } else {
+                    // Fallback for non-videos or if editor not available
+                    videoInfo.textContent = 'Selected: ' + file.name + ' (' + Math.round(file.size / 1024 / 1024) + ' MB)';
+                }
             });
         }
 
@@ -95,8 +151,29 @@
             dropZone.style.background = 'transparent';
 
             if (e.dataTransfer.files.length) {
-                fileInput.files = e.dataTransfer.files;
-                updateFileInfo(e.dataTransfer.files);
+                const files = e.dataTransfer.files;
+                if (files.length === 1) {
+                    const file = files[0];
+                    const fileType = file.type.split('/')[0];
+                    
+                    // Check if file can be edited
+                    if (['image', 'video', 'audio'].includes(fileType) && typeof openMediaEditor === 'function') {
+                        openMediaEditor(file, function(processedFile) {
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(processedFile);
+                            fileInput.files = dataTransfer.files;
+                            updateFileInfo(dataTransfer.files);
+                        });
+                    } else {
+                        // Fallback for non-editable files
+                        fileInput.files = files;
+                        updateFileInfo(files);
+                    }
+                } else {
+                    // For multiple files, use original behavior
+                    fileInput.files = files;
+                    updateFileInfo(files);
+                }
             }
         });
 
