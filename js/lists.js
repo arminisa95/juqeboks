@@ -887,12 +887,22 @@ async function loadLists() {
             myPlaylists.forEach((playlist, index) => {
                 console.log(`Creating navigation item ${index + 1}:`, playlist.name);
                 
+                // Create navigation item container
+                const navItemContainer = document.createElement('div');
+                navItemContainer.className = 'lists-nav-item-container';
+                navItemContainer.style.display = 'flex';
+                navItemContainer.style.alignItems = 'center';
+                navItemContainer.style.justifyContent = 'space-between';
+                navItemContainer.style.position = 'relative';
+                
                 const navBtn = document.createElement('button');
                 navBtn.className = 'lists-nav-item';
                 navBtn.type = 'button';
                 navBtn.role = 'tab';
                 navBtn.setAttribute('data-view', `playlist-${playlist.id}`);
                 navBtn.textContent = playlist.name;
+                navBtn.style.flex = '1';
+                navBtn.style.textAlign = 'left';
                 
                 navBtn.addEventListener('click', () => {
                     console.log('Clicked playlist:', playlist.name);
@@ -901,8 +911,86 @@ async function loadLists() {
                     loadPlaylistContent(playlist);
                 });
                 
-                navItemsEl.appendChild(navBtn);
-                console.log(`Added navigation button for: ${playlist.name}`);
+                // Add edit/delete buttons for owned playlists
+                const isOwner = !playlist.owner_username || playlist.owner_username === getCurrentUsername();
+                if (isOwner) {
+                    const actionsContainer = document.createElement('div');
+                    actionsContainer.className = 'lists-nav-actions';
+                    actionsContainer.style.display = 'flex';
+                    actionsContainer.style.gap = '4px';
+                    actionsContainer.style.opacity = '0';
+                    actionsContainer.style.transition = 'opacity 0.2s ease';
+                    
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'lists-nav-action-btn edit-btn';
+                    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                    editBtn.title = 'Edit playlist';
+                    editBtn.style.width = '24px';
+                    editBtn.style.height = '24px';
+                    editBtn.style.borderRadius = '4px';
+                    editBtn.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                    editBtn.style.background = 'rgba(0, 0, 0, 0.5)';
+                    editBtn.style.color = '#fff';
+                    editBtn.style.cursor = 'pointer';
+                    editBtn.style.display = 'flex';
+                    editBtn.style.alignItems = 'center';
+                    editBtn.style.justifyContent = 'center';
+                    editBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        editPlaylist(playlist.id, playlist.name);
+                    };
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'lists-nav-action-btn delete-btn';
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteBtn.title = 'Delete playlist';
+                    deleteBtn.style.width = '24px';
+                    deleteBtn.style.height = '24px';
+                    deleteBtn.style.borderRadius = '4px';
+                    deleteBtn.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                    deleteBtn.style.background = 'rgba(0, 0, 0, 0.5)';
+                    deleteBtn.style.color = '#fff';
+                    deleteBtn.style.cursor = 'pointer';
+                    deleteBtn.style.display = 'flex';
+                    deleteBtn.style.alignItems = 'center';
+                    deleteBtn.style.justifyContent = 'center';
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        deletePlaylist(playlist.id, playlist.name);
+                    };
+                    
+                    // Hover effects
+                    editBtn.onmouseover = () => {
+                        editBtn.style.background = '#1ed760';
+                    };
+                    editBtn.onmouseout = () => {
+                        editBtn.style.background = 'rgba(0, 0, 0, 0.5)';
+                    };
+                    
+                    deleteBtn.onmouseover = () => {
+                        deleteBtn.style.background = '#f44336';
+                    };
+                    deleteBtn.onmouseout = () => {
+                        deleteBtn.style.background = 'rgba(0, 0, 0, 0.5)';
+                    };
+                    
+                    actionsContainer.appendChild(editBtn);
+                    actionsContainer.appendChild(deleteBtn);
+                    
+                    // Show actions on hover
+                    navItemContainer.onmouseover = () => {
+                        actionsContainer.style.opacity = '1';
+                    };
+                    navItemContainer.onmouseout = () => {
+                        actionsContainer.style.opacity = '0';
+                    };
+                    
+                    navItemContainer.appendChild(actionsContainer);
+                }
+                
+                navItemContainer.appendChild(navBtn);
+                navItemsEl.appendChild(navItemContainer);
+                console.log(`Added navigation item for: ${playlist.name}`);
                 
                 // Create corresponding panel
                 const panel = document.createElement('div');
@@ -1000,24 +1088,108 @@ async function createPlaylist(name) {
             console.log('Playlist created successfully:', response);
             alert('Playlist created successfully!');
             
-            // Add the new playlist as a navigation item
+            // Add the new playlist as a navigation item with edit/delete buttons
             const navItemsEl = document.querySelector('.lists-nav-items');
             if (navItemsEl) {
+                // Create navigation item container
+                const navItemContainer = document.createElement('div');
+                navItemContainer.className = 'lists-nav-item-container';
+                navItemContainer.style.display = 'flex';
+                navItemContainer.style.alignItems = 'center';
+                navItemContainer.style.justifyContent = 'space-between';
+                navItemContainer.style.position = 'relative';
+                
                 const navBtn = document.createElement('button');
                 navBtn.className = 'lists-nav-item';
                 navBtn.type = 'button';
                 navBtn.role = 'tab';
                 navBtn.setAttribute('data-view', `playlist-${response.id}`);
                 navBtn.textContent = response.name;
+                navBtn.style.flex = '1';
+                navBtn.style.textAlign = 'left';
                 navBtn.style.border = '2px solid #1ed760';
                 navBtn.style.boxShadow = '0 0 20px rgba(30, 215, 96, 0.5)';
                 
                 navBtn.addEventListener('click', () => {
+                    console.log('Clicked playlist:', response.name);
                     showPanel(`playlist-${response.id}`);
                     loadPlaylistContent(response);
                 });
                 
-                navItemsEl.appendChild(navBtn);
+                // Add edit/delete buttons
+                const actionsContainer = document.createElement('div');
+                actionsContainer.className = 'lists-nav-actions';
+                actionsContainer.style.display = 'flex';
+                actionsContainer.style.gap = '4px';
+                actionsContainer.style.opacity = '1'; // Show immediately for new playlist
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'lists-nav-action-btn edit-btn';
+                editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                editBtn.title = 'Edit playlist';
+                editBtn.style.width = '24px';
+                editBtn.style.height = '24px';
+                editBtn.style.borderRadius = '4px';
+                editBtn.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                editBtn.style.background = 'rgba(0, 0, 0, 0.5)';
+                editBtn.style.color = '#fff';
+                editBtn.style.cursor = 'pointer';
+                editBtn.style.display = 'flex';
+                editBtn.style.alignItems = 'center';
+                editBtn.style.justifyContent = 'center';
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    editPlaylist(response.id, response.name);
+                };
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'lists-nav-action-btn delete-btn';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.title = 'Delete playlist';
+                deleteBtn.style.width = '24px';
+                deleteBtn.style.height = '24px';
+                deleteBtn.style.borderRadius = '4px';
+                deleteBtn.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                deleteBtn.style.background = 'rgba(0, 0, 0, 0.5)';
+                deleteBtn.style.color = '#fff';
+                deleteBtn.style.cursor = 'pointer';
+                deleteBtn.style.display = 'flex';
+                deleteBtn.style.alignItems = 'center';
+                deleteBtn.style.justifyContent = 'center';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deletePlaylist(response.id, response.name);
+                };
+                
+                // Hover effects
+                editBtn.onmouseover = () => {
+                    editBtn.style.background = '#1ed760';
+                };
+                editBtn.onmouseout = () => {
+                    editBtn.style.background = 'rgba(0, 0, 0, 0.5)';
+                };
+                
+                deleteBtn.onmouseover = () => {
+                    deleteBtn.style.background = '#f44336';
+                };
+                deleteBtn.onmouseout = () => {
+                    deleteBtn.style.background = 'rgba(0, 0, 0, 0.5)';
+                };
+                
+                actionsContainer.appendChild(editBtn);
+                actionsContainer.appendChild(deleteBtn);
+                
+                // Show actions on hover
+                navItemContainer.onmouseover = () => {
+                    actionsContainer.style.opacity = '1';
+                };
+                navItemContainer.onmouseout = () => {
+                    actionsContainer.style.opacity = '0';
+                };
+                
+                navItemContainer.appendChild(actionsContainer);
+                navItemContainer.appendChild(navBtn);
+                navItemsEl.appendChild(navItemContainer);
                 
                 // Create corresponding panel
                 const panel = document.createElement('div');
