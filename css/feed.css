@@ -230,14 +230,14 @@
     left:50%;
     bottom: calc(14px + env(safe-area-inset-bottom));
     transform:translate(-50%, 120%);
-    width:min(520px, calc(100vw - 18px));
-    max-height:min(98vh, 880px);
+    width:min(95vw, calc(100vw - 10px));
+    max-height:min(99vh, 920px);
     display:flex;
     flex-direction:column;
-    background:rgba(18,18,18,0.98);
-    border:1px solid rgba(255,255,255,0.10);
-    border-radius:16px;
-    box-shadow:0 18px 44px rgba(0,0,0,0.55);
+    background:rgba(18,18,18,0.99);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    box-shadow:0 25px 60px rgba(0,0,0,0.80);
     overflow:hidden;
     transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -248,8 +248,10 @@
         left: auto;
         bottom: auto;
         transform: translateY(24px);
-        width: min(720px, calc(100vw - 36px));
-        max-height: min(calc(100vh - 140px), 880px);
+        width: min(95vw, calc(100vw - 20px));
+        max-width: 1200px;
+        max-height: min(calc(100vh - 80px), 920px);
+        margin: 0 auto;
     }
     .juke-stories-tray-root.open .juke-stories-tray-sheet {
         transform: translateY(0);
@@ -261,28 +263,32 @@
 }
 
 .juke-stories-tray-media{
-    padding: 16px 16px 8px;
+    padding: 12px;
     border-bottom: 1px solid rgba(255,255,255,0.02);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .juke-story-media-frame{
     width: 100%;
     aspect-ratio: 9 / 16;
-    max-height: min(85vh, 720px);
-    border-radius: 24px;
+    max-height: min(90vh, 800px);
+    border-radius: 20px;
     overflow: hidden;
     position: relative;
     background: rgba(255,255,255,0.04);
-    border: 3px solid rgba(255,255,255,0.20);
-    box-shadow: 0 25px 60px rgba(0,0,0,0.75);
-    margin: 0 auto 20px;
+    border: 2px solid rgba(255,255,255,0.15);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.85);
+    margin: 0 auto;
 }
 
 @media (min-width: 769px) {
     .juke-story-media-frame{
         aspect-ratio: 16 / 9;
-        max-height: min(90vh, 750px);
-        margin: 0 auto 24px;
+        max-height: min(95vh, 900px);
+        margin: 0 auto;
     }
 }
 
@@ -614,39 +620,39 @@ text-overflow: ellipsis;
 }
 
 .juke-stories-tray-list{
-    padding:4px 6px;
+    padding:3px 6px;
     overflow:auto;
-    max-height: 100px;
+    max-height: 80px;
 }
 
 .juke-story-track{
     width:100%;
     display:flex;
     align-items:center;
-    gap:6px;
-    background:rgba(255,255,255,0.02);
-    border:1px solid rgba(255,255,255,0.04);
-    border-radius:6px;
-    padding:6px;
-    margin:0 0 4px;
+    gap:4px;
+    background:rgba(255,255,255,0.015);
+    border:1px solid rgba(255,255,255,0.03);
+    border-radius:4px;
+    padding:4px;
+    margin:0 0 3px;
     color:#fff;
     cursor:pointer;
 }
 
 .juke-story-track:hover{
-    background:rgba(255,255,255,0.04);
-    border-color:rgba(0, 180, 150, 0.12);
+    background:rgba(255,255,255,0.03);
+    border-color:rgba(0, 180, 150, 0.10);
 }
 
 .juke-story-track.active{
-    border-color: rgba(0, 180, 150, 0.16);
-    background: rgba(0, 180, 150, 0.03);
+    border-color: rgba(0, 180, 150, 0.12);
+    background: rgba(0, 180, 150, 0.02);
 }
 
 .juke-story-track-cover{
-    width:32px;
-    height:32px;
-    border-radius:6px;
+    width:28px;
+    height:28px;
+    border-radius:4px;
     object-fit:cover;
     flex-shrink:0;
 }
@@ -657,8 +663,8 @@ text-overflow: ellipsis;
 }
 
 .juke-story-track-title{
-    font-weight:600;
-    font-size:0.75rem;
+    font-weight:500;
+    font-size:0.65rem;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -666,27 +672,27 @@ text-overflow: ellipsis;
 
 .juke-story-track-sub{
     display:flex;
-    gap:6px;
+    gap:4px;
     margin-top:1px;
-    font-size:0.6rem;
-    color:rgba(255,255,255,0.4);
+    font-size:0.55rem;
+    color:rgba(255,255,255,0.35);
 }
 
 .juke-story-track-date{
-    color:rgba(0, 180, 150, 0.5);
-    font-weight:500;
+    color:rgba(0, 180, 150, 0.4);
+    font-weight:400;
 }
 
 .juke-story-track-share{
     background:none;
     border:none;
-    color:rgba(255,255,255,0.5);
+    color:rgba(255,255,255,0.4);
     cursor:pointer;
-    padding:4px;
+    padding:3px;
 }
 
 .juke-story-track-share:hover{
-    color:rgba(0, 180, 150, 0.7);
+    color:rgba(0, 180, 150, 0.6);
 }
 
 .uploader-link {
