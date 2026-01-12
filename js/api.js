@@ -718,18 +718,18 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
 
         var root = document.createElement('div');
         root.id = 'jukeMediaViewerRoot';
-        root.className = 'juke-stories-tray-root juke-media-viewer-root';
+        root.className = 'juke-media-viewer-root';
 
         root.innerHTML = '' +
-            '<div class="juke-stories-tray-backdrop" data-juke-media-close="1"></div>' +
-            '<div class="juke-stories-tray-sheet juke-media-viewer-sheet" role="dialog" aria-modal="true">' +
-            '  <div class="juke-stories-tray-header">' +
-            '    <div class="juke-stories-tray-title">Media</div>' +
-            '    <button type="button" class="juke-stories-tray-close" data-juke-media-close="1" aria-label="Close">' +
+            '<div class="juke-media-backdrop" data-juke-media-close="1"></div>' +
+            '<div class="juke-media-viewer-sheet" role="dialog" aria-modal="true">' +
+            '  <div class="juke-media-header">' +
+            '    <div class="juke-media-title">Media</div>' +
+            '    <button type="button" class="juke-media-close" data-juke-media-close="1" aria-label="Close">' +
             '      <i class="fas fa-times"></i>' +
             '    </button>' +
             '  </div>' +
-            '  <div class="juke-stories-tray-media juke-media-container">' +
+            '  <div class="juke-media-container">' +
             '    <div class="juke-media-main">' +
             '      <div class="juke-media-frame">' +
             '        <button type="button" class="juke-media-nav juke-media-prev" data-juke-media-nav="prev" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>' +
@@ -1301,17 +1301,10 @@ async function renderStoriesBar() {
             try {
                 if (!track) return;
                 
-                // Create a user object with the single track
-                var trackUser = {
-                    id: track.uploader_id || 'unknown',
-                    username: track.uploader_username || track.artist_name || 'Unknown',
-                    avatar_url: track.uploader_avatar_url || null,
-                    tracks: [track]
-                };
-                
-                openStoriesTray(trackUser);
+                // Open YouTube-sized media viewer with the single track
+                openTrackMediaViewer([track], track.id);
             } catch (_) {
-                console.error('Failed to open stories tray for track:', _);
+                console.error('Failed to open media viewer for track:', _);
             }
         }
         

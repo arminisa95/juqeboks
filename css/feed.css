@@ -1226,6 +1226,70 @@ min-width: 0;
 }
 
 /* YouTube-sized Media Viewer with Sidebar */
+.juke-media-viewer-root {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.juke-media-viewer-root.open {
+    display: flex;
+}
+
+.juke-media-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+}
+
+.juke-media-viewer-root.open .juke-media-backdrop {
+    opacity: 1;
+}
+
+.juke-media-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: rgba(0,0,0,0.9);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.juke-media-title {
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+
+.juke-media-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.25);
+    color: rgba(255,255,255,0.9);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.juke-media-close:hover {
+    background: rgba(0,0,0,0.45);
+    border-color: rgba(0, 180, 150, 0.22);
+}
+
+.juke-media-close i {
+    font-size: 1rem;
+}
+
 .juke-media-viewer-sheet {
     max-width: 1200px;
     width: 90vw;
