@@ -248,12 +248,12 @@
         left: auto;
         bottom: auto;
         transform: translateY(24px);
-        width: min(90vw, calc(100vw - 40px));
-        max-width: 1200px;
-        max-height: min(calc(100vh - 60px), 800px);
+        width: min(95vw, calc(100vw - 40px));
+        max-width: 1400px;
+        max-height: min(calc(100vh - 60px), 920px);
         margin: 0 auto;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
     }
     .juke-stories-tray-root.open .juke-stories-tray-sheet {
         transform: translateY(0);
@@ -283,84 +283,226 @@
     background: rgba(255,255,255,0.04);
     border: 2px solid rgba(255,255,255,0.15);
     box-shadow: 0 30px 80px rgba(0,0,0,0.85);
-    margin: 0 auto;
 }
 
-@media (min-width: 769px) {
-    .juke-stories-tray-media{
-        padding: 20px;
-        border-bottom: none;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        min-height: 500px;
-    }
-    
-    .juke-story-media-frame{
-        aspect-ratio: 16 / 9;
-        max-height: min(75vh, 600px);
-        margin: 0 auto;
-        width: 100%;
-        max-width: 900px;
-    }
-    
-    .juke-story-actions{
-        margin-top: 20px;
-        justify-content: center;
-        gap: 20px;
-    }
-    
-    .juke-story-actions .post-action {
-        font-size: 1.3rem;
-        padding: 12px;
-        border-radius: 12px;
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.15);
-        color: rgba(255,255,255,0.9);
-        transition: all 0.2s ease;
-    }
-    
-    .juke-story-actions .post-action:hover {
-        background: rgba(255,255,255,0.15);
-        border-color: rgba(255,255,255,0.25);
-        transform: translateY(-2px);
-    }
-    
-    .juke-story-actions .post-action.liked {
-        color: #F72193;
-        background: rgba(247,33,147,0.1);
-        border-color: rgba(247,33,147,0.3);
-    }
-    
-    .juke-fullscreen-btn {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        background: rgba(0,0,0,0.6);
-        border: 1px solid rgba(255,255,255,0.2);
-        color: rgba(255,255,255,0.9);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        z-index: 10;
-    }
-    
-    .juke-fullscreen-btn:hover {
-        background: rgba(0,0,0,0.8);
-        border-color: rgba(255,255,255,0.3);
-        transform: scale(1.05);
-    }
-    
-    .juke-fullscreen-btn i {
-        font-size: 1.2rem;
-    }
+.juke-story-actions{
+    margin-top: 16px;
+    justify-content: center;
+    gap: 20px;
+}
+
+.juke-story-actions .post-action {
+    font-size: 1.3rem;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.9);
+    transition: all 0.2s ease;
+}
+
+.juke-story-actions .post-action:hover {
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.25);
+    transform: translateY(-2px);
+}
+
+.juke-story-actions .post-action.liked {
+    color: #F72193;
+    background: rgba(247,33,147,0.1);
+    border-color: rgba(247,33,147,0.3);
+}
+
+.juke-fullscreen-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.9);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.juke-fullscreen-btn:hover {
+    background: rgba(0,0,0,0.8);
+    border-color: rgba(255,255,255,0.3);
+    transform: scale(1.05);
+}
+
+.juke-fullscreen-btn i {
+    font-size: 1.2rem;
+}
+
+.juke-stories-tray-comments {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(59,130,246,0.03);
+    border-left: 1px solid rgba(59,130,246,0.1);
+    min-width: 380px;
+    max-width: 420px;
+}
+
+.juke-stories-tray-comments-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.juke-stories-tray-comments-title {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.juke-stories-tray-comments-title i {
+    color: rgba(59,130,246,0.8);
+}
+
+.juke-stories-tray-comments-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.juke-stories-tray-comments-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.juke-stories-tray-comments-content::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+}
+
+.juke-stories-tray-comments-content::-webkit-scrollbar-thumb {
+    background: rgba(59,130,246,0.3);
+    border-radius: 2px;
+}
+
+.juke-stories-tray-comments-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(59,130,246,0.5);
+}
+
+.juke-stories-tray-comment-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.2s ease;
+}
+
+.juke-stories-tray-comment-item:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.1);
+}
+
+.juke-stories-tray-comment-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.juke-stories-tray-comment-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.juke-stories-tray-comment-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.juke-stories-tray-comment-username {
+    color: rgba(255,255,255,0.9);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.juke-stories-tray-comment-text {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+    margin-bottom: 6px;
+}
+
+.juke-stories-tray-comment-time {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.75rem;
+}
+
+.juke-stories-tray-comment-empty {
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.9rem;
+    padding: 40px 20px;
+}
+
+.juke-stories-tray-comment-compose {
+    padding: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.juke-stories-tray-comment-input {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.juke-stories-tray-comment-input:focus {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(59,130,246,0.4);
+}
+
+.juke-stories-tray-comment-input::placeholder {
+    color: rgba(255,255,255,0.4);
+}
+
+.juke-stories-tray-comment-send {
+    background: rgba(59,130,246,0.8);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.juke-stories-tray-comment-send:hover {
+    background: rgba(59,130,246,1);
+    transform: translateY(-1px);
 }
 
 .juke-story-media-layout{
