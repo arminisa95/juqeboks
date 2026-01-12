@@ -1122,14 +1122,23 @@ async function cleanupOldStories() {
 
 async function renderStoriesBar() {
     try {
+        console.log('renderStoriesBar called');
         const feedContainer = document.querySelector('.feed-container');
-        if (!feedContainer || feedState.storiesLoaded) return;
+        if (!feedContainer) {
+            console.error('No feed-container found');
+            return;
+        }
+        if (feedState.storiesLoaded) {
+            console.log('Stories already loaded');
+            return;
+        }
         
         // Clean up stories older than 1 month
         await cleanupOldStories();
         
         let storiesBar = feedContainer.querySelector('.stories-bar');
         if (!storiesBar) {
+            console.log('Creating stories bar');
             storiesBar = document.createElement('div');
             storiesBar.className = 'stories-bar';
             const title = feedContainer.querySelector('.feed-title');
@@ -1146,6 +1155,8 @@ async function renderStoriesBar() {
             } else {
                 feedContainer.insertAdjacentElement('afterbegin', storiesBar);
             }
+        } else {
+            console.log('Stories bar already exists');
         }
         
         const tracks = await apiFetchJson('/tracks/new?limit=40&offset=0', {}, d => Array.isArray(d));
