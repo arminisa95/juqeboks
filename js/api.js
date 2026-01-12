@@ -1495,6 +1495,69 @@ async function renderStoriesBar() {
             } catch (_) {}
         }
         
+        function loadCommentsIntoSidebar(trackId) {
+            try {
+                var commentsContent = document.getElementById('jukeStoriesCommentsContent');
+                if (!commentsContent) return;
+                
+                commentsContent.innerHTML = '<div class="juke-stories-tray-comment-empty">Loading comments...</div>';
+                
+                var token = getAuthToken();
+                if (!token) {
+                    commentsContent.innerHTML = '<div class="juke-stories-tray-comment-empty">Please login to view comments</div>';
+                    return;
+                }
+                
+                apiFetchJson('/comments/track/' + encodeURIComponent(String(trackId)), {
+                    headers: { Authorization: 'Bearer ' + token }
+                }).then(function(comments) {
+                    displayCommentsInSidebar(comments || []);
+                }).catch(function(err) {
+                    console.error('Failed to load comments:', err);
+                    commentsContent.innerHTML = '<div class="juke-stories-tray-comment-empty">Failed to load comments</div>';
+                });
+                
+            } catch (_) {
+                console.error('Failed to load comments into sidebar:', _);
+            }
+        }
+        
+        function displayCommentsInSidebar(comments) {
+            try {
+                var commentsContent = document.getElementById('jukeStoriesCommentsContent');
+                if (!commentsContent) return;
+                
+                if (!Array.isArray(comments) || comments.length === 0) {
+                    commentsContent.innerHTML = '<div class="juke-stories-tray-comment-empty">No comments yet. Be the first to comment!</div>';
+                    return;
+                }
+                
+                var commentsHtml = '';
+                comments.forEach(function(comment) {
+                    var safeUsername = (comment.username || 'Anonymous').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    var safeText = (comment.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    var timeAgo = formatCommentTime(comment.created_at);
+                    
+                    commentsHtml += '' +
+                        '<div class="juke-stories-tray-comment-item">' +
+                        '  <div class="juke-stories-tray-comment-avatar">' +
+                        '    <img src="' + resolveAssetUrl(comment.avatar_url, '../images/default-avatar.png') + '" alt="' + safeUsername + '">' +
+                        '  </div>' +
+                        '  <div class="juke-stories-tray-comment-content">' +
+                        '    <div class="juke-stories-tray-comment-username">' + safeUsername + '</div>' +
+                        '    <div class="juke-stories-tray-comment-text">' + safeText + '</div>' +
+                        '    <div class="juke-stories-tray-comment-time">' + timeAgo + '</div>' +
+                        '  </div>' +
+                        '</div>';
+                });
+                
+                commentsContent.innerHTML = commentsHtml;
+                
+            } catch (_) {
+                console.error('Failed to display comments in sidebar:', _);
+            }
+        }
+        
         function formatCommentTime(dateStr) {
             try {
                 if (!dateStr) return '';
@@ -1561,7 +1624,18 @@ async function renderStoriesBar() {
                     '    </button>' +
                     '  </div>' +
                     '  <div class="juke-stories-tray-media juke-story-split"></div>' +
-                    '  <div class="juke-stories-tray-list">' + listHtml + '</div>' +
+                    '  <div class="juke-stories-tray-sidebar">' +
+                    '    <div class="juke-stories-tray-list">' +
+                    '      <div class="juke-stories-tray-list-header">Most Played</div>' +
+                    '      <div class="juke-stories-tray-list-content">' + listHtml + '</div>' +
+                    '    </div>' +
+                    '    <div class="juke-stories-tray-comments-section">' +
+                    '      <div class="juke-stories-tray-comments-header">Comments</div>' +
+                    '      <div class="juke-stories-tray-comments-content" id="jukeStoriesCommentsContent">' +
+                    '        <div class="juke-stories-tray-comment-empty">Click comment button to view comments</div>' +
+                    '      </div>' +
+                    '    </div>' +
+                    '  </div>' +
                     '</div>';
 
                 document.body.appendChild(root);
@@ -1967,16 +2041,9 @@ async function renderStoriesBar() {
                             }
                         }
                         
-                        // Get track title for the modal
-                        var trackTitle = '';
-                        try {
-                            var titleEl = root.querySelector('.juke-story-media-title');
-                            if (titleEl) trackTitle = titleEl.textContent || '';
-                        } catch (_) {}
-                        
-                        // Open comments modal instead of inline comments
-                        if (trackId && typeof openCommentsModal === 'function') {
-                            openCommentsModal(trackId, trackTitle);
+                        // Load and display comments in sidebar
+                        if (trackId) {
+                            loadCommentsIntoSidebar(trackId);
                         }
                         return;
                     }
