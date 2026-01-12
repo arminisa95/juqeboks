@@ -1282,6 +1282,239 @@ async function renderStoriesBar() {
             }
         }
         
+        function openCommentsModal(trackId, trackTitle) {
+            try {
+                if (!trackId) return;
+                
+                // Remove existing modal if present
+                var existingModal = document.getElementById('jukeCommentsModalRoot');
+                if (existingModal && existingModal.parentNode) {
+                    existingModal.parentNode.removeChild(existingModal);
+                }
+                
+                // Create modal container
+                var modalRoot = document.createElement('div');
+                modalRoot.id = 'jukeCommentsModalRoot';
+                modalRoot.className = 'juke-comments-modal-root';
+                
+                modalRoot.innerHTML = '' +
+                    '<div class="juke-comments-modal-backdrop" data-juke-comments-close="1"></div>' +
+                    '<div class="juke-comments-modal-sheet">' +
+                    '  <div class="juke-comments-modal-header">' +
+                    '    <div class="juke-comments-modal-title">Comments - ' + (trackTitle || 'Track') + '</div>' +
+                    '    <button type="button" class="juke-comments-modal-close" data-juke-comments-close="1" aria-label="Close">' +
+                    '      <i class="fas fa-times"></i>' +
+                    '    </button>' +
+                    '  </div>' +
+                    '  <div class="juke-comments-modal-content" id="jukeCommentsModalContent">' +
+                    '    <div class="juke-comments-modal-empty">Loading comments...</div>' +
+                    '  </div>' +
+                    '  <div class="juke-comments-modal-compose">' +
+                    '    <input type="text" class="juke-comments-modal-input" placeholder="Add a comment…" data-track-id="' + trackId + '">' +
+                    '    <button type="button" class="juke-comments-modal-send" data-track-id="' + trackId + '">Post</button>' +
+                    '  </div>' +
+                    '</div>';
+                
+                document.body.appendChild(modalRoot);
+                
+                // Load comments
+                loadCommentsForTrack(trackId);
+                
+                // Setup event listeners
+                setupCommentsModalListeners(modalRoot, trackId);
+                
+                // Open modal with animation
+                requestAnimationFrame(function() {
+                    modalRoot.classList.add('open');
+                });
+                
+            } catch (_) {
+                console.error('Failed to open comments modal:', _);
+            }
+        }
+        
+        function loadCommentsForTrack(trackId) {
+            try {
+                var token = getAuthToken();
+                if (!token) {
+                    showCommentsError('Please login to view comments');
+                    return;
+                }
+                
+                apiFetchJson('/comments/track/' + encodeURIComponent(String(trackId)), {
+                    headers: { Authorization: 'Bearer ' + token }
+                }).then(function(comments) {
+                    displayCommentsInModal(comments || []);
+                }).catch(function(err) {
+                    console.error('Failed to load comments:', err);
+                    showCommentsError('Failed to load comments');
+                });
+                
+            } catch (_) {
+                showCommentsError('Failed to load comments');
+            }
+        }
+        
+        function displayCommentsInModal(comments) {
+            try {
+                var contentEl = document.getElementById('jukeCommentsModalContent');
+                if (!contentEl) return;
+                
+                if (!Array.isArray(comments) || comments.length === 0) {
+                    contentEl.innerHTML = '<div class="juke-comments-modal-empty">No comments yet. Be the first to comment!</div>';
+                    return;
+                }
+                
+                var commentsHtml = '';
+                comments.forEach(function(comment) {
+                    var safeUsername = (comment.username || 'Anonymous').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    var safeText = (comment.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    var timeAgo = formatCommentTime(comment.created_at);
+                    
+                    commentsHtml += '' +
+                        '<div class="juke-comments-modal-comment">' +
+                        '  <div class="juke-comments-modal-avatar">' +
+                        '    <img src="' + resolveAssetUrl(comment.avatar_url, '../images/default-avatar.png') + '" alt="' + safeUsername + '">' +
+                        '  </div>' +
+                        '  <div class="juke-comments-modal-content-wrapper">' +
+                        '    <div class="juke-comments-modal-username">' + safeUsername + '</div>' +
+                        '    <div class="juke-comments-modal-text">' + safeText + '</div>' +
+                        '    <div class="juke-comments-modal-time">' + timeAgo + '</div>' +
+                        '  </div>' +
+                        '</div>';
+                });
+                
+                contentEl.innerHTML = commentsHtml;
+                
+            } catch (_) {
+                showCommentsError('Failed to display comments');
+            }
+        }
+        
+        function showCommentsError(message) {
+            try {
+                var contentEl = document.getElementById('jukeCommentsModalContent');
+                if (contentEl) {
+                    contentEl.innerHTML = '<div class="juke-comments-modal-empty">' + (message || 'An error occurred') + '</div>';
+                }
+            } catch (_) {}
+        }
+        
+        function setupCommentsModalListeners(modalRoot, trackId) {
+            try {
+                // Close modal listeners
+                var closeEls = modalRoot.querySelectorAll('[data-juke-comments-close="1"]');
+                closeEls.forEach(function(el) {
+                    el.addEventListener('click', closeCommentsModal);
+                });
+                
+                // Backdrop click to close
+                var backdrop = modalRoot.querySelector('.juke-comments-modal-backdrop');
+                if (backdrop) {
+                    backdrop.addEventListener('click', function(e) {
+                        if (e.target === backdrop) {
+                            closeCommentsModal();
+                        }
+                    });
+                }
+                
+                // Send comment listener
+                var sendBtn = modalRoot.querySelector('.juke-comments-modal-send[data-track-id="' + trackId + '"]');
+                var input = modalRoot.querySelector('.juke-comments-modal-input[data-track-id="' + trackId + '"]');
+                
+                if (sendBtn && input) {
+                    var sendComment = function() {
+                        var text = String(input.value || '').trim();
+                        if (!text) return;
+                        
+                        var token = getAuthToken();
+                        if (!token) {
+                            alert('Please login to post comments');
+                            return;
+                        }
+                        
+                        sendBtn.disabled = true;
+                        sendBtn.textContent = 'Posting...';
+                        
+                        apiFetchJson('/comments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + token
+                            },
+                            body: JSON.stringify({
+                                track_id: trackId,
+                                text: text
+                            })
+                        }).then(function(newComment) {
+                            input.value = '';
+                            loadCommentsForTrack(trackId); // Reload comments
+                        }).catch(function(err) {
+                            console.error('Failed to post comment:', err);
+                            alert('Failed to post comment');
+                        }).finally(function() {
+                            sendBtn.disabled = false;
+                            sendBtn.textContent = 'Post';
+                        });
+                    };
+                    
+                    sendBtn.addEventListener('click', sendComment);
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            sendComment();
+                        }
+                    });
+                }
+                
+                // ESC key to close
+                var escHandler = function(e) {
+                    if (e.key === 'Escape') {
+                        closeCommentsModal();
+                        document.removeEventListener('keydown', escHandler);
+                    }
+                };
+                document.addEventListener('keydown', escHandler);
+                
+            } catch (_) {
+                console.error('Failed to setup comments modal listeners:', _);
+            }
+        }
+        
+        function closeCommentsModal() {
+            try {
+                var modalRoot = document.getElementById('jukeCommentsModalRoot');
+                if (modalRoot) {
+                    modalRoot.classList.remove('open');
+                    setTimeout(function() {
+                        if (modalRoot.parentNode) {
+                            modalRoot.parentNode.removeChild(modalRoot);
+                        }
+                    }, 300);
+                }
+            } catch (_) {}
+        }
+        
+        function formatCommentTime(dateStr) {
+            try {
+                if (!dateStr) return '';
+                var date = new Date(dateStr);
+                var now = new Date();
+                var diffMs = now - date;
+                var diffMins = Math.floor(diffMs / 60000);
+                var diffHours = Math.floor(diffMs / 3600000);
+                var diffDays = Math.floor(diffMs / 86400000);
+                
+                if (diffMins < 1) return 'just now';
+                if (diffMins < 60) return diffMins + 'm ago';
+                if (diffHours < 24) return diffHours + 'h ago';
+                if (diffDays < 7) return diffDays + 'd ago';
+                return date.toLocaleDateString();
+            } catch (_) {
+                return '';
+            }
+        }
+        
         function openStoriesTray(u) {
             try {
                 if (!u) return;
@@ -1471,7 +1704,7 @@ async function renderStoriesBar() {
                             '      <i class="' + (liked ? 'fas' : 'far') + ' fa-heart"></i>' +
                             '      <span class="like-count" data-track-id="' + String(track.id) + '">' + likeCountTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
                             '    </button>' +
-                            '    <button class="post-action" type="button" aria-label="Comments" data-juke-story-comments-toggle="1">' +
+                            '    <button class="post-action" type="button" aria-label="Comments" data-juke-story-comments-toggle="1" data-track-id="' + String(track.id) + '">' +
                             '      <i class="far fa-comment"></i>' +
                             '    </button>' +
                             '    <button class="post-action" type="button" aria-label="Share" data-share-track-id="' + String(track.id) + '">' +
@@ -1723,23 +1956,27 @@ async function renderStoriesBar() {
                             if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
                         } catch (_) {
                         }
-                        var mediaHostEl = null;
-                        try {
-                            mediaHostEl = root.querySelector('.juke-stories-tray-media');
-                        } catch (_) {
-                            mediaHostEl = null;
-                        }
-                        if (mediaHostEl && mediaHostEl.classList) {
-                            var willOpen = !mediaHostEl.classList.contains('comments-open');
-                            mediaHostEl.classList.toggle('comments-open', willOpen);
-                            if (willOpen) {
-                                try {
-                                    var listEl = mediaHostEl.querySelector('.post-comments-list[data-track-id]');
-                                    var tid = listEl ? listEl.getAttribute('data-track-id') : null;
-                                    if (tid) loadAndRenderTrackComments(tid, listEl);
-                                } catch (_) {
-                                }
+                        
+                        // Get track ID from the comment toggle button or nearby elements
+                        var trackId = storyCommentToggle.getAttribute('data-track-id');
+                        if (!trackId) {
+                            // Try to find track ID from parent elements
+                            var trackEl = storyCommentToggle.closest('[data-track-id]');
+                            if (trackEl) {
+                                trackId = trackEl.getAttribute('data-track-id');
                             }
+                        }
+                        
+                        // Get track title for the modal
+                        var trackTitle = '';
+                        try {
+                            var titleEl = root.querySelector('.juke-story-media-title');
+                            if (titleEl) trackTitle = titleEl.textContent || '';
+                        } catch (_) {}
+                        
+                        // Open comments modal instead of inline comments
+                        if (trackId && typeof openCommentsModal === 'function') {
+                            openCommentsModal(trackId, trackTitle);
                         }
                         return;
                     }
