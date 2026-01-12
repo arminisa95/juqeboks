@@ -2152,10 +2152,40 @@ async function renderStoriesBar() {
                     });
                 } catch (_) {
                 }
+        }
+    } catch (e) {
+        console.error('Stories tray failed:', e);
+    }
+}
+
+async function renderStoriesBar() {
+    try {
+        const feedContainer = document.querySelector('.feed-container');
+        if (!feedContainer || feedState.storiesLoaded) return;
+        
+        // Clean up stories older than 1 month
+        await cleanupOldStories();
+        
+        let storiesBar = feedContainer.querySelector('.stories-bar');
+        if (!storiesBar) {
+            storiesBar = document.createElement('div');
+            storiesBar.className = 'stories-bar';
+            const title = feedContainer.querySelector('.feed-title');
+            var isMobile = false;
+            try {
+                isMobile = !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
             } catch (_) {
+                isMobile = false;
+            }
+            if (isMobile) {
+                feedContainer.insertAdjacentElement('afterbegin', storiesBar);
+            } else if (title) {
+                title.insertAdjacentElement('afterend', storiesBar);
+            } else {
+                feedContainer.insertAdjacentElement('afterbegin', storiesBar);
             }
         }
-
+        
         storiesBar.innerHTML = '';
 
         // "Your story" bubble first (upload shortcut)
