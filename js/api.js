@@ -2198,16 +2198,20 @@ async function renderStoriesBar() {
                 <div class="story-username">${u.username}</div>
             `;
             item.addEventListener('click', () => {
-                // Always open stories tray with media viewer
-                console.log('Story avatar clicked, opening stories tray with tracks:', u.tracks ? u.tracks.length : 0);
-                openStoriesTray(u);
+                // Open YouTube-sized media viewer with story tracks
+                console.log('Story avatar clicked, opening media viewer with tracks:', u.tracks ? u.tracks.length : 0);
+                if (u.tracks && u.tracks.length > 0) {
+                    openTrackMediaViewer(u.tracks, u.tracks[0].id);
+                }
             });
             
             // Also add touch event listener for mobile
             item.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                console.log('Story avatar touchend, opening stories tray with tracks:', u.tracks ? u.tracks.length : 0);
-                openStoriesTray(u);
+                console.log('Story avatar touchend, opening media viewer with tracks:', u.tracks ? u.tracks.length : 0);
+                if (u.tracks && u.tracks.length > 0) {
+                    openTrackMediaViewer(u.tracks, u.tracks[0].id);
+                }
             });
             storiesBar.appendChild(item);
         });
