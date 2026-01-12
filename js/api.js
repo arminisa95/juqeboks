@@ -1122,23 +1122,14 @@ async function cleanupOldStories() {
 
 async function renderStoriesBar() {
     try {
-        console.log('renderStoriesBar called');
         const feedContainer = document.querySelector('.feed-container');
-        if (!feedContainer) {
-            console.error('No feed-container found');
-            return;
-        }
-        if (feedState.storiesLoaded) {
-            console.log('Stories already loaded');
-            return;
-        }
+        if (!feedContainer || feedState.storiesLoaded) return;
         
         // Clean up stories older than 1 month
         await cleanupOldStories();
         
         let storiesBar = feedContainer.querySelector('.stories-bar');
         if (!storiesBar) {
-            console.log('Creating stories bar');
             storiesBar = document.createElement('div');
             storiesBar.className = 'stories-bar';
             const title = feedContainer.querySelector('.feed-title');
@@ -1155,8 +1146,6 @@ async function renderStoriesBar() {
             } else {
                 feedContainer.insertAdjacentElement('afterbegin', storiesBar);
             }
-        } else {
-            console.log('Stories bar already exists');
         }
         
         const tracks = await apiFetchJson('/tracks/new?limit=40&offset=0', {}, d => Array.isArray(d));
@@ -2166,65 +2155,71 @@ async function renderStoriesBar() {
             } catch (_) {
             }
         }
-    }
-    
-    storiesBar.innerHTML = '';
 
-    // "Your story" bubble first (upload shortcut)
-    try {
-        var cu = null;
+        storiesBar.innerHTML = '';
+
+        // "Your story" bubble first (upload shortcut)
         try {
-            if (typeof getCurrentUser === 'function') cu = getCurrentUser();
-        } catch (_) {
-            cu = null;
-        }
-        var myUsername = (cu && cu.username) ? String(cu.username) : '';
-        if (myUsername) {
-            const your = document.createElement('div');
-            your.className = 'story-item';
-            your.innerHTML = `
-                <div class="story-avatar your-story">
-                    <img src="${resolveAssetUrl(null, resolveLocalAssetUrl('images/juke.png'))}" alt="${myUsername}">
-                    <div class="story-plus-badge">+</div>
-                </div>
-                <div class="story-username">Your story</div>
-            `;
-            your.addEventListener('click', function () {
-                try {
-                    if (isSpaMode()) {
-                        window.location.hash = '#/upload';
-                    } else {
-                        window.location.href = 'upload.html';
-                    }
-                } catch (_) {
-                }
-            });
-            storiesBar.appendChild(your);
-        }
-    } catch (_) {
-    }
-
-    uploaderArr.forEach(function (u) {
-        const item = document.createElement('div');
-        item.className = 'story-item';
-        item.innerHTML = `
-            <div class="story-avatar ${u.hasNew ? '' : 'no-story'}">
-                <img src="${resolveAssetUrl(u.avatar, resolveLocalAssetUrl('images/juke.png'))}" alt="${u.username}">
-            </div>
-            <div class="story-username">${u.username}</div>
-        `;
-        item.addEventListener('click', function () {
+            var cu = null;
             try {
-                openStoriesTray(u);
+                if (typeof getCurrentUser === 'function') cu = getCurrentUser();
             } catch (_) {
+                cu = null;
             }
+            var myUsername = (cu && cu.username) ? String(cu.username) : '';
+            if (myUsername) {
+                const your = document.createElement('div');
+                your.className = 'story-item';
+                your.innerHTML = `
+                    <div class="story-avatar your-story">
+                        <img src="${resolveAssetUrl(null, resolveLocalAssetUrl('images/juke.png'))}" alt="${myUsername}">
+                        <div class="story-plus-badge">+</div>
+                    </div>
+                    <div class="story-username">Your story</div>
+                `;
+                your.addEventListener('click', function () {
+                    try {
+                        if (isSpaMode()) {
+                            window.location.hash = '#/upload';
+                        } else {
+                            window.location.href = 'upload.html';
+                        }
+                    } catch (_) {
+                    }
+                });
+                storiesBar.appendChild(your);
+            }
+        } catch (_) {
+        }
+
+        uploaderArr.forEach(function (u) {
+            const item = document.createElement('div');
+            item.className = 'story-item';
+            item.innerHTML = `
+                <div class="story-avatar ${u.hasNew ? '' : 'no-story'}">
+                    <img src="${resolveAssetUrl(u.avatar, resolveLocalAssetUrl('images/juke.png'))}" alt="${u.username}">
+                </div>
+                <div class="story-username">${u.username}</div>
+            `;
+            item.addEventListener('click', () => {
+                // Always open stories tray with media viewer
+                console.log('Story avatar clicked, opening stories tray with tracks:', u.tracks ? u.tracks.length : 0);
+                openStoriesTray(u);
+            });
+            
+            // Also add touch event listener for mobile
+            item.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                console.log('Story avatar touchend, opening stories tray with tracks:', u.tracks ? u.tracks.length : 0);
+                openStoriesTray(u);
+            });
+            storiesBar.appendChild(item);
         });
-        storiesBar.appendChild(item);
-    });
-    
-    feedState.storiesLoaded = true;
-} catch (e) {
-    console.error('Stories bar failed:', e);
+        
+        feedState.storiesLoaded = true;
+    } catch (e) {
+        console.error('Stories bar failed:', e);
+    }
 }
 
 async function loadFeedStream(reset) {
