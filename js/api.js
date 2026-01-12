@@ -672,21 +672,25 @@ async function renderUserHeader(userId) {
 // Fetch all tracks for feed
 async function loadTracks() {
     try {
+        console.log('loadTracks called');
         const tracksGrid = document.getElementById('tracksGrid');
 
         await loadLikedTrackIds();
 
         if (tracksGrid) {
+            console.log('Loading tracks grid (my tracks)');
             await loadMyTracks();
             return;
         }
 
         const feedGrid = document.querySelector('.music-grid');
         if (feedGrid) {
+            console.log('Loading feed grid');
             await loadFeedStream(true);
             return;
         }
 
+        console.log('Loading default tracks');
         const tracks = await apiFetchJson('/tracks', {}, function (d) {
             return Array.isArray(d);
         });
@@ -2214,7 +2218,10 @@ async function renderStoriesBar() {
 
 async function loadFeedStream(reset) {
     const grid = document.querySelector('.music-grid');
-    if (!grid) return;
+    if (!grid) {
+        console.error('No music-grid element found');
+        return;
+    }
 
     if (reset) {
         feedState.offset = 0;
@@ -2236,12 +2243,16 @@ async function loadFeedStream(reset) {
     }
 
     try {
+        console.log('Loading feed tracks with offset:', feedState.offset, 'limit:', feedState.limit);
         const tracks = await apiFetchJson('/tracks/new?limit=' + feedState.limit + '&offset=' + feedState.offset, {}, function (d) {
             return Array.isArray(d);
         });
+        
+        console.log('Received tracks:', tracks?.length || 0, 'tracks');
 
         if (!Array.isArray(tracks) || tracks.length === 0) {
             feedState.done = true;
+            console.log('No more tracks to load');
             return;
         }
 
@@ -2278,6 +2289,7 @@ async function loadFeedStream(reset) {
         maybeAutoPlaySharedTrack();
 
         feedState.offset += tracks.length;
+        console.log('Feed loaded successfully, new offset:', feedState.offset);
     } catch (e) {
         console.error('Feed stream load failed:', e);
     } finally {
