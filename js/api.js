@@ -672,25 +672,21 @@ async function renderUserHeader(userId) {
 // Fetch all tracks for feed
 async function loadTracks() {
     try {
-        console.log('loadTracks called');
         const tracksGrid = document.getElementById('tracksGrid');
 
         await loadLikedTrackIds();
 
         if (tracksGrid) {
-            console.log('Loading tracks grid (my tracks)');
             await loadMyTracks();
             return;
         }
 
         const feedGrid = document.querySelector('.music-grid');
         if (feedGrid) {
-            console.log('Loading feed grid');
             await loadFeedStream(true);
             return;
         }
 
-        console.log('Loading default tracks');
         const tracks = await apiFetchJson('/tracks', {}, function (d) {
             return Array.isArray(d);
         });
@@ -810,6 +806,61 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                 } else {
                     mediaEl = '<img src="' + String(cover).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" alt="">';
                 }
+
+                var liked = false;
+                try {
+                    liked = likedTrackIds.has(String(trackObj.id));
+                } catch (_) {
+                    liked = false;
+                }
+
+                var likeCount = 0;
+                try {
+                    likeCount = (typeof trackObj.like_count === 'number') ? trackObj.like_count : 0;
+                } catch (_) {
+                    likeCount = 0;
+                }
+                var likeCountTxt = (liked || likeCount > 0) ? String(likeCount) : '';
+
+                mediaHost.innerHTML = '' +
+                    '<div class="juke-story-split">' +
+                    '  <div class="juke-story-left">' +
+                    '    <div class="juke-story-media-layout">' +
+                    '      <button type="button" class="juke-story-side juke-story-side-prev" data-juke-media-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
+                    '      <div class="juke-story-media-frame">' + mediaEl + '</div>' +
+                    '      <button type="button" class="juke-story-side juke-story-side-next" data-juke-media-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
+                    '    </div>' +
+                    '    <div class="juke-story-actions">' +
+                    '      <button class="post-action like-btn ' + (liked ? 'liked' : '') + '" data-track-id="' + String(trackObj.id) + '" type="button" aria-label="Like">' +
+                    '        <i class="' + (liked ? 'fas' : 'far') + ' fa-heart"></i>' +
+                    '        <span class="like-count" data-track-id="' + String(trackObj.id) + '">' + likeCountTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
+                    '      </button>' +
+                    '      <button class="post-action" type="button" aria-label="Comments" data-juke-media-comments-toggle="1">' +
+                    '        <i class="far fa-comment"></i>' +
+                    '      </button>' +
+                    '      <button class="post-action" type="button" aria-label="Share" data-share-track-id="' + String(trackObj.id) + '">' +
+                    '        <i class="far fa-paper-plane"></i>' +
+                    '      </button>' +
+                    '    </div>' +
+                    '    <div class="juke-story-media-meta">' +
+                    '      <div style="min-width:0;flex:1;">' +
+                    '        <div class="juke-story-media-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                    '        <div class="juke-story-media-sub">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                    '      </div>' +
+                    (dateTxt ? ('<div class="juke-story-media-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>') : '') +
+                    '    </div>' +
+                    '  </div>' +
+                    '  <div class="juke-story-right">' +
+                    '    <div class="juke-story-comments">' +
+                    '      <div class="post-comments-title">Comments</div>' +
+                    '      <div class="post-comments-list" data-track-id="' + String(trackObj.id) + '"></div>' +
+                    '      <div class="post-comment-compose">' +
+                    '        <input type="text" class="post-comment-input" placeholder="Add a comment…" data-track-id="' + String(trackObj.id) + '">' +
+                    '        <button type="button" class="post-comment-send" data-track-id="' + String(trackObj.id) + '">Post</button>' +
+                    '      </div>' +
+                    '    </div>' +
+                    '  </div>' +
+                    '</div>';
 
                 try {
                     if (mediaHost.classList) mediaHost.classList.add('comments-open');
@@ -1444,92 +1495,6 @@ async function renderStoriesBar() {
             } catch (_) {}
         }
         
-        function loadCommentsIntoSidebar(trackId) {
-            try {
-                var commentsContent = document.getElementById('jukeStoriesCommentsContent');
-                if (!commentsContent) return;
-                
-                commentsContent.innerHTML = '<div class="juke-stories-tray-comment-empty">Loading comments...</div>';
-                
-                var token = getAuthToken();
-                if (!token) {
-                    commentsContent.innerHTML = '<div class="juke-stories-tray-comment-empty">Please login to view comments</div>';
-                    return;
-                }
-                
-                apiFetchJson('/comments/track/' + encodeURIComponent(String(trackId)), {
-                    headers: { Authorization: 'Bearer ' + token }
-                }).then(function(comments) {
-                    displayCommentsInSidebar(comments || []);
-                }).catch(function(err) {
-                    console.error('Failed to load comments:', err);
-                    commentsContent.innerHTML = '<div class="juke-stories-tray-comment-empty">Failed to load comments</div>';
-                });
-                
-            } catch (_) {
-                console.error('Failed to load comments into sidebar:', _);
-            }
-        }
-        
-        function displayCommentsInSidebar(comments) {
-            try {
-                var commentsContent = document.getElementById('jukeStoriesCommentsContent');
-                if (!commentsContent) return;
-                
-                if (!Array.isArray(comments) || comments.length === 0) {
-                    commentsContent.innerHTML = '<div class="juke-stories-tray-comment-empty">No comments yet. Be the first to comment!</div>';
-                    return;
-                }
-                
-                var commentsHtml = '';
-                comments.forEach(function(comment) {
-                    var safeUsername = (comment.username || 'Anonymous').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    var safeText = (comment.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    var timeAgo = formatCommentTime(comment.created_at);
-                    
-                    commentsHtml += '' +
-                        '<div class="juke-stories-tray-comment-item">' +
-                        '  <div class="juke-stories-tray-comment-avatar">' +
-                        '    <img src="' + resolveAssetUrl(comment.avatar_url, '../images/default-avatar.png') + '" alt="' + safeUsername + '">' +
-                        '  </div>' +
-                        '  <div class="juke-stories-tray-comment-content">' +
-                        '    <div class="juke-stories-tray-comment-username">' + safeUsername + '</div>' +
-                        '    <div class="juke-stories-tray-comment-text">' + safeText + '</div>' +
-                        '    <div class="juke-stories-tray-comment-time">' + timeAgo + '</div>' +
-                        '  </div>' +
-                        '</div>';
-                });
-                
-                commentsContent.innerHTML = commentsHtml;
-                
-            } catch (_) {
-                console.error('Failed to display comments in sidebar:', _);
-            }
-        }
-        
-        function toggleFullscreen(trackId) {
-            try {
-                var mediaFrame = document.querySelector('.juke-story-media-frame[data-track-id="' + trackId + '"]');
-                if (!mediaFrame) return;
-                
-                var img = mediaFrame.querySelector('img');
-                var video = mediaFrame.querySelector('video');
-                var mediaElement = img || video;
-                
-                if (!mediaElement) return;
-                
-                if (document.fullscreenElement) {
-                    document.exitFullscreen();
-                } else {
-                    mediaElement.requestFullscreen().catch(function(err) {
-                        console.error('Fullscreen failed:', err);
-                    });
-                }
-            } catch (_) {
-                console.error('Toggle fullscreen failed:', _);
-            }
-        }
-        
         function formatCommentTime(dateStr) {
             try {
                 if (!dateStr) return '';
@@ -1596,21 +1561,7 @@ async function renderStoriesBar() {
                     '    </button>' +
                     '  </div>' +
                     '  <div class="juke-stories-tray-media juke-story-split"></div>' +
-                    '  <div class="juke-stories-tray-comments">' +
-                    '    <div class="juke-stories-tray-comments-header">' +
-                    '      <div class="juke-stories-tray-comments-title">' +
-                    '        <i class="far fa-comment"></i>' +
-                    '        Comments' +
-                    '      </div>' +
-                    '    </div>' +
-                    '    <div class="juke-stories-tray-comments-content" id="jukeStoriesCommentsContent">' +
-                    '      <div class="juke-stories-tray-comment-empty">No comments yet. Be the first to comment!</div>' +
-                    '    </div>' +
-                    '    <div class="juke-stories-tray-comment-compose">' +
-                    '      <input type="text" class="juke-stories-tray-comment-input" placeholder="Add a comment…" data-track-id="">' +
-                    '      <button type="button" class="juke-stories-tray-comment-send" data-track-id="">Post</button>' +
-                    '    </div>' +
-                    '  </div>' +
+                    '  <div class="juke-stories-tray-list">' + listHtml + '</div>' +
                     '</div>';
 
                 document.body.appendChild(root);
@@ -1741,16 +1692,51 @@ async function renderStoriesBar() {
                         }
                         var likeCountTxt = (liked || likeCount > 0) ? String(likeCount) : '';
 
-                        var storyHtml = buildStoryTrayHtml(track);
-                        mediaHost.innerHTML = storyHtml;
+                        mediaHost.innerHTML = '' +
+                            '<div class="juke-story-left">' +
+                            '  <div class="juke-story-media-layout">' +
+                            '    <button type="button" class="juke-story-side juke-story-side-prev" data-juke-story-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
+                            '    <div class="juke-story-media-frame">' + mediaEl + '</div>' +
+                            '    <button type="button" class="juke-story-side juke-story-side-next" data-juke-story-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
+                            '  </div>' +
+                            '  <div class="juke-story-actions">' +
+                            '    <button class="post-action like-btn ' + (liked ? 'liked' : '') + '" data-track-id="' + String(track.id) + '" type="button" aria-label="Like">' +
+                            '      <i class="' + (liked ? 'fas' : 'far') + ' fa-heart"></i>' +
+                            '      <span class="like-count" data-track-id="' + String(track.id) + '">' + likeCountTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
+                            '    </button>' +
+                            '    <button class="post-action" type="button" aria-label="Comments" data-juke-story-comments-toggle="1" data-track-id="' + String(track.id) + '">' +
+                            '      <i class="far fa-comment"></i>' +
+                            '    </button>' +
+                            '    <button class="post-action" type="button" aria-label="Share" data-share-track-id="' + String(track.id) + '">' +
+                            '      <i class="far fa-paper-plane"></i>' +
+                            '    </button>' +
+                            '  </div>' +
+                            '  <div class="juke-story-media-meta">' +
+                            '    <div style="min-width:0;flex:1;">' +
+                            '      <div class="juke-story-media-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                            '      <div class="juke-story-media-sub">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                            '    </div>' +
+                            (dateTxt ? ('<div class="juke-story-media-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>') : '') +
+                            '  </div>' +
+                            '</div>' +
+                            '<div class="juke-story-right">' +
+                            '  <div class="juke-story-comments">' +
+                            '    <div class="post-comments-title">Comments</div>' +
+                            '    <div class="post-comments-list" data-track-id="' + String(track.id) + '"></div>' +
+                            '    <div class="post-comment-compose">' +
+                            '      <input type="text" class="post-comment-input" placeholder="Add a comment…" data-track-id="' + String(track.id) + '">' +
+                            '      <button type="button" class="post-comment-send" data-track-id="' + String(track.id) + '">Post</button>' +
+                            '    </div>' +
+                            '  </div>' +
+                            '</div>';
 
-                        // Update comment input track ID
                         try {
-                            var commentInput = root.querySelector('.juke-stories-tray-comment-input');
-                            var commentSend = root.querySelector('.juke-stories-tray-comment-send');
-                            if (commentInput) commentInput.setAttribute('data-track-id', String(track.id));
-                            if (commentSend) commentSend.setAttribute('data-track-id', String(track.id));
-                        } catch (_) {}
+                            if (mediaHost.classList) mediaHost.classList.add('comments-open');
+                            var listElAuto = mediaHost.querySelector('.post-comments-list[data-track-id]');
+                            var tidAuto = listElAuto ? listElAuto.getAttribute('data-track-id') : null;
+                            if (tidAuto) loadAndRenderTrackComments(tidAuto, listElAuto);
+                        } catch (_) {
+                        }
 
                         try {
                             var v = mediaHost.querySelector('video');
@@ -1761,6 +1747,7 @@ async function renderStoriesBar() {
                         }
                     } catch (_) {
                     }
+                }
 
                 try {
                     var initial = (u && u.tracks && u.tracks[0]) ? u.tracks[0] : null;
@@ -1958,20 +1945,6 @@ async function renderStoriesBar() {
                         }
                     }
 
-                    var fullscreenBtn = null;
-                    try {
-                        fullscreenBtn = target.closest ? target.closest('[data-fullscreen-track-id]') : null;
-                    } catch (_) {
-                        fullscreenBtn = null;
-                    }
-                    if (fullscreenBtn) {
-                        var fullscreenTrackId = fullscreenBtn.getAttribute('data-fullscreen-track-id');
-                        if (fullscreenTrackId) {
-                            toggleFullscreen(fullscreenTrackId);
-                        }
-                        return;
-                    }
-
                     var storyCommentToggle = null;
                     try {
                         storyCommentToggle = target.closest ? target.closest('[data-juke-story-comments-toggle="1"]') : null;
@@ -1994,35 +1967,25 @@ async function renderStoriesBar() {
                             }
                         }
                         
-                        // Load and display comments in sidebar
-                        if (trackId) {
-                            loadCommentsIntoSidebar(trackId);
+                        // Get track title for the modal
+                        var trackTitle = '';
+                        try {
+                            var titleEl = root.querySelector('.juke-story-media-title');
+                            if (titleEl) trackTitle = titleEl.textContent || '';
+                        } catch (_) {}
+                        
+                        // Open comments modal instead of inline comments
+                        if (trackId && typeof openCommentsModal === 'function') {
+                            openCommentsModal(trackId, trackTitle);
                         }
                         return;
                     }
 
                     var storySend = null;
                     try {
-                        storySend = target.closest ? target.closest('.juke-stories-tray-comment-send[data-track-id]') : null;
+                        storySend = target.closest ? target.closest('.post-comment-send[data-track-id]') : null;
                     } catch (_) {
                         storySend = null;
-                    }
-                    if (storySend) {
-                        var trackId = storySend.getAttribute('data-track-id');
-                        if (!trackId) return;
-                        try {
-                            var input = root.querySelector('.juke-stories-tray-comment-input[data-track-id="' + trackId + '"]');
-                            var content = root.querySelector('#jukeStoriesCommentsContent');
-                            var txt = input ? String(input.value || '').trim() : '';
-                            if (!txt) return;
-                            if (input) input.value = '';
-                            createTrackComment(trackId, txt).then(function () {
-                                loadCommentsIntoSidebar(trackId);
-                            });
-                        } catch (_) {
-                            console.error('Failed to post comment:', _);
-                        }
-                        return;
                     }
                     if (storySend) {
                         try {
@@ -2152,40 +2115,10 @@ async function renderStoriesBar() {
                     });
                 } catch (_) {
                 }
-        }
-    } catch (e) {
-        console.error('Stories tray failed:', e);
-    }
-}
-
-async function renderStoriesBar() {
-    try {
-        const feedContainer = document.querySelector('.feed-container');
-        if (!feedContainer || feedState.storiesLoaded) return;
-        
-        // Clean up stories older than 1 month
-        await cleanupOldStories();
-        
-        let storiesBar = feedContainer.querySelector('.stories-bar');
-        if (!storiesBar) {
-            storiesBar = document.createElement('div');
-            storiesBar.className = 'stories-bar';
-            const title = feedContainer.querySelector('.feed-title');
-            var isMobile = false;
-            try {
-                isMobile = !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
             } catch (_) {
-                isMobile = false;
-            }
-            if (isMobile) {
-                feedContainer.insertAdjacentElement('afterbegin', storiesBar);
-            } else if (title) {
-                title.insertAdjacentElement('afterend', storiesBar);
-            } else {
-                feedContainer.insertAdjacentElement('afterbegin', storiesBar);
             }
         }
-        
+
         storiesBar.innerHTML = '';
 
         // "Your story" bubble first (upload shortcut)
@@ -2254,10 +2187,7 @@ async function renderStoriesBar() {
 
 async function loadFeedStream(reset) {
     const grid = document.querySelector('.music-grid');
-    if (!grid) {
-        console.error('No music-grid element found');
-        return;
-    }
+    if (!grid) return;
 
     if (reset) {
         feedState.offset = 0;
@@ -2279,16 +2209,12 @@ async function loadFeedStream(reset) {
     }
 
     try {
-        console.log('Loading feed tracks with offset:', feedState.offset, 'limit:', feedState.limit);
         const tracks = await apiFetchJson('/tracks/new?limit=' + feedState.limit + '&offset=' + feedState.offset, {}, function (d) {
             return Array.isArray(d);
         });
-        
-        console.log('Received tracks:', tracks?.length || 0, 'tracks');
 
         if (!Array.isArray(tracks) || tracks.length === 0) {
             feedState.done = true;
-            console.log('No more tracks to load');
             return;
         }
 
@@ -2325,7 +2251,6 @@ async function loadFeedStream(reset) {
         maybeAutoPlaySharedTrack();
 
         feedState.offset += tracks.length;
-        console.log('Feed loaded successfully, new offset:', feedState.offset);
     } catch (e) {
         console.error('Feed stream load failed:', e);
     } finally {
