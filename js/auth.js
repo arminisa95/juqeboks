@@ -208,9 +208,28 @@ function setupProfilePage() {
     if (logoutBtn) logoutBtn.dataset.bound = 'true';
 
     requireAuth();
-    const user = getCurrentUser();
-    if (!user) return;
+    const token = localStorage.getItem('juke_token');
+    if (!token) return;
 
+    // Parse user data from token
+    let user = null;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        user = {
+            id: payload.id,
+            username: payload.username,
+            email: payload.email,
+            firstName: payload.first_name,
+            lastName: payload.last_name,
+            avatarUrl: payload.avatar_url,
+            bio: payload.bio
+        };
+    } catch (error) {
+        console.error('Error parsing token:', error);
+        return;
+    }
+
+    // Get form elements
     const emailEl = document.getElementById('profileEmail');
     const firstNameEl = document.getElementById('profileFirstName');
     const lastNameEl = document.getElementById('profileLastName');
@@ -218,16 +237,74 @@ function setupProfilePage() {
     const avatarEl = document.getElementById('profileAvatar');
     const messageEl = document.getElementById('profileMessage');
 
-    if (emailEl) emailEl.value = user.email || '';
-    if (firstNameEl) firstNameEl.value = user.firstName || user.first_name || '';
-    if (lastNameEl) lastNameEl.value = user.lastName || user.last_name || '';
-    if (bioEl) bioEl.value = user.bio || '';
-    if (avatarEl) avatarEl.value = user.avatarUrl || user.avatar_url || '';
+    // Avatar upload elements
+    const avatarPreview = document.getElementById('avatarPreview');
+    const avatarPreviewImg = document.getElementById('avatarPreviewImg');
+    const avatarFileInput = document.getElementById('profileAvatarFile');
+    const uploadBtn = document.getElementById('avatarUploadBtn');
+    const removeBtn = document.getElementById('avatarRemoveBtn');
 
+    // Populate form fields
+    if (emailEl) emailEl.value = user.email || '';
+    if (firstNameEl) firstNameEl.value = user.firstName || '';
+    if (lastNameEl) lastNameEl.value = user.lastName || '';
+    if (bioEl) bioEl.value = user.bio || '';
+    if (avatarEl) avatarEl.value = user.avatarUrl || '';
+
+    // Load current avatar
+    if (avatarPreview && avatarPreviewImg && user.avatarUrl) {
+        avatarPreviewImg.src = user.avatarUrl;
+        avatarPreview.classList.add('has-image');
+        if (removeBtn) removeBtn.style.display = 'inline-block';
+        if (uploadBtn) uploadBtn.textContent = 'Change Picture';
+    }
+
+    // Setup avatar upload handlers
+    if (avatarPreview && avatarFileInput) {
+        avatarPreview.addEventListener('click', () => avatarFileInput.click());
+        if (uploadBtn) uploadBtn.addEventListener('click', () => avatarFileInput.click());
+        if (removeBtn) removeBtn.addEventListener('click', () => {
+            avatarPreviewImg.src = 'images/juke.png';
+            avatarPreview.classList.remove('has-image');
+            avatarEl.value = '';
+            avatarFileInput.value = '';
+            if (removeBtn) removeBtn.style.display = 'none';
+            if (uploadBtn) uploadBtn.textContent = 'Upload Picture';
+            avatarPreview.dataset.newAvatar = 'true';
+        });
+
+        avatarFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showMessage(messageEl, 'Please select an image file.', 'error');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage(messageEl, 'Image size must be less than 5MB.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                avatarPreviewImg.src = e.target.result;
+                avatarPreview.classList.add('has-image');
+                if (removeBtn) removeBtn.style.display = 'inline-block';
+                if (uploadBtn) uploadBtn.textContent = 'Change Picture';
+                avatarPreview.dataset.newAvatar = 'true';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Logout button handler
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => logout());
     }
 
+    // Form submission handler
     if (profileForm) {
         profileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -238,24 +315,92 @@ function setupProfilePage() {
                 messageEl.textContent = '';
             }
 
-            const updatedUser = {
-                ...user,
-                firstName: firstNameEl ? firstNameEl.value.trim() : user.firstName,
-                lastName: lastNameEl ? lastNameEl.value.trim() : user.lastName,
-                bio: bioEl ? bioEl.value.trim() : user.bio,
-                avatarUrl: avatarEl ? avatarEl.value.trim() : user.avatarUrl,
-            };
+            // Handle avatar upload first
+            if (avatarPreview && avatarPreview.dataset.newAvatar === 'true' && avatarFileInput.files[0]) {
+                try {
+                    const avatarFormData = new FormData();
+                    avatarFormData.append('avatar', avatarFileInput.files[0]);
+                    
+                    const response = await fetch('/api/users/avatar', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: avatarFormData
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        avatarEl.value = result.avatar_url;
+                    } else {
+                        throw new Error('Avatar upload failed');
+                    }
+                } catch (error) {
+                    showMessage(messageEl, 'Failed to upload avatar. Please try again.', 'error');
+                    return;
+                }
+            }
 
-            localStorage.setItem('juke_user', JSON.stringify(updatedUser));
-            currentUser = updatedUser;
-            updateAuthUI();
+            // Update profile data
+            try {
+                const response = await fetch('/api/users/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        first_name: firstNameEl ? firstNameEl.value.trim() : user.firstName,
+                        last_name: lastNameEl ? lastNameEl.value.trim() : user.lastName,
+                        bio: bioEl ? bioEl.value.trim() : user.bio,
+                        avatar_url: avatarEl ? avatarEl.value.trim() : user.avatarUrl
+                    })
+                });
 
-            if (messageEl) {
-                messageEl.textContent = 'Saved locally.';
-                messageEl.className = 'profile-message success';
-                messageEl.style.display = 'block';
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // Update token with new data
+                    if (result.token) {
+                        localStorage.setItem('juke_token', result.token);
+                    }
+
+                    // Update local user data
+                    const updatedUser = {
+                        ...user,
+                        firstName: firstNameEl ? firstNameEl.value.trim() : user.firstName,
+                        lastName: lastNameEl ? lastNameEl.value.trim() : user.lastName,
+                        bio: bioEl ? bioEl.value.trim() : user.bio,
+                        avatarUrl: avatarEl ? avatarEl.value.trim() : user.avatarUrl,
+                    };
+
+                    // Update UI
+                    updateAuthUI();
+                    
+                    // Clear avatar upload flag
+                    if (avatarPreview) delete avatarPreview.dataset.newAvatar;
+
+                    showMessage(messageEl, 'Profile updated successfully!', 'success');
+                } else {
+                    throw new Error('Profile update failed');
+                }
+            } catch (error) {
+                console.error('Profile update error:', error);
+                showMessage(messageEl, 'Failed to update profile. Please try again.', 'error');
             }
         });
+    }
+}
+
+function showMessage(messageEl, message, type) {
+    if (messageEl) {
+        messageEl.textContent = message;
+        messageEl.className = `profile-message ${type}`;
+        messageEl.style.display = 'block';
+        
+        setTimeout(() => {
+            messageEl.style.display = 'none';
+        }, 5000);
     }
 }
 
