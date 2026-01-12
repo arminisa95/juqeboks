@@ -622,10 +622,33 @@
         text-transform: none;
         letter-spacing: 0;
         color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
     }
     
     .lists-nav-subtitle {
         display: none;
+    }
+    
+    .lists-add-btn {
+        background: rgba(29, 185, 84, 0.2);
+        border: 1px solid rgba(29, 185, 84, 0.4);
+        color: #fff;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+    
+    .lists-add-btn:hover {
+        background: rgba(29, 185, 84, 0.3);
+        transform: scale(1.05);
     }
     
     .lists-nav-items {
@@ -785,32 +808,6 @@
         width: 28px !important;
         height: 28px !important;
         font-size: 0.8rem !important;
-    }
-    
-    /* Mobile Buttons - Higher specificity */
-    body .lists-add-btn {
-        width: 28px !important;
-        height: 28px !important;
-        font-size: 0.7rem !important;
-    }
-    
-    body .lists-delete-btn {
-        width: 28px !important;
-        height: 28px !important;
-        font-size: 1rem !important;
-    }
-    
-    body .lists-menu-btn {
-        width: 28px !important;
-        height: 28px !important;
-        font-size: 1rem !important;
-    }
-    
-    /* Mobile Back Button - Higher specificity */
-    body .lists-back {
-        padding: 6px 12px !important;
-        font-size: 0.85rem !important;
-        margin-bottom: 16px !important;
     }
     
     /* Hide header on mobile (already handled by main styles.css) */
