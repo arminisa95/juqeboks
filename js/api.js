@@ -807,61 +807,6 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                     mediaEl = '<img src="' + String(cover).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" alt="">';
                 }
 
-                var liked = false;
-                try {
-                    liked = likedTrackIds.has(String(trackObj.id));
-                } catch (_) {
-                    liked = false;
-                }
-
-                var likeCount = 0;
-                try {
-                    likeCount = (typeof trackObj.like_count === 'number') ? trackObj.like_count : 0;
-                } catch (_) {
-                    likeCount = 0;
-                }
-                var likeCountTxt = (liked || likeCount > 0) ? String(likeCount) : '';
-
-                mediaHost.innerHTML = '' +
-                    '<div class="juke-story-split">' +
-                    '  <div class="juke-story-left">' +
-                    '    <div class="juke-story-media-layout">' +
-                    '      <button type="button" class="juke-story-side juke-story-side-prev" data-juke-media-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
-                    '      <div class="juke-story-media-frame">' + mediaEl + '</div>' +
-                    '      <button type="button" class="juke-story-side juke-story-side-next" data-juke-media-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
-                    '    </div>' +
-                    '    <div class="juke-story-actions">' +
-                    '      <button class="post-action like-btn ' + (liked ? 'liked' : '') + '" data-track-id="' + String(trackObj.id) + '" type="button" aria-label="Like">' +
-                    '        <i class="' + (liked ? 'fas' : 'far') + ' fa-heart"></i>' +
-                    '        <span class="like-count" data-track-id="' + String(trackObj.id) + '">' + likeCountTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
-                    '      </button>' +
-                    '      <button class="post-action" type="button" aria-label="Comments" data-juke-media-comments-toggle="1">' +
-                    '        <i class="far fa-comment"></i>' +
-                    '      </button>' +
-                    '      <button class="post-action" type="button" aria-label="Share" data-share-track-id="' + String(trackObj.id) + '">' +
-                    '        <i class="far fa-paper-plane"></i>' +
-                    '      </button>' +
-                    '    </div>' +
-                    '    <div class="juke-story-media-meta">' +
-                    '      <div style="min-width:0;flex:1;">' +
-                    '        <div class="juke-story-media-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-                    '        <div class="juke-story-media-sub">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-                    '      </div>' +
-                    (dateTxt ? ('<div class="juke-story-media-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>') : '') +
-                    '    </div>' +
-                    '  </div>' +
-                    '  <div class="juke-story-right">' +
-                    '    <div class="juke-story-comments">' +
-                    '      <div class="post-comments-title">Comments</div>' +
-                    '      <div class="post-comments-list" data-track-id="' + String(trackObj.id) + '"></div>' +
-                    '      <div class="post-comment-compose">' +
-                    '        <input type="text" class="post-comment-input" placeholder="Add a comment…" data-track-id="' + String(trackObj.id) + '">' +
-                    '        <button type="button" class="post-comment-send" data-track-id="' + String(trackObj.id) + '">Post</button>' +
-                    '      </div>' +
-                    '    </div>' +
-                    '  </div>' +
-                    '</div>';
-
                 try {
                     if (mediaHost.classList) mediaHost.classList.add('comments-open');
                     var listElAuto = mediaHost.querySelector('.post-comments-list[data-track-id]');
@@ -1558,6 +1503,29 @@ async function renderStoriesBar() {
             }
         }
         
+        function toggleFullscreen(trackId) {
+            try {
+                var mediaFrame = document.querySelector('.juke-story-media-frame[data-track-id="' + trackId + '"]');
+                if (!mediaFrame) return;
+                
+                var img = mediaFrame.querySelector('img');
+                var video = mediaFrame.querySelector('video');
+                var mediaElement = img || video;
+                
+                if (!mediaElement) return;
+                
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    mediaElement.requestFullscreen().catch(function(err) {
+                        console.error('Fullscreen failed:', err);
+                    });
+                }
+            } catch (_) {
+                console.error('Toggle fullscreen failed:', _);
+            }
+        }
+        
         function formatCommentTime(dateStr) {
             try {
                 if (!dateStr) return '';
@@ -1624,18 +1592,6 @@ async function renderStoriesBar() {
                     '    </button>' +
                     '  </div>' +
                     '  <div class="juke-stories-tray-media juke-story-split"></div>' +
-                    '  <div class="juke-stories-tray-sidebar">' +
-                    '    <div class="juke-stories-tray-list">' +
-                    '      <div class="juke-stories-tray-list-header">Most Played</div>' +
-                    '      <div class="juke-stories-tray-list-content">' + listHtml + '</div>' +
-                    '    </div>' +
-                    '    <div class="juke-stories-tray-comments-section">' +
-                    '      <div class="juke-stories-tray-comments-header">Comments</div>' +
-                    '      <div class="juke-stories-tray-comments-content" id="jukeStoriesCommentsContent">' +
-                    '        <div class="juke-stories-tray-comment-empty">Click comment button to view comments</div>' +
-                    '      </div>' +
-                    '    </div>' +
-                    '  </div>' +
                     '</div>';
 
                 document.body.appendChild(root);
@@ -2019,6 +1975,20 @@ async function renderStoriesBar() {
                         }
                     }
 
+                    var fullscreenBtn = null;
+                    try {
+                        fullscreenBtn = target.closest ? target.closest('[data-fullscreen-track-id]') : null;
+                    } catch (_) {
+                        fullscreenBtn = null;
+                    }
+                    if (fullscreenBtn) {
+                        var fullscreenTrackId = fullscreenBtn.getAttribute('data-fullscreen-track-id');
+                        if (fullscreenTrackId) {
+                            toggleFullscreen(fullscreenTrackId);
+                        }
+                        return;
+                    }
+
                     var storyCommentToggle = null;
                     try {
                         storyCommentToggle = target.closest ? target.closest('[data-juke-story-comments-toggle="1"]') : null;
@@ -2041,9 +2011,16 @@ async function renderStoriesBar() {
                             }
                         }
                         
-                        // Load and display comments in sidebar
-                        if (trackId) {
-                            loadCommentsIntoSidebar(trackId);
+                        // Get track title for the modal
+                        var trackTitle = '';
+                        try {
+                            var titleEl = root.querySelector('.juke-story-media-title');
+                            if (titleEl) trackTitle = titleEl.textContent || '';
+                        } catch (_) {}
+                        
+                        // Open comments modal
+                        if (trackId && typeof openCommentsModal === 'function') {
+                            openCommentsModal(trackId, trackTitle);
                         }
                         return;
                     }
