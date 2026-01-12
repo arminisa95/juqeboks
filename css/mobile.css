@@ -2,7 +2,7 @@
    MOBILE NAVIGATION & PLAYER - Spotify-like Design
    ======================================== */
 
-/* Mobile Bottom Navigation Bar */
+/* Mobile Bottom Navigation Bar - Minimalist Design */
 .mobile-nav {
     display: none;
     position: fixed;
@@ -10,10 +10,8 @@
     left: 0;
     right: 0;
     height: 60px;
-    background: rgba(18, 18, 18, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #000;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 999;
     padding-bottom: env(safe-area-inset-bottom);
 }
@@ -34,27 +32,28 @@
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.65rem;
-    font-weight: 500;
-    padding: 10px 12px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    gap: 0;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0;
+    font-weight: 400;
+    padding: 12px;
+    border-radius: 0;
+    transition: color 0.15s ease;
+    min-width: 44px;
+    min-height: 44px;
 }
 
 .mobile-nav-item i {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     margin-bottom: 0;
+    line-height: 1;
 }
 
-.mobile-nav-item:hover,
+.mobile-nav-item:hover {
+    color: rgba(255, 255, 255, 0.7);
+}
+
 .mobile-nav-item.active {
     color: #fff;
-}
-
-.mobile-nav-item.active {
-    color: #F72193;
 }
 
 .mobile-nav-item span {
@@ -468,15 +467,11 @@
 /* Extra small screens */
 @media (max-width: 420px) {
     .mobile-nav-item {
-        padding: 6px 8px;
+        padding: 10px;
     }
 
     .mobile-nav-item i {
-        font-size: 1.15rem;
-    }
-
-    .mobile-nav-item span {
-        font-size: 0.6rem;
+        font-size: 1rem;
     }
 
     .mobile-mini-player {
