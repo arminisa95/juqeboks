@@ -128,3 +128,89 @@
 .profile-links a:hover {
     color: #F72193;
 }
+
+/* Avatar Upload Styles */
+.avatar-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.avatar-preview:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+}
+
+.avatar-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.avatar-preview-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.avatar-preview:hover .avatar-preview-placeholder {
+    background: rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.avatar-preview-placeholder i {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.avatar-preview.has-image .avatar-preview-placeholder {
+    display: none;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .profile-container {
+        width: 95vw;
+        padding: 20px;
+        margin: 10px auto;
+    }
+    
+    .avatar-preview {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .avatar-upload-container {
+        gap: 10px;
+    }
+    
+    .profile-btn.secondary {
+        font-size: 12px;
+        padding: 8px 16px;
+    }
+}
