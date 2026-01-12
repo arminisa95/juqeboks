@@ -231,7 +231,7 @@
     bottom: calc(14px + env(safe-area-inset-bottom));
     transform:translate(-50%, 120%);
     width:min(520px, calc(100vw - 18px));
-    max-height:min(72vh, 560px);
+    max-height:min(85vh, 680px);
     display:flex;
     flex-direction:column;
     background:rgba(18,18,18,0.94);
@@ -261,85 +261,149 @@
 }
 
 .juke-stories-tray-media{
-padding: 12px 14px;
-border-bottom: 1px solid rgba(255,255,255,0.02);
+    padding: 16px 16px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
 }
 
 .juke-story-media-frame{
-width: 100%;
-aspect-ratio: 1 / 1;
-border-radius: 14px;
-overflow: hidden;
-position: relative;
-background: rgba(255,255,255,0.04);
-border: 1px solid rgba(255,255,255,0.10);
-box-shadow: 0 14px 38px rgba(0,0,0,0.45);
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    max-height: min(60vh, 480px);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 16px 42px rgba(0,0,0,0.55);
+    margin: 0 auto 12px;
 }
 
 @media (min-width: 769px) {
-.juke-story-media-frame{
-aspect-ratio: 9 / 16;
-max-height: min(58vh, 520px);
-margin: 0 auto;
-}
+    .juke-story-media-frame{
+        aspect-ratio: 16 / 9;
+        max-height: min(65vh, 540px);
+        margin: 0 auto 16px;
+    }
 }
 
 .juke-story-media-layout{
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 12px;
 }
 
 .juke-story-side{
-width: 54px;
-height: 54px;
-border-radius: 18px;
-border: 1px solid rgba(255,255,255,0.14);
-background: rgba(0,0,0,0.35);
-color: rgba(255,255,255,0.95);
-display: inline-flex;
-align-items: center;
-justify-content: center;
-cursor: pointer;
-flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.35);
+    color: rgba(255,255,255,0.95);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+    backdrop-filter: blur(10px);
 }
 
 .juke-story-side:hover{
-background: rgba(0,0,0,0.55);
-border-color: rgba(0, 180, 150, 0.22);
+    background: rgba(0,0,0,0.55);
+    border-color: rgba(0, 180, 150, 0.22);
+    transform: scale(1.05);
 }
 
 .juke-story-side:disabled{
-opacity: 0.28;
-cursor: default;
+    opacity: 0.28;
+    cursor: default;
 }
 
 .juke-story-side i{
-font-size: 1.15rem;
+    font-size: 1.1rem;
 }
 
 .juke-story-actions{
-margin-top: 10px;
-display: flex;
-align-items: center;
-gap: 10px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
 }
 
-.juke-story-comments{
-display: none;
-margin-top: 10px;
-padding-top: 10px;
-border-top: 1px solid rgba(255,255,255,0.08);
+.juke-story-comments::-webkit-scrollbar {
+    width: 4px;
+}
+
+.juke-story-comments::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+}
+
+.juke-story-comments::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px;
+}
+
+.juke-story-comments::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.25);
 }
 
 .juke-stories-tray-media.comments-open .juke-story-comments{
-display: block;
+    display: block;
+}
+
+.juke-story-comment {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+}
+
+.juke-story-comment:last-child {
+    margin-bottom: 0;
+}
+
+.juke-story-comment-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    flex-shrink: 0;
+}
+
+.juke-story-comment-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.juke-story-comment-username {
+    color: rgba(255,255,255,0.9);
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.juke-story-comment-text {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    word-wrap: break-word;
+}
+
+.juke-story-comment-time {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.7rem;
+    margin-top: 2px;
 }
 
 .juke-stories-tray-title{
-color:#fff;
-font-weight:800;
+    color:#fff;
+    font-weight:800;
+    font-size:0.95rem;
 font-size:0.95rem;
 }
 
