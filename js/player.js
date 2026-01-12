@@ -1,27 +1,4 @@
 (function () {
-    var DEFAULT_API_BASE = (function () {
-        try {
-            if (window.location && window.location.origin) {
-                var host = String(window.location.hostname || '');
-                if (host.endsWith('github.io')) return 'https://juke-api.onrender.com/api';
-                return window.location.origin.replace(/\/$/, '') + '/api';
-            }
-        } catch (_) {
-        }
-        return 'https://juke-api.onrender.com/api';
-    })();
-
-    function getApiBase() {
-        try {
-            return localStorage.getItem('juke_api_base') || DEFAULT_API_BASE;
-        } catch (_) {
-            return DEFAULT_API_BASE;
-        }
-    }
-
-    function getApiOrigin() {
-        return getApiBase().replace(/\/api$/, '');
-    }
 
     var STORAGE_KEY = 'juke_player_state';
 
@@ -37,7 +14,7 @@
     function resolveAssetUrl(url) {
         if (!url) return null;
         if (url.startsWith('http://') || url.startsWith('https://')) return url;
-        if (url.startsWith('/')) return getApiOrigin() + url;
+        if (url.startsWith('/')) return window.JukeAPIBase.getApiOrigin() + url;
         return url;
     }
 
@@ -815,7 +792,7 @@
 
         var bases = [];
         try {
-            bases = [getApiBase(), 'https://juke-api.onrender.com/api'];
+            bases = window.JukeAPIBase.getApiBases();
         } catch (_) {
             bases = ['https://juke-api.onrender.com/api'];
         }

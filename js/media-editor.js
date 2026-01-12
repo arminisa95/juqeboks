@@ -600,7 +600,6 @@ class MediaEditor {
         };
         
         // In a real implementation, you would use a video processing library
-        console.log('Video/audio processing with metadata:', metadata);
         
         return Promise.resolve(this.originalFile);
     }

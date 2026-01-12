@@ -1,41 +1,3 @@
-var DEFAULT_API_BASE = (function () {
-    try {
-        if (window.location && window.location.origin) {
-            var host = String(window.location.hostname || '');
-            if (host.endsWith('github.io')) return 'https://juke-api.onrender.com/api';
-            return window.location.origin.replace(/\/$/, '') + '/api';
-        }
-    } catch (_) {
-    }
-    return 'https://juke-api.onrender.com/api';
-})();
-var API_BASE = (function () {
-    try {
-        return localStorage.getItem('juke_api_base') || DEFAULT_API_BASE;
-    } catch (_) {
-        return DEFAULT_API_BASE;
-    }
-})();
-var API_ORIGIN = API_BASE.replace(/\/api$/, '');
-
-function getApiBase() {
-    try {
-        return localStorage.getItem('juke_api_base') || DEFAULT_API_BASE;
-    } catch (_) {
-        return DEFAULT_API_BASE;
-    }
-}
-
-function getApiOrigin() {
-    return getApiBase().replace(/\/api$/, '');
-}
-
-function getApiBases() {
-    var bases = [getApiBase(), 'https://juke-api.onrender.com/api'];
-    return bases.filter(function (v, i, a) {
-        return !!v && a.indexOf(v) === i;
-    });
-}
 
 function isSpaMode() {
     return !!(document.body && document.body.dataset && document.body.dataset.spa);
@@ -44,7 +6,7 @@ function isSpaMode() {
 function resolveAssetUrl(url, fallback) {
     if (!url) return fallback;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/')) return `${getApiOrigin()}${url}`;
+    if (url.startsWith('/')) return `${window.JukeAPIBase.getApiOrigin()}${url}`;
     return url;
 }
 
@@ -70,7 +32,6 @@ function isTokenExpired() {
 
 function validateTokenAndRedirect() {
     if (isTokenExpired()) {
-        console.log('Token expired, clearing and redirecting to login');
         localStorage.removeItem('juke_token');
         localStorage.removeItem('juke_user');
         
@@ -85,7 +46,7 @@ function validateTokenAndRedirect() {
 }
 
 async function apiFetchJson(path, options, validateOkData) {
-    var bases = getApiBases();
+    var bases = window.JukeAPIBase.getApiBases();
     var lastErr = null;
 
     for (var i = 0; i < bases.length; i++) {
@@ -119,7 +80,6 @@ async function apiFetchJson(path, options, validateOkData) {
 
             if (res.status === 401 || res.status === 403) {
                 // Token is invalid or expired - clear it and redirect to login
-                console.log('Token invalid/expired, clearing and redirecting to login');
                 localStorage.removeItem('juke_token');
                 localStorage.removeItem('juke_user');
                 
@@ -531,7 +491,6 @@ async function openPlaylist(playlist) {
                 commentBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const trackId = this.getAttribute('data-track-id');
-                    console.log('Comment button clicked for track:', trackId);
                     // TODO: Implement comment functionality
                     alert('Comment functionality coming soon!');
                 });
@@ -556,7 +515,6 @@ async function openPlaylist(playlist) {
                 editBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const trackId = this.getAttribute('data-track-id');
-                    console.log('Edit button clicked for track:', trackId);
                     // TODO: Implement edit functionality
                     alert('Edit functionality coming soon!');
                 });
@@ -567,7 +525,6 @@ async function openPlaylist(playlist) {
                 deleteBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const trackId = this.getAttribute('data-track-id');
-                    console.log('Delete button clicked for track:', trackId);
                     // Call global delete function if available
                     if (typeof window.deleteTrack === 'function') {
                         window.deleteTrack(trackId, e);
@@ -635,12 +592,9 @@ function bindListsNavigatorUi() {
 function getCurrentUsername() {
     try {
         const token = getAuthToken();
-        console.log('Token found:', !!token);
         if (token) {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            const username = payload.username || payload.sub || null;
-            console.log('Username from token:', username);
-            return username;
+            return payload.username || payload.sub || null;
         }
     } catch (error) {
         console.error('Error getting username:', error);
@@ -682,7 +636,6 @@ function editPlaylist(playlistId, currentName) {
                 name: finalName
             })
         }).then(response => {
-            console.log('Playlist updated successfully:', response);
             
             // Update navigation button text
             if (navBtn) {
@@ -770,7 +723,6 @@ function showPlaylistMenu(playlist, button) {
 
 function addPostToPlaylist(playlist) {
     // TODO: Implement add post functionality
-    console.log('Add post to playlist:', playlist.name);
     alert('Add post functionality coming soon!');
 }
 
@@ -800,7 +752,6 @@ function deletePlaylist(playlistId, playlistName) {
                 Authorization: `Bearer ${token}`
             }
         }).then(response => {
-            console.log('Playlist deleted successfully:', response);
             
             // Remove navigation container
             if (navContainer) {
@@ -1033,18 +984,12 @@ async function loadLists() {
     const likedEl = document.getElementById('likedTracks');
     const randomEl = document.getElementById('randomPlaylists');
 
-    console.log('Elements found:', {
-        curated: !!curatedEl,
-        liked: !!likedEl,
-        random: !!randomEl
-    });
-
+    
     bindListsNavigatorUi();
     showPanel('liked'); // Show liked tracks by default
 
     // Check which panel is currently active
     const activePanel = document.querySelector('.lists-panel.active');
-    console.log('Currently active panel:', activePanel ? activePanel.id : 'none');
 
     if (curatedEl) setEmpty(curatedEl, 'Loading...');
     if (likedEl) setEmpty(likedEl, 'Loading...');
@@ -1071,26 +1016,21 @@ async function loadLists() {
 
         // Load user playlists as separate navigation items
         const navItemsEl = document.querySelector('.lists-nav-items');
-        console.log('Navigation items container found:', !!navItemsEl);
         
         if (navItemsEl) {
             // Keep the existing _liked tracks button
             const likedTracksBtn = navItemsEl.querySelector('[data-view="liked"]');
-            console.log('Liked tracks button found:', !!likedTracksBtn);
             
             // Clear existing navigation items except _liked tracks
             navItemsEl.innerHTML = '';
             if (likedTracksBtn) {
                 navItemsEl.appendChild(likedTracksBtn);
-                console.log('Re-added liked tracks button');
             }
             
             // Add each playlist as a separate navigation item
             const myPlaylists = profile.playlists || [];
-            console.log('User playlists from profile:', myPlaylists.length, myPlaylists);
             
             myPlaylists.forEach((playlist, index) => {
-                console.log(`Creating navigation item ${index + 1}:`, playlist.name);
                 
                 // Create navigation item that mimics lists-nav-title structure
                 const navItemContainer = document.createElement('div');
@@ -1111,7 +1051,6 @@ async function loadLists() {
                 navBtn.style.textAlign = 'left';
                 
                 navBtn.addEventListener('click', () => {
-                    console.log('Clicked playlist:', playlist.name);
                     showPanel(`playlist-${playlist.id}`);
                     // Load playlist content when clicked
                     loadPlaylistContent(playlist);
@@ -1124,31 +1063,23 @@ async function loadLists() {
                 menuBtn.title = 'Playlist options';
                 menuBtn.onclick = (e) => {
                     e.stopPropagation();
-                    console.log('Menu button clicked for:', playlist.name);
                     showPlaylistMenu(playlist, e.target);
                 };
                 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'lists-delete-btn';
-                deleteBtn.innerHTML = '-';
+                deleteBtn.innerHTML = '×';
                 deleteBtn.title = 'Delete playlist';
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();
-                    console.log('Quick delete button clicked for:', playlist.name);
                     deletePlaylist(playlist.id, playlist.name);
                 };
-                
-                console.log('Created menu button:', menuBtn);
-                console.log('Created delete button:', deleteBtn);
                 
                 navItemContainer.appendChild(navBtn);
                 navItemContainer.appendChild(menuBtn);
                 navItemContainer.appendChild(deleteBtn);
                 
-                console.log('Added buttons to container. Children count:', navItemContainer.children.length);
-                
                 navItemsEl.appendChild(navItemContainer);
-                console.log(`Added navigation item for: ${playlist.name}`);
                 
                 // Create corresponding panel
                 const panel = document.createElement('div');
@@ -1164,10 +1095,7 @@ async function loadLists() {
                     <div id="playlist-${playlist.id}" class="cards-grid"></div>
                 `;
                 document.querySelector('.lists-content').appendChild(panel);
-                console.log(`Created panel for: ${playlist.name}`);
             });
-            
-            console.log('Navigation setup complete. Total items:', navItemsEl.children.length);
         }
     } catch (e) {
         console.error(e);
@@ -1214,7 +1142,6 @@ async function loadLists() {
 
 async function createPlaylist(name) {
     try {
-        console.log('createPlaylist called with:', name);
         
         if (!validateTokenAndRedirect()) {
             return; // Token validation failed and user was redirected
@@ -1225,12 +1152,9 @@ async function createPlaylist(name) {
         
         const token = getAuthToken();
         if (!token) {
-            console.log('No auth token found');
             alert('Please login to create a playlist');
             return;
         }
-
-        console.log('Making API call to create playlist with name:', playlistName);
         
         const response = await apiFetchJson('/playlists', {
             method: 'POST',
@@ -1244,10 +1168,7 @@ async function createPlaylist(name) {
             })
         });
 
-        console.log('API response:', response);
-
         if (response && response.id) {
-            console.log('Playlist created successfully:', response);
             alert('Playlist created successfully!');
             
             // Add the new playlist as a navigation item with delete button positioned like add button
@@ -1274,7 +1195,6 @@ async function createPlaylist(name) {
                 navBtn.style.boxShadow = '0 0 20px rgba(30, 215, 96, 0.5)';
                 
                 navBtn.addEventListener('click', () => {
-                    console.log('Clicked playlist:', response.name);
                     showPanel(`playlist-${response.id}`);
                     loadPlaylistContent(response);
                 });
@@ -1286,7 +1206,6 @@ async function createPlaylist(name) {
                 menuBtn.title = 'Playlist options';
                 menuBtn.onclick = (e) => {
                     e.stopPropagation();
-                    console.log('Menu button clicked for new playlist:', response.name);
                     showPlaylistMenu(response, e.target);
                 };
                 
@@ -1296,7 +1215,6 @@ async function createPlaylist(name) {
                 deleteBtn.title = 'Delete playlist';
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();
-                    console.log('Quick delete button clicked for new playlist:', response.name);
                     deletePlaylist(response.id, response.name);
                 };
                 
@@ -1322,7 +1240,6 @@ async function createPlaylist(name) {
                 
                 // Switch to the new playlist panel
                 setTimeout(() => {
-                    console.log('Switching to new playlist panel');
                     showPanel(`playlist-${response.id}`);
                     loadPlaylistContent(response);
                     
@@ -1334,11 +1251,9 @@ async function createPlaylist(name) {
                 }, 100);
             }
         } else {
-            console.error('Failed to create playlist - invalid response:', response);
             alert('Failed to create playlist. Please try again.');
         }
     } catch (error) {
-        console.error('Error creating playlist:', error);
         alert('Error creating playlist: ' + (error.message || 'Unknown error'));
     }
 }
@@ -1356,15 +1271,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const bindAddButton = () => {
         const addPlaylistBtn = document.getElementById('addPlaylistBtn');
         if (addPlaylistBtn) {
-            console.log('Add playlist button found, binding click event');
             
             // Remove any existing listeners to prevent duplicates
             addPlaylistBtn.removeEventListener('click', handleAddButton);
             
             // Add the event listener
             addPlaylistBtn.addEventListener('click', handleAddButton);
-            
-            console.log('Add playlist button click event bound successfully');
             return true;
         }
         return false;
@@ -1374,16 +1286,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleAddButton = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Add playlist button clicked');
         const name = prompt('Enter playlist name (will be prefixed with "_"):');
         if (!name || !name.trim()) return;
         
-        console.log('Creating playlist:', name.trim());
         if (typeof createPlaylist === 'function') {
             createPlaylist(name.trim());
-        } else {
-            console.error('createPlaylist function not found');
-            alert('Error: createPlaylist function not available');
+        } else if (typeof window.createPlaylist === 'function') {
+            window.createPlaylist(name.trim());
         }
     };
     
@@ -1393,17 +1302,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const tryBind = () => {
         attempts++;
-        console.log(`Attempt ${attempts} to bind add button`);
         
         if (bindAddButton()) {
-            console.log('Add button bound successfully');
             return;
         }
         
         if (attempts < maxAttempts) {
             setTimeout(tryBind, 200 * attempts); // Exponential backoff
-        } else {
-            console.error('Failed to bind add button after multiple attempts');
         }
     };
     
@@ -1420,19 +1325,14 @@ window.createPlaylist = createPlaylist;
 // Global click handler as fallback
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addPlaylistBtn') {
-        console.log('Global click handler triggered for add button');
         e.preventDefault();
         e.stopPropagation();
         
         const name = prompt('Enter playlist name (will be prefixed with "_"):');
         if (!name || !name.trim()) return;
         
-        console.log('Creating playlist via global handler:', name.trim());
         if (typeof createPlaylist === 'function') {
             createPlaylist(name.trim());
-        } else {
-            console.error('createPlaylist function not found in global handler');
-            alert('Error: createPlaylist function not available');
         }
     }
 });

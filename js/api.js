@@ -1,45 +1,7 @@
 // JUKE API Integration
-var DEFAULT_API_BASE = (function () {
-    try {
-        if (window.location && window.location.origin) {
-            var host = String(window.location.hostname || '');
-            if (host.endsWith('github.io')) return 'https://juke-api.onrender.com/api';
-            return window.location.origin.replace(/\/$/, '') + '/api';
-        }
-    } catch (_) {
-    }
-    return 'https://juke-api.onrender.com/api';
-})();
-var API_BASE = (function () {
-    try {
-        return localStorage.getItem('juke_api_base') || DEFAULT_API_BASE;
-    } catch (_) {
-        return DEFAULT_API_BASE;
-    }
-})();
-var API_ORIGIN = API_BASE.replace(/\/api$/, '');
-
-function getApiBase() {
-    try {
-        return localStorage.getItem('juke_api_base') || DEFAULT_API_BASE;
-    } catch (_) {
-        return DEFAULT_API_BASE;
-    }
-}
-
-function getApiOrigin() {
-    return getApiBase().replace(/\/api$/, '');
-}
-
-function getApiBases() {
-    var bases = [getApiBase(), 'https://juke-api.onrender.com/api'];
-    return bases.filter(function (v, i, a) {
-        return !!v && a.indexOf(v) === i;
-    });
-}
 
 async function apiFetchJson(path, options, validateOkData) {
-    var bases = getApiBases();
+    var bases = window.JukeAPIBase.getApiBases();
     var lastErr = null;
 
     for (var i = 0; i < bases.length; i++) {
@@ -106,7 +68,7 @@ function getAuthToken() {
 function resolveAssetUrl(url, fallback) {
     if (!url) return fallback;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/')) return `${getApiOrigin()}${url}`;
+    if (url.startsWith('/')) return `${window.JukeAPIBase.getApiOrigin()}${url}`;
     return url;
 }
 
@@ -2762,7 +2724,7 @@ async function deleteTrack(trackId, evt) {
     if (!ok) return;
 
     try {
-        await fetchJson(`${getApiBase()}/tracks/${encodeURIComponent(trackId)}`, {
+        await fetchJson(`${window.JukeAPIBase.getApiBase()}/tracks/${encodeURIComponent(trackId)}`, {
             method: 'DELETE',
             headers: {
                 Authorization: `Bearer ${token}`
