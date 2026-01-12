@@ -1113,6 +1113,30 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                     close();
                     return;
                 }
+                
+                // Arrow key navigation
+                if (e.key === 'ArrowLeft') {
+                    try {
+                        var prevBtn = root.querySelector('.juke-media-prev');
+                        if (prevBtn && !prevBtn.disabled) {
+                            prevBtn.click();
+                        }
+                    } catch (_) {
+                    }
+                    return;
+                }
+                
+                if (e.key === 'ArrowRight') {
+                    try {
+                        var nextBtn = root.querySelector('.juke-media-next');
+                        if (nextBtn && !nextBtn.disabled) {
+                            nextBtn.click();
+                        }
+                    } catch (_) {
+                    }
+                    return;
+                }
+                
                 var t = e && e.target ? e.target : null;
                 if (!t) return;
                 if (t.classList && t.classList.contains('juke-comment-input')) {
