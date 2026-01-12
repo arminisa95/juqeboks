@@ -52,6 +52,38 @@ function getAuthToken() {
     return localStorage.getItem('juke_token');
 }
 
+function isTokenExpired() {
+    try {
+        const token = getAuthToken();
+        if (!token) return true;
+        
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        
+        // Check if token expires in the next 5 minutes (300 seconds)
+        return payload.exp < (currentTime + 300);
+    } catch (error) {
+        console.error('Error checking token expiration:', error);
+        return true; // Assume expired if we can't parse
+    }
+}
+
+function validateTokenAndRedirect() {
+    if (isTokenExpired()) {
+        console.log('Token expired, clearing and redirecting to login');
+        localStorage.removeItem('juke_token');
+        localStorage.removeItem('juke_user');
+        
+        if (isSpaMode()) {
+            window.location.hash = '#/login';
+        } else {
+            window.location.href = '../index.html#/login';
+        }
+        return false;
+    }
+    return true;
+}
+
 async function apiFetchJson(path, options, validateOkData) {
     var bases = getApiBases();
     var lastErr = null;
@@ -85,7 +117,23 @@ async function apiFetchJson(path, options, validateOkData) {
                 return data;
             }
 
-            if (res.status === 401 || res.status === 403 || res.status === 404 || res.status === 405) {
+            if (res.status === 401 || res.status === 403) {
+                // Token is invalid or expired - clear it and redirect to login
+                console.log('Token invalid/expired, clearing and redirecting to login');
+                localStorage.removeItem('juke_token');
+                localStorage.removeItem('juke_user');
+                
+                if (isSpaMode()) {
+                    window.location.hash = '#/login';
+                } else {
+                    window.location.href = '../index.html#/login';
+                }
+                
+                lastErr = new Error(((data && data.error) ? data.error : ('Session expired - Please login again')) + ' (' + (base + path) + ')');
+                continue;
+            }
+
+            if (res.status === 404 || res.status === 405) {
                 lastErr = new Error(((data && data.error) ? data.error : ('Request failed: ' + res.status)) + ' (' + (base + path) + ')');
                 continue;
             }
@@ -967,6 +1015,10 @@ function renderTrackCard(t) {
 }
 
 async function loadLists() {
+    if (!validateTokenAndRedirect()) {
+        return; // Token validation failed and user was redirected
+    }
+    
     const token = getAuthToken();
     if (!token) {
         if (isSpaMode()) {
@@ -1163,6 +1215,10 @@ async function loadLists() {
 async function createPlaylist(name) {
     try {
         console.log('createPlaylist called with:', name);
+        
+        if (!validateTokenAndRedirect()) {
+            return; // Token validation failed and user was redirected
+        }
         
         // Add "_" prefix to the name
         const playlistName = '_' + name;
