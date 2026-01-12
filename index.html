@@ -406,8 +406,20 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="profileAvatar">Avatar URL</label>
-                        <input type="url" id="profileAvatar" name="profileAvatar" placeholder="https://...">
+                        <label for="profileAvatar">Profile Picture</label>
+                        <div class="avatar-upload-container">
+                            <div class="avatar-preview" id="avatarPreview">
+                                <img id="avatarPreviewImg" src="images/juke.png" alt="Profile Preview" class="avatar-preview-img">
+                                <div class="avatar-preview-placeholder">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Click to upload</span>
+                                </div>
+                            </div>
+                            <input type="file" id="profileAvatarFile" name="profileAvatarFile" accept="image/*" style="display: none;">
+                            <input type="url" id="profileAvatar" name="profileAvatar" placeholder="https://..." style="display: none;">
+                            <button type="button" id="avatarUploadBtn" class="profile-btn secondary">Upload Picture</button>
+                            <button type="button" id="avatarRemoveBtn" class="profile-btn secondary" style="display: none;">Remove Picture</button>
+                        </div>
                     </div>
 
                     <button type="submit" class="profile-btn">Save Settings</button>
