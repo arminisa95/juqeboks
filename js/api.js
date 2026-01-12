@@ -1264,6 +1264,24 @@ async function renderStoriesBar() {
         } catch (_) {
         }
         
+        function openStoriesTrayForTrack(track) {
+            try {
+                if (!track) return;
+                
+                // Create a user object with the single track
+                var trackUser = {
+                    id: track.uploader_id || 'unknown',
+                    username: track.uploader_username || track.artist_name || 'Unknown',
+                    avatar_url: track.uploader_avatar_url || null,
+                    tracks: [track]
+                };
+                
+                openStoriesTray(trackUser);
+            } catch (_) {
+                console.error('Failed to open stories tray for track:', _);
+            }
+        }
+        
         function openStoriesTray(u) {
             try {
                 if (!u) return;
@@ -2222,14 +2240,16 @@ function createFeedPostCard(track) {
                     }
                 } else {
                     try {
+                        // Open stories tray for this single track (like stories behavior)
+                        openStoriesTrayForTrack(track);
+                    } catch (_) {
+                        // Fallback to original behavior
                         var list = (feedState && Array.isArray(feedState.queueTracks) && feedState.queueTracks.length) ? feedState.queueTracks : [track];
                         if (typeof window.openTrackMediaViewer === 'function') {
                             window.openTrackMediaViewer(list, String(track.id));
                         } else {
                             playTrack(String(track.id));
                         }
-                    } catch (_) {
-                        playTrack(String(track.id));
                     }
                 }
                 lastTap = now;

@@ -231,10 +231,10 @@
     bottom: calc(14px + env(safe-area-inset-bottom));
     transform:translate(-50%, 120%);
     width:min(520px, calc(100vw - 18px));
-    max-height:min(92vh, 750px);
+    max-height:min(96vh, 820px);
     display:flex;
     flex-direction:column;
-    background:rgba(18,18,18,0.94);
+    background:rgba(18,18,18,0.96);
     border:1px solid rgba(255,255,255,0.10);
     border-radius:16px;
     box-shadow:0 18px 44px rgba(0,0,0,0.55);
@@ -249,7 +249,7 @@
         bottom: auto;
         transform: translateY(24px);
         width: min(720px, calc(100vw - 36px));
-        max-height: min(calc(100vh - 140px), 780px);
+        max-height: min(calc(100vh - 140px), 820px);
     }
     .juke-stories-tray-root.open .juke-stories-tray-sheet {
         transform: translateY(0);
@@ -267,22 +267,22 @@
 
 .juke-story-media-frame{
     width: 100%;
-    aspect-ratio: 3 / 4;
-    max-height: min(70vh, 560px);
-    border-radius: 20px;
+    aspect-ratio: 9 / 16;
+    max-height: min(80vh, 680px);
+    border-radius: 24px;
     overflow: hidden;
     position: relative;
     background: rgba(255,255,255,0.04);
-    border: 2px solid rgba(255,255,255,0.15);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.65);
-    margin: 0 auto 16px;
+    border: 3px solid rgba(255,255,255,0.20);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.75);
+    margin: 0 auto 20px;
 }
 
 @media (min-width: 769px) {
     .juke-story-media-frame{
-        aspect-ratio: 2 / 1;
-        max-height: min(75vh, 600px);
-        margin: 0 auto 20px;
+        aspect-ratio: 16 / 9;
+        max-height: min(85vh, 700px);
+        margin: 0 auto 24px;
     }
 }
 
@@ -333,82 +333,82 @@ justify-content: center;
 }
 
 .juke-story-comments{
-display: none;
-margin-top: 12px;
-padding: 8px 10px;
-border-top: 1px solid rgba(255,255,255,0.05);
-background: rgba(255,255,255,0.01);
-border-radius: 8px;
-max-height: 120px;
-overflow-y: auto;
+    display: none;
+    margin-top: 8px;
+    padding: 6px 8px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.008);
+    border-radius: 6px;
+    max-height: 80px;
+    overflow-y: auto;
 }
 
 .juke-story-comments::-webkit-scrollbar {
-width: 3px;
+    width: 2px;
 }
 
 .juke-story-comments::-webkit-scrollbar-track {
-background: rgba(255,255,255,0.03);
-border-radius: 2px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 1px;
 }
 
 .juke-story-comments::-webkit-scrollbar-thumb {
-background: rgba(255,255,255,0.12);
-border-radius: 2px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 1px;
 }
 
 .juke-story-comments::-webkit-scrollbar-thumb:hover {
-background: rgba(255,255,255,0.20);
+    background: rgba(255,255,255,0.15);
 }
 
 .juke-stories-tray-media.comments-open .juke-story-comments{
-display: block;
+    display: block;
 }
 
 .juke-story-comment {
-display: flex;
-gap: 6px;
-margin-bottom: 6px;
-padding: 6px;
-background: rgba(255,255,255,0.02);
-border-radius: 6px;
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+    padding: 4px;
+    background: rgba(255,255,255,0.015);
+    border-radius: 4px;
 }
 
 .juke-story-comment:last-child {
-margin-bottom: 0;
+    margin-bottom: 0;
 }
 
 .juke-story-comment-avatar {
-width: 20px;
-height: 20px;
-border-radius: 50%;
-background: rgba(255,255,255,0.08);
-flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    flex-shrink: 0;
 }
 
 .juke-story-comment-content {
-flex: 1;
-min-width: 0;
+    flex: 1;
+    min-width: 0;
 }
 
 .juke-story-comment-username {
-color: rgba(255,255,255,0.8);
-font-size: 0.7rem;
-font-weight: 500;
-margin-bottom: 1px;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.6rem;
+    font-weight: 400;
+    margin-bottom: 1px;
 }
 
 .juke-story-comment-text {
-color: rgba(255,255,255,0.6);
-font-size: 0.65rem;
-line-height: 1.2;
-word-wrap: break-word;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.55rem;
+    line-height: 1.1;
+    word-wrap: break-word;
 }
 
 .juke-story-comment-time {
-color: rgba(255,255,255,0.3);
-font-size: 0.6rem;
-margin-top: 1px;
+    color: rgba(255,255,255,0.25);
+    font-size: 0.5rem;
+    margin-top: 1px;
 }
 
 .juke-stories-tray-title{
@@ -482,39 +482,39 @@ text-overflow: ellipsis;
 }
 
 .juke-stories-tray-list{
-    padding:6px 8px;
+    padding:4px 6px;
     overflow:auto;
-    max-height: 140px;
+    max-height: 100px;
 }
 
 .juke-story-track{
     width:100%;
     display:flex;
     align-items:center;
-    gap:8px;
-    background:rgba(255,255,255,0.03);
-    border:1px solid rgba(255,255,255,0.06);
-    border-radius:8px;
-    padding:8px;
-    margin:0 0 6px;
+    gap:6px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.04);
+    border-radius:6px;
+    padding:6px;
+    margin:0 0 4px;
     color:#fff;
     cursor:pointer;
 }
 
 .juke-story-track:hover{
-    background:rgba(255,255,255,0.05);
-    border-color:rgba(0, 180, 150, 0.15);
+    background:rgba(255,255,255,0.04);
+    border-color:rgba(0, 180, 150, 0.12);
 }
 
 .juke-story-track.active{
-    border-color: rgba(0, 180, 150, 0.20);
-    background: rgba(0, 180, 150, 0.04);
+    border-color: rgba(0, 180, 150, 0.16);
+    background: rgba(0, 180, 150, 0.03);
 }
 
 .juke-story-track-cover{
-    width:36px;
-    height:36px;
-    border-radius:8px;
+    width:32px;
+    height:32px;
+    border-radius:6px;
     object-fit:cover;
     flex-shrink:0;
 }
@@ -525,8 +525,8 @@ text-overflow: ellipsis;
 }
 
 .juke-story-track-title{
-    font-weight:700;
-    font-size:0.85rem;
+    font-weight:600;
+    font-size:0.75rem;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -534,27 +534,27 @@ text-overflow: ellipsis;
 
 .juke-story-track-sub{
     display:flex;
-    gap:8px;
-    margin-top:2px;
-    font-size:0.7rem;
-    color:rgba(255,255,255,0.5);
+    gap:6px;
+    margin-top:1px;
+    font-size:0.6rem;
+    color:rgba(255,255,255,0.4);
 }
 
 .juke-story-track-date{
-    color:rgba(0, 180, 150, 0.6);
-    font-weight:600;
+    color:rgba(0, 180, 150, 0.5);
+    font-weight:500;
 }
 
 .juke-story-track-share{
     background:none;
     border:none;
-    color:rgba(255,255,255,0.6);
+    color:rgba(255,255,255,0.5);
     cursor:pointer;
-    padding:6px;
+    padding:4px;
 }
 
 .juke-story-track-share:hover{
-    color:rgba(0, 180, 150, 0.8);
+    color:rgba(0, 180, 150, 0.7);
 }
 
 .uploader-link {
