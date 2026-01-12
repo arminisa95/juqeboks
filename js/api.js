@@ -722,14 +722,52 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
 
         root.innerHTML = '' +
             '<div class="juke-stories-tray-backdrop" data-juke-media-close="1"></div>' +
-            '<div class="juke-stories-tray-sheet" role="dialog" aria-modal="true">' +
+            '<div class="juke-stories-tray-sheet juke-media-viewer-sheet" role="dialog" aria-modal="true">' +
             '  <div class="juke-stories-tray-header">' +
             '    <div class="juke-stories-tray-title">Media</div>' +
             '    <button type="button" class="juke-stories-tray-close" data-juke-media-close="1" aria-label="Close">' +
             '      <i class="fas fa-times"></i>' +
             '    </button>' +
             '  </div>' +
-            '  <div class="juke-stories-tray-media juke-story-split"></div>' +
+            '  <div class="juke-stories-tray-media juke-media-container">' +
+            '    <div class="juke-media-main">' +
+            '      <div class="juke-media-frame">' +
+            '        <button type="button" class="juke-media-nav juke-media-prev" data-juke-media-nav="prev" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>' +
+            '        <div class="juke-media-content"></div>' +
+            '        <button type="button" class="juke-media-nav juke-media-next" data-juke-media-nav="next" aria-label="Next"><i class="fas fa-chevron-right"></i></button>' +
+            '      </div>' +
+            '      <div class="juke-media-info">' +
+            '        <div class="juke-media-title"></div>' +
+            '        <div class="juke-media-artist"></div>' +
+            '        <div class="juke-media-date"></div>' +
+            '      </div>' +
+            '      <div class="juke-media-actions">' +
+            '        <button class="juke-media-action like-btn" data-track-id="" type="button" aria-label="Like">' +
+            '          <i class="far fa-heart"></i>' +
+            '          <span class="like-count"></span>' +
+            '        </button>' +
+            '        <button class="juke-media-action comment-btn" type="button" aria-label="Comments" data-juke-media-comments-toggle="1">' +
+            '          <i class="far fa-comment"></i>' +
+            '        </button>' +
+            '        <button class="juke-media-action share-btn" type="button" aria-label="Share" data-share-track-id="">' +
+            '          <i class="far fa-paper-plane"></i>' +
+            '        </button>' +
+            '      </div>' +
+            '    </div>' +
+            '    <div class="juke-media-sidebar" id="jukeMediaSidebar">' +
+            '      <div class="juke-sidebar-header">' +
+            '        <h3>Comments</h3>' +
+            '        <button type="button" class="juke-sidebar-close" data-juke-sidebar-close="1" aria-label="Close sidebar">' +
+            '          <i class="fas fa-times"></i>' +
+            '        </button>' +
+            '      </div>' +
+            '      <div class="juke-comments-list" data-track-id=""></div>' +
+            '      <div class="juke-comment-compose">' +
+            '        <input type="text" class="juke-comment-input" placeholder="Add a comment…" data-track-id="">' +
+            '        <button type="button" class="juke-comment-send" data-track-id="">Post</button>' +
+            '      </div>' +
+            '    </div>' +
+            '  </div>' +
             '</div>';
 
         document.body.appendChild(root);
@@ -786,7 +824,6 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
 
         function setActiveTrack(trackObj, opts) {
             try {
-                if (!mediaHost) return;
                 if (!trackObj || trackObj.id == null) return;
                 activeTrackId = String(trackObj.id);
 
@@ -802,7 +839,7 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
 
                 var mediaEl = '';
                 if (videoUrl) {
-                    mediaEl = '<video src="' + String(videoUrl).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" playsinline muted autoplay loop></video>';
+                    mediaEl = '<video src="' + String(videoUrl).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" playsinline muted autoplay loop controls></video>';
                 } else {
                     mediaEl = '<img src="' + String(cover).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" alt="">';
                 }
@@ -822,68 +859,70 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                 }
                 var likeCountTxt = (liked || likeCount > 0) ? String(likeCount) : '';
 
-                mediaHost.innerHTML = '' +
-                    '<div class="juke-story-split">' +
-                    '  <div class="juke-story-left">' +
-                    '    <div class="juke-story-media-layout">' +
-                    '      <button type="button" class="juke-story-side juke-story-side-prev" data-juke-media-nav="prev" aria-label="Previous"' + (hasPrev ? '' : ' disabled') + '><i class="fas fa-chevron-left"></i></button>' +
-                    '      <div class="juke-story-media-frame">' + mediaEl + '</div>' +
-                    '      <button type="button" class="juke-story-side juke-story-side-next" data-juke-media-nav="next" aria-label="Next"' + (hasNext ? '' : ' disabled') + '><i class="fas fa-chevron-right"></i></button>' +
-                    '    </div>' +
-                    '    <div class="juke-story-actions">' +
-                    '      <button class="post-action like-btn ' + (liked ? 'liked' : '') + '" data-track-id="' + String(trackObj.id) + '" type="button" aria-label="Like">' +
-                    '        <i class="' + (liked ? 'fas' : 'far') + ' fa-heart"></i>' +
-                    '        <span class="like-count" data-track-id="' + String(trackObj.id) + '">' + likeCountTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
-                    '      </button>' +
-                    '      <button class="post-action" type="button" aria-label="Comments" data-juke-media-comments-toggle="1">' +
-                    '        <i class="far fa-comment"></i>' +
-                    '      </button>' +
-                    '      <button class="post-action" type="button" aria-label="Share" data-share-track-id="' + String(trackObj.id) + '">' +
-                    '        <i class="far fa-paper-plane"></i>' +
-                    '      </button>' +
-                    '    </div>' +
-                    '    <div class="juke-story-media-meta">' +
-                    '      <div style="min-width:0;flex:1;">' +
-                    '        <div class="juke-story-media-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-                    '        <div class="juke-story-media-sub">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
-                    '      </div>' +
-                    (dateTxt ? ('<div class="juke-story-media-date">' + dateTxt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>') : '') +
-                    '    </div>' +
-                    '  </div>' +
-                    '  <div class="juke-story-right">' +
-                    '    <div class="juke-story-comments">' +
-                    '      <div class="post-comments-title">Comments</div>' +
-                    '      <div class="post-comments-list" data-track-id="' + String(trackObj.id) + '"></div>' +
-                    '      <div class="post-comment-compose">' +
-                    '        <input type="text" class="post-comment-input" placeholder="Add a comment…" data-track-id="' + String(trackObj.id) + '">' +
-                    '        <button type="button" class="post-comment-send" data-track-id="' + String(trackObj.id) + '">Post</button>' +
-                    '      </div>' +
-                    '    </div>' +
-                    '  </div>' +
-                    '</div>';
-
-                try {
-                    if (mediaHost.classList) mediaHost.classList.add('comments-open');
-                    var listElAuto = mediaHost.querySelector('.post-comments-list[data-track-id]');
-                    var tidAuto = listElAuto ? listElAuto.getAttribute('data-track-id') : null;
-                    if (tidAuto) loadAndRenderTrackComments(tidAuto, listElAuto);
-                } catch (_) {
+                // Update media content
+                var mediaContent = root.querySelector('.juke-media-content');
+                if (mediaContent) {
+                    mediaContent.innerHTML = mediaEl;
                 }
 
-                try {
-                    var v = mediaHost.querySelector('video');
-                    if (v && typeof v.play === 'function') {
-                        v.play().catch(function () { });
-                    }
-                } catch (_) {
+                // Update media info
+                var titleEl = root.querySelector('.juke-media-title');
+                var artistEl = root.querySelector('.juke-media-artist');
+                var dateEl = root.querySelector('.juke-media-date');
+                
+                if (titleEl) titleEl.textContent = safeTitle;
+                if (artistEl) artistEl.textContent = safeArtist;
+                if (dateEl) dateEl.textContent = dateTxt || '';
+
+                // Update navigation buttons
+                var prevBtn = root.querySelector('.juke-media-prev');
+                var nextBtn = root.querySelector('.juke-media-next');
+                
+                if (prevBtn) prevBtn.disabled = !hasPrev;
+                if (nextBtn) nextBtn.disabled = !hasNext;
+
+                // Update action buttons
+                var likeBtn = root.querySelector('.like-btn');
+                var commentBtn = root.querySelector('.comment-btn');
+                var shareBtn = root.querySelector('.share-btn');
+                
+                if (likeBtn) {
+                    likeBtn.setAttribute('data-track-id', String(trackObj.id));
+                    likeBtn.querySelector('i').className = liked ? 'fas fa-heart' : 'far fa-heart';
+                    likeBtn.classList.toggle('liked', liked);
+                    var likeCountEl = likeBtn.querySelector('.like-count');
+                    if (likeCountEl) likeCountEl.textContent = likeCountTxt;
+                }
+                
+                if (commentBtn) {
+                    commentBtn.setAttribute('data-track-id', String(trackObj.id));
+                }
+                
+                if (shareBtn) {
+                    shareBtn.setAttribute('data-share-track-id', String(trackObj.id));
                 }
 
-                try {
-                    if (!opts || opts.play !== false) playTrackObj(trackObj);
-                } catch (_) {
-                }
-            } catch (_) {
+                // Update sidebar elements
+                var commentsList = root.querySelector('.juke-comments-list');
+                var commentInput = root.querySelector('.juke-comment-input');
+                var commentSend = root.querySelector('.juke-comment-send');
+                
+                if (commentsList) commentsList.setAttribute('data-track-id', String(trackObj.id));
+                if (commentInput) commentInput.setAttribute('data-track-id', String(trackObj.id));
+                if (commentSend) commentSend.setAttribute('data-track-id', String(trackObj.id));
+
+                // Play track if available
+                playTrackObj(trackObj);
+
+            } catch (e) {
+                console.error('Set active track failed:', e);
             }
+        }
+
+        // Set initial track
+        var initialTrack = findTrackById(startTrackId);
+        if (initialTrack) {
+            setActiveTrack(initialTrack);
         }
 
         function close() {
@@ -906,16 +945,7 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
             }
         }
 
-        var initial = findTrackById(activeTrackId) || null;
-        if (!initial) {
-            try {
-                initial = (tracksArr && Array.isArray(tracksArr) && tracksArr[0]) ? tracksArr[0] : null;
-            } catch (_) {
-                initial = null;
-            }
-        }
-        if (initial) setActiveTrack(initial, { play: true });
-
+        // Add event listeners
         root.addEventListener('click', function (e) {
             var target = e && e.target ? e.target : null;
             if (!target) return;
@@ -967,12 +997,15 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
                 } catch (_) {
                 }
-                if (mediaHost && mediaHost.classList) {
-                    var willOpen = !mediaHost.classList.contains('comments-open');
-                    mediaHost.classList.toggle('comments-open', willOpen);
+                
+                var sidebar = root.querySelector('.juke-media-sidebar');
+                if (sidebar) {
+                    var willOpen = !sidebar.classList.contains('open');
+                    sidebar.classList.toggle('open', willOpen);
+                    
                     if (willOpen) {
                         try {
-                            var listEl = mediaHost.querySelector('.post-comments-list[data-track-id]');
+                            var listEl = root.querySelector('.juke-comments-list[data-track-id]');
                             var tid = listEl ? listEl.getAttribute('data-track-id') : null;
                             if (tid) loadAndRenderTrackComments(tid, listEl);
                         } catch (_) {
@@ -992,8 +1025,8 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                 var tid2 = sendBtn.getAttribute('data-track-id');
                 if (!tid2) return;
                 try {
-                    var input2 = mediaHost ? mediaHost.querySelector('.post-comment-input[data-track-id="' + String(tid2) + '"]') : null;
-                    var list2 = mediaHost ? mediaHost.querySelector('.post-comments-list[data-track-id="' + String(tid2) + '"]') : null;
+                    var input2 = root.querySelector('.juke-comment-input[data-track-id="' + String(tid2) + '"]');
+                    var list2 = root.querySelector('.juke-comments-list[data-track-id="' + String(tid2) + '"]');
                     var txt2 = input2 ? String(input2.value || '').trim() : '';
                     if (!txt2) return;
                     if (input2) input2.value = '';
@@ -1020,7 +1053,7 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                 } catch (_) {
                 }
                 try {
-                    var listDel = mediaHost ? mediaHost.querySelector('.post-comments-list[data-track-id="' + String(dtid) + '"]') : null;
+                    var listDel = root.querySelector('.juke-comments-list[data-track-id="' + String(dtid) + '"]');
                     deleteTrackComment(dtid, dcid).then(function () {
                         loadAndRenderTrackComments(dtid, listDel);
                     });
@@ -1082,11 +1115,11 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                 }
                 var t = e && e.target ? e.target : null;
                 if (!t) return;
-                if (t.classList && t.classList.contains('post-comment-input')) {
+                if (t.classList && t.classList.contains('juke-comment-input')) {
                     if (e.key === 'Enter') {
                         try {
                             var id = t.getAttribute('data-track-id');
-                            var send = id ? root.querySelector('.post-comment-send[data-track-id="' + String(id) + '"]') : null;
+                            var send = id ? root.querySelector('.juke-comment-send[data-track-id="' + String(id) + '"]') : null;
                             if (send) send.click();
                         } catch (_) {
                         }
