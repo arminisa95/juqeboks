@@ -1108,7 +1108,14 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
         });
 
         try {
-            root.addEventListener('keydown', function (e) {
+            // Add keyboard navigation to document for better capture
+            document.addEventListener('keydown', function (e) {
+                // Only handle keys when media viewer is open
+                var mediaViewer = document.getElementById('jukeMediaViewerRoot');
+                if (!mediaViewer || !mediaViewer.classList.contains('open')) return;
+                
+                console.log('Key pressed:', e.key); // Debug log
+                
                 if (e.key === 'Escape') {
                     close();
                     return;
@@ -1116,34 +1123,44 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                 
                 // Arrow key navigation
                 if (e.key === 'ArrowLeft') {
+                    console.log('ArrowLeft pressed, navigating to previous'); // Debug log
                     try {
-                        var prevBtn = root.querySelector('.juke-media-prev');
+                        var prevBtn = mediaViewer.querySelector('.juke-media-prev');
                         if (prevBtn && !prevBtn.disabled) {
+                            console.log('Previous button clicked'); // Debug log
                             prevBtn.click();
+                        } else {
+                            console.log('Previous button disabled or not found'); // Debug log
                         }
                     } catch (_) {
+                        console.log('Error in previous navigation'); // Debug log
                     }
                     return;
                 }
                 
                 if (e.key === 'ArrowRight') {
+                    console.log('ArrowRight pressed, navigating to next'); // Debug log
                     try {
-                        var nextBtn = root.querySelector('.juke-media-next');
+                        var nextBtn = mediaViewer.querySelector('.juke-media-next');
                         if (nextBtn && !nextBtn.disabled) {
+                            console.log('Next button clicked'); // Debug log
                             nextBtn.click();
+                        } else {
+                            console.log('Next button disabled or not found'); // Debug log
                         }
                     } catch (_) {
+                        console.log('Error in next navigation'); // Debug log
                     }
                     return;
                 }
                 
+                // Handle comment input
                 var t = e && e.target ? e.target : null;
-                if (!t) return;
-                if (t.classList && t.classList.contains('juke-comment-input')) {
+                if (t && t.classList && t.classList.contains('juke-comment-input')) {
                     if (e.key === 'Enter') {
                         try {
                             var id = t.getAttribute('data-track-id');
-                            var send = id ? root.querySelector('.juke-comment-send[data-track-id="' + String(id) + '"]') : null;
+                            var send = id ? mediaViewer.querySelector('.juke-comment-send[data-track-id="' + String(id) + '"]') : null;
                             if (send) send.click();
                         } catch (_) {
                         }
