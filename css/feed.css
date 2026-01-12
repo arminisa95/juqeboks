@@ -1297,6 +1297,16 @@ min-width: 0;
     margin: 0 auto;
     border-radius: 12px;
     overflow: hidden;
+    background: rgba(18,18,18,0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.juke-media-viewer-root.open .juke-media-viewer-sheet {
+    transform: scale(1) translateY(0);
+    opacity: 1;
 }
 
 .juke-media-container {
