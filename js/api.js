@@ -2151,71 +2151,65 @@ async function renderStoriesBar() {
             } catch (_) {
             }
         }
-
-        storiesBar.innerHTML = '';
-
-        // "Your story" bubble first (upload shortcut)
-        try {
-            var cu = null;
-            try {
-                if (typeof getCurrentUser === 'function') cu = getCurrentUser();
-            } catch (_) {
-                cu = null;
-            }
-            var myUsername = (cu && cu.username) ? String(cu.username) : '';
-            if (myUsername) {
-                const your = document.createElement('div');
-                your.className = 'story-item';
-                your.innerHTML = `
-                    <div class="story-avatar your-story">
-                        <img src="${resolveAssetUrl(null, resolveLocalAssetUrl('images/juke.png'))}" alt="${myUsername}">
-                        <div class="story-plus-badge">+</div>
-                    </div>
-                    <div class="story-username">Your story</div>
-                `;
-                your.addEventListener('click', function () {
-                    try {
-                        if (isSpaMode()) {
-                            window.location.hash = '#/upload';
-                        } else {
-                            window.location.href = 'upload.html';
-                        }
-                    } catch (_) {
-                    }
-                });
-                storiesBar.appendChild(your);
-            }
-        } catch (_) {
-        }
-
-        uploaderArr.forEach(function (u) {
-            const item = document.createElement('div');
-            item.className = 'story-item';
-            item.innerHTML = `
-                <div class="story-avatar ${u.hasNew ? '' : 'no-story'}">
-                    <img src="${resolveAssetUrl(u.avatar, resolveLocalAssetUrl('images/juke.png'))}" alt="${u.username}">
-                </div>
-                <div class="story-username">${u.username}</div>
-            `;
-            item.addEventListener('click', () => {
-                // Always open stories tray with media viewer
-                console.log('Story avatar clicked, opening stories tray with tracks:', u.tracks ? u.tracks.length : 0);
-                openStoriesTray(u);
-            });
-            
-            // Also add touch event listener for mobile
-            item.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                console.log('Story avatar touchend, opening stories tray with tracks:', u.tracks ? u.tracks.length : 0);
-                openStoriesTray(u);
-            });
-            storiesBar.appendChild(item);
-        });
-        
-        feedState.storiesLoaded = true;
-    } catch (e) {
-        console.error('Stories bar failed:', e);
     }
+    
+    storiesBar.innerHTML = '';
+
+    // "Your story" bubble first (upload shortcut)
+    try {
+        var cu = null;
+        try {
+            if (typeof getCurrentUser === 'function') cu = getCurrentUser();
+        } catch (_) {
+            cu = null;
+        }
+        var myUsername = (cu && cu.username) ? String(cu.username) : '';
+        if (myUsername) {
+            const your = document.createElement('div');
+            your.className = 'story-item';
+            your.innerHTML = `
+                <div class="story-avatar your-story">
+                    <img src="${resolveAssetUrl(null, resolveLocalAssetUrl('images/juke.png'))}" alt="${myUsername}">
+                    <div class="story-plus-badge">+</div>
+                </div>
+                <div class="story-username">Your story</div>
+            `;
+            your.addEventListener('click', function () {
+                try {
+                    if (isSpaMode()) {
+                        window.location.hash = '#/upload';
+                    } else {
+                        window.location.href = 'upload.html';
+                    }
+                } catch (_) {
+                }
+            });
+            storiesBar.appendChild(your);
+        }
+    } catch (_) {
+    }
+
+    uploaderArr.forEach(function (u) {
+        const item = document.createElement('div');
+        item.className = 'story-item';
+        item.innerHTML = `
+            <div class="story-avatar ${u.hasNew ? '' : 'no-story'}">
+                <img src="${resolveAssetUrl(u.avatar, resolveLocalAssetUrl('images/juke.png'))}" alt="${u.username}">
+            </div>
+            <div class="story-username">${u.username}</div>
+        `;
+        item.addEventListener('click', function () {
+            try {
+                openStoriesTray(u);
+            } catch (_) {
+            }
+        });
+        storiesBar.appendChild(item);
+    });
+    
+    feedState.storiesLoaded = true;
+} catch (e) {
+    console.error('Stories bar failed:', e);
 }
 
 async function loadFeedStream(reset) {
