@@ -626,6 +626,110 @@ app.post('/api/users/:id/like', authenticateToken, async (req, res) => {
     }
 });
 
+// ==================== DATABASE MONITORING ENDPOINTS ====================
+
+app.get('/api/database/stats', authenticateToken, async (req, res) => {
+    try {
+        const isAdmin = !!(req.user && req.user.is_admin);
+        if (!isAdmin) {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+
+        // Get table counts
+        const tables = ['users', 'artists', 'albums', 'tracks', 'playlists', 'user_favorites', 'play_history'];
+        const stats = {};
+        
+        for (const table of tables) {
+            const result = await db.get(`SELECT COUNT(*) as count FROM ${table}`);
+            stats[table] = parseInt(result.count);
+        }
+
+        // Get storage usage
+        const storageResult = await db.get(`
+            SELECT COALESCE(SUM(file_size), 0) as total_size 
+            FROM tracks WHERE file_size IS NOT NULL
+        `);
+
+        // Get today's activity
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const playsToday = await db.get(`
+            SELECT COUNT(*) as count FROM play_history 
+            WHERE played_at >= $1
+        `, [today]);
+
+        // Get recent activity
+        const recentActivity = await db.getAll(`
+            SELECT 
+                'New User' as type,
+                username as description,
+                created_at as timestamp
+            FROM users 
+            WHERE created_at >= NOW() - INTERVAL '7 days'
+            ORDER BY created_at DESC 
+            LIMIT 10
+            
+            UNION ALL
+            
+            SELECT 
+                'New Track' as type,
+                t.title || ' by ' || a.name as description,
+                t.created_at as timestamp
+            FROM tracks t
+            JOIN artists a ON t.artist_id = a.id
+            WHERE t.created_at >= NOW() - INTERVAL '7 days'
+            ORDER BY timestamp DESC
+            LIMIT 10
+        `);
+
+        // Get 7-day activity data
+        const activityData = [];
+        const activityLabels = [];
+        
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+            
+            const newUsers = await db.get(`
+                SELECT COUNT(*) as count FROM users 
+                WHERE created_at >= $1 AND created_at < $2
+            `, [date, nextDate]);
+            
+            const newTracks = await db.get(`
+                SELECT COUNT(*) as count FROM tracks 
+                WHERE created_at >= $1 AND created_at < $2
+            `, [date, nextDate]);
+            
+            activityLabels.push(date.toLocaleDateString('en', { weekday: 'short' }));
+            activityData.push({
+                newUsers: parseInt(newUsers.count),
+                newTracks: parseInt(newTracks.count)
+            });
+        }
+
+        res.json({
+            users: stats.users,
+            tracks: stats.tracks,
+            playlists: stats.playlists,
+            artists: stats.artists,
+            storageSize: parseInt(storageResult.total_size),
+            playsToday: parseInt(playsToday.count),
+            recentActivity,
+            activityLabels,
+            newUsersData: activityData.map(d => d.newUsers),
+            newTracksData: activityData.map(d => d.newTracks)
+        });
+
+    } catch (error) {
+        console.error('Database stats error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // ==================== MUSIC ENDPOINTS ====================
 
 app.get('/api/playlists/my', authenticateToken, async (req, res) => {

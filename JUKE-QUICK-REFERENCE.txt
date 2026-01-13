@@ -1,0 +1,42 @@
+
+🎵 JUKE PLATFORM - QUICK REFERENCE
+
+📁 KEY FILES:
+├── index.html          # Main app
+├── server.js           # Backend
+├── database/           # Database files
+├── css/                # Styles
+└── js/                 # JavaScript
+
+🗄️ DATABASE TABLES:
+├── users               # User accounts
+├── artists             # Music artists
+├── tracks              # Songs
+├── playlists           # User playlists
+└── user_favorites      # Liked songs
+
+🚀 COMMANDS:
+├── node server.js      # Start app
+├── node monitor.js     # View stats
+├── node query-tool.js  # SQL queries
+└── node test-connection.js # Test DB
+
+🎯 FEATURES:
+├── 🎵 Music upload/play
+├── 📱 Mobile responsive
+├── 👥 User profiles
+├── 📝 Playlists
+├── 💿 Media editor
+└── 📊 Analytics
+
+🔧 TROUBLESHOOTING:
+├── DB issues → Set DB_SSL=false
+├── Upload fails → Check file size
+├── Login errors → Clear cache
+└── Mobile bugs → Check mobile.css
+
+📞 SUPPORT:
+├── Check README.md
+├── Use query-tool.js
+├── Review dashboard.html
+└── Test with monitor.js

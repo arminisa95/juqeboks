@@ -50,6 +50,8 @@
                 return { templateId: 'tpl-register', file: 'html/register.html', selector: 'main' };
             case '#/profile':
                 return { templateId: 'tpl-profile', file: 'html/profile.html', selector: 'main' };
+            case '#/impressum':
+                return { templateId: 'tpl-impressum', file: 'html/impressum.html', selector: 'main' };
             default:
                 return { templateId: 'tpl-feed', file: 'html/user.html', selector: 'section.music-feed' };
         }
