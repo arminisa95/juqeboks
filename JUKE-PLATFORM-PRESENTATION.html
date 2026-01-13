@@ -669,13 +669,16 @@
             <i class="fas fa-chevron-left"></i> Previous
         </button>
         <div class="slide-counter">
-            <span id="currentSlide">1</span> / <span id="totalSlides">8</span>
+            <span id="currentSlide">1</span> / <span id="totalSlides">9</span>
         </div>
         <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">
             Next <i class="fas fa-chevron-right"></i>
         </button>
         <button class="export-btn" onclick="exportToPDF()">
             <i class="fas fa-file-pdf"></i> Export PDF
+        </button>
+        <button class="nav-btn" onclick="closePresentation()" style="background: linear-gradient(135deg, #ff4444, #cc0000);">
+            <i class="fas fa-times"></i> Close
         </button>
     </div>
 
@@ -712,10 +715,19 @@
             alert('PDF export feature coming soon! For now, you can print this presentation using Ctrl+P (or Cmd+P on Mac).');
         }
 
+        function closePresentation() {
+            window.close();
+            // If window.close() doesn't work (due to browser restrictions), redirect back
+            setTimeout(() => {
+                window.location.href = 'html/impressum.html';
+            }, 100);
+        }
+
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') changeSlide(-1);
             if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'Escape') closePresentation();
         });
 
         // Touch/swipe support for mobile
