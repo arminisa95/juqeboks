@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Impressum - JUKE Music Streaming Platform</title>
+    <title>How JUKE Works - Complete Platform Guide</title>
     <script>
         if (window.top === window.self) {
             window.location.replace('../index.html#/impressum');
@@ -12,168 +12,356 @@
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .impressum-container {
-            max-width: 1000px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background: rgba(30, 25, 100, 0.7);
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        .impressum-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-        
-        .impressum-header h1 {
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             color: #fff;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .impressum-header p {
-            color: #a0a0a0;
-            font-size: 1.1rem;
-        }
-        
-        .section {
-            margin-bottom: 2.5rem;
-            padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            border-left: 4px solid #00ffd0;
-        }
-        
-        .section h2 {
-            color: #00ffd0;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .section h3 {
-            color: #fff;
-            font-size: 1.2rem;
-            margin-bottom: 0.8rem;
-            margin-top: 1.5rem;
-        }
-        
-        .section p, .section li {
-            color: #dbd8d8;
+            min-height: 100vh;
             line-height: 1.6;
-            margin-bottom: 0.8rem;
         }
-        
-        .section ul {
-            margin-left: 1.5rem;
+
+        .hero-section {
+            background: linear-gradient(135deg, rgba(0, 255, 208, 0.1) 0%, rgba(29, 185, 84, 0.1) 100%);
+            padding: 4rem 2rem;
+            text-align: center;
+            border-bottom: 2px solid rgba(0, 255, 208, 0.3);
         }
-        
-        .contact-grid {
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00ffd0, #1db954);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px rgba(0, 255, 208, 0.5)); }
+            to { filter: drop-shadow(0 0 30px rgba(29, 185, 84, 0.5)); }
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: #a0a0a0;
+            margin-bottom: 2rem;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            color: #dbd8d8;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section {
+            margin: 4rem 0;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            color: #00ffd0;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, #00ffd0, #1db954);
+            border-radius: 2px;
+        }
+
+        .how-it-works {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .step-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 208, 0.2);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00ffd0, #1db954);
+        }
+
+        .step-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 255, 208, 0.2);
+            border-color: #00ffd0;
+        }
+
+        .step-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00ffd0;
+            margin-bottom: 1rem;
+        }
+
+        .step-title {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+
+        .step-description {
+            color: #a0a0a0;
+            line-height: 1.6;
+        }
+
+        .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
-            margin-top: 1rem;
+            margin: 3rem 0;
         }
-        
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 3px solid #1db954;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: #1db954;
+            margin-right: 1rem;
+            min-width: 40px;
+        }
+
+        .feature-text {
+            color: #dbd8d8;
+        }
+
+        .pdf-section {
+            background: linear-gradient(135deg, rgba(0, 255, 208, 0.1) 0%, rgba(29, 185, 84, 0.1) 100%);
+            border: 2px solid rgba(0, 255, 208, 0.3);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            margin: 4rem 0;
+        }
+
+        .pdf-title {
+            font-size: 2rem;
+            color: #00ffd0;
+            margin-bottom: 1.5rem;
+        }
+
+        .pdf-description {
+            color: #a0a0a0;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .pdf-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .pdf-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #00ffd0, #00e6b8);
+            color: #0a0a0a;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .pdf-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 255, 208, 0.4);
+        }
+
+        .pdf-btn i {
+            margin-right: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+
+        .tech-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tech-icon {
+            font-size: 2.5rem;
+            color: #1db954;
+            margin-bottom: 1rem;
+        }
+
+        .tech-name {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .tech-desc {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(29, 185, 84, 0.1) 0%, rgba(0, 255, 208, 0.1) 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(29, 185, 84, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1db954;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #a0a0a0;
+            font-size: 1rem;
+        }
+
+        .contact-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 3rem;
+            margin: 4rem 0;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
         .contact-item {
             display: flex;
             align-items: center;
             color: #dbd8d8;
         }
-        
+
         .contact-item i {
             color: #00ffd0;
             margin-right: 1rem;
-            font-size: 1.2rem;
-            width: 20px;
+            font-size: 1.5rem;
+            width: 30px;
         }
-        
-        .document-section {
-            background: rgba(0, 255, 208, 0.1);
-            border: 2px solid #00ffd0;
-            border-radius: 10px;
-            padding: 2rem;
-            margin: 2rem 0;
+
+        .footer {
             text-align: center;
-        }
-        
-        .document-section h3 {
-            color: #00ffd0;
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .document-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-            margin-top: 2rem;
-        }
-        
-        .doc-btn {
-            display: inline-flex;
-            align-items: center;
-            padding: 1rem 2rem;
-            background: linear-gradient(135deg, #00ffd0, #00e6b8);
-            color: #100a56;
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        
-        .doc-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 255, 208, 0.3);
-        }
-        
-        .doc-btn i {
-            margin-right: 0.5rem;
-            font-size: 1.2rem;
-        }
-        
-        .doc-description {
+            padding: 3rem 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             color: #a0a0a0;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
         }
-        
-        .highlight-box {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-        }
-        
-        .highlight-box h4 {
+
+        .footer-title {
+            font-size: 1.5rem;
             color: #00ffd0;
-            margin-bottom: 0.8rem;
+            margin-bottom: 1rem;
         }
-        
+
         @media (max-width: 768px) {
-            .impressum-container {
-                margin: 1rem;
-                padding: 1.5rem;
+            .hero-title {
+                font-size: 2.5rem;
             }
             
-            .impressum-header h1 {
+            .hero-section {
+                padding: 2rem 1rem;
+            }
+            
+            .section-title {
                 font-size: 2rem;
             }
             
-            .document-buttons {
+            .pdf-buttons {
                 flex-direction: column;
                 align-items: center;
             }
             
-            .doc-btn {
+            .pdf-btn {
                 width: 100%;
                 max-width: 300px;
             }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
@@ -205,113 +393,175 @@
     </header>
 
     <main>
-        <div class="impressum-container">
-            <div class="impressum-header">
-                <h1><i class="fas fa-balance-scale"></i> Impressum & Legal Information</h1>
-                <p>JUKE Music Streaming Platform - Transparency and Compliance</p>
-            </div>
+        <section class="hero-section">
+            <h1 class="hero-title">🎵 How JUKE Works</h1>
+            <p class="hero-subtitle">Your Complete Guide to the Music Streaming Platform</p>
+            <p class="hero-description">
+                Welcome to JUKE! This guide will show you everything about our music streaming platform - 
+                from uploading your first track to building a community of music lovers. 
+                Built for independent artists and music enthusiasts like you!
+            </p>
+        </section>
 
+        <div class="container">
             <section class="section">
-                <h2><i class="fas fa-info-circle"></i> Platform Information</h2>
-                <p><strong>JUKE</strong> is a modern music streaming platform designed for independent artists and music enthusiasts to share, discover, and enjoy music in a community-driven environment.</p>
+                <h2 class="section-title">🚀 Getting Started in 4 Simple Steps</h2>
                 
-                <div class="highlight-box">
-                    <h4>Platform Features</h4>
-                    <ul>
-                        <li>🎵 Music upload and streaming</li>
-                        <li>📱 Cross-platform compatibility</li>
-                        <li>👥 Social features and community</li>
-                        <li>🎨 Media editing tools</li>
-                        <li>📊 Analytics and insights</li>
-                    </ul>
+                <div class="how-it-works">
+                    <div class="step-card">
+                        <div class="step-number">01</div>
+                        <h3 class="step-title">Create Account</h3>
+                        <p class="step-description">
+                            Sign up with your email or social account. 
+                            Choose your username and set up your profile in seconds. 
+                            No credit card required - it's completely free!
+                        </p>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">02</div>
+                        <h3 class="step-title">Upload Music</h3>
+                        <p class="step-description">
+                            Drag & drop your audio files or browse to select them. 
+                            Add cover art, track information, and choose your genre. 
+                            Our media editor helps you perfect your sound!
+                        </p>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">03</div>
+                        <h3 class="step-title">Share & Discover</h3>
+                        <p class="step-description">
+                            Create playlists, follow other artists, 
+                            and discover new music through our smart recommendations. 
+                            Build your community and grow your audience!
+                        </p>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">04</div>
+                        <h3 class="step-title">Track Success</h3>
+                        <p class="step-description">
+                            Monitor your plays, likes, and follower growth. 
+                            See who's listening to your music and where. 
+                            Use insights to improve your music strategy!
+                        </p>
+                    </div>
                 </div>
             </section>
 
             <section class="section">
-                <h2><i class="fas fa-user"></i> Provider Information</h2>
-                <div class="contact-grid">
-                    <div class="contact-item">
-                        <i class="fas fa-user-circle"></i>
-                        <span><strong>Platform Operator:</strong> JUKE Development Team</span>
+                <h2 class="section-title">✨ Platform Features</h2>
+                
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-music feature-icon"></i>
+                        <span class="feature-text">Unlimited music uploads & streaming</span>
                     </div>
-                    <div class="contact-item">
-                        <i class="fas fa-globe"></i>
-                        <span><strong>Platform Type:</strong> Music Streaming Service</span>
+                    <div class="feature-item">
+                        <i class="fas fa-users feature-icon"></i>
+                        <span class="feature-text">Artist profiles & fan communities</span>
                     </div>
-                    <div class="contact-item">
-                        <i class="fas fa-code"></i>
-                        <span><strong>Technology:</strong> Node.js, PostgreSQL, HTML5</span>
+                    <div class="feature-item">
+                        <i class="fas fa-list feature-icon"></i>
+                        <span class="feature-text">Create & share playlists</span>
                     </div>
-                    <div class="contact-item">
-                        <i class="fas fa-cloud"></i>
-                        <span><strong>Hosting:</strong> Render, Cloudflare, GitHub Pages</span>
+                    <div class="feature-item">
+                        <i class="fas fa-heart feature-icon"></i>
+                        <span class="feature-text">Like & favorite tracks</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-chart-line feature-icon"></i>
+                        <span class="feature-text">Real-time analytics dashboard</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-mobile-alt feature-icon"></i>
+                        <span class="feature-text">Mobile-responsive design</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-edit feature-icon"></i>
+                        <span class="feature-text">Built-in media editor</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-globe feature-icon"></i>
+                        <span class="feature-text">Global music discovery</span>
                     </div>
                 </div>
             </section>
 
             <section class="section">
-                <h2><i class="fas fa-shield-alt"></i> Privacy & Data Protection</h2>
-                <p>We are committed to protecting your privacy and personal data. This platform processes user data in accordance with modern data protection principles.</p>
+                <h2 class="section-title">📊 Platform Statistics</h2>
                 
-                <h3>Data Collection</h3>
-                <ul>
-                    <li>Account information (username, email)</li>
-                    <li>Music preferences and listening history</li>
-                    <li>User-generated content (playlists, comments)</li>
-                    <li>Technical data for service improvement</li>
-                </ul>
-                
-                <h3>Data Usage</h3>
-                <ul>
-                    <li>Service provision and improvement</li>
-                    <li>Personalized recommendations</li>
-                    <li>Community features and interactions</li>
-                    <li>Analytics and platform optimization</li>
-                </ul>
+                <div class="stats-section">
+                    <div class="stat-card">
+                        <div class="stat-number">3+</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">8+</div>
+                        <div class="stat-label">Tracks Uploaded</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">4+</div>
+                        <div class="stat-label">Artists</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">4+</div>
+                        <div class="stat-label">Playlists Created</div>
+                    </div>
+                </div>
             </section>
 
             <section class="section">
-                <h2><i class="fas fa-copyright"></i> Copyright & Content</h2>
-                <p>All content uploaded to JUKE remains the property of respective rights holders. The platform provides technical infrastructure for content sharing.</p>
+                <h2 class="section-title">🛠️ Technology Stack</h2>
                 
-                <h3>Content Rights</h3>
-                <ul>
-                    <li>Users retain rights to their uploaded content</li>
-                    <li>Platform license for streaming and distribution</li>
-                    <li>Respect for intellectual property rights</li>
-                    <li>Content moderation and compliance</li>
-                </ul>
-                
-                <h3>Copyright Infringement</h3>
-                <p>Reports of copyright infringement will be promptly addressed. Please contact us with any concerns regarding unauthorized content.</p>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <i class="fab fa-html5 tech-icon"></i>
+                        <div class="tech-name">HTML5</div>
+                        <div class="tech-desc">Modern web standards</div>
+                    </div>
+                    <div class="tech-item">
+                        <i class="fab fa-css3-alt tech-icon"></i>
+                        <div class="tech-name">CSS3</div>
+                        <div class="tech-desc">Responsive design</div>
+                    </div>
+                    <div class="tech-item">
+                        <i class="fab fa-js tech-icon"></i>
+                        <div class="tech-name">JavaScript</div>
+                        <div class="tech-desc">Interactive features</div>
+                    </div>
+                    <div class="tech-item">
+                        <i class="fab fa-node tech-icon"></i>
+                        <div class="tech-name">Node.js</div>
+                        <div class="tech-desc">Backend server</div>
+                    </div>
+                    <div class="tech-item">
+                        <i class="fas fa-database tech-icon"></i>
+                        <div class="tech-name">PostgreSQL</div>
+                        <div class="tech-desc">Database management</div>
+                    </div>
+                    <div class="tech-item">
+                        <i class="fas fa-cloud tech-icon"></i>
+                        <div class="tech-name">Cloud Storage</div>
+                        <div class="tech-desc">File hosting</div>
+                    </div>
+                </div>
             </section>
 
-            <section class="section">
-                <h2><i class="fas fa-gavel"></i> Terms of Service</h2>
-                <p>By using JUKE, users agree to comply with our community guidelines and terms of service.</p>
-                
-                <h3>User Responsibilities</h3>
-                <ul>
-                    <li>Respect copyright and intellectual property</li>
-                    <li>Maintain appropriate community conduct</li>
-                    <li>Provide accurate account information</li>
-                    <li>Report violations and inappropriate content</li>
-                </ul>
-                
-                <h3>Platform Rights</h3>
-                <ul>
-                    <li>Content moderation and removal</li>
-                    <li>Account suspension for violations</li>
-                    <li>Service updates and modifications</li>
-                    <li>Platform access management</li>
-                </ul>
-            </section>
-
-            <div class="document-section">
+            <div class="pdf-section">
                 <h3><i class="fas fa-book-open"></i> Platform Documentation</h3>
                 <p>Comprehensive guides and technical documentation for developers and users interested in understanding the JUKE platform architecture and implementation.</p>
                 
                 <div class="document-buttons">
+                    <div>
+                        <p class="doc-description">Interactive presentation - How JUKE works</p>
+                        <a href="../JUKE-PLATFORM-PRESENTATION.html" class="doc-btn" target="_blank">
+                            <i class="fas fa-play-circle"></i>
+                            View Presentation
+                        </a>
+                    </div>
+                    
                     <div>
                         <p class="doc-description">Complete project guide for beginners and developers</p>
                         <a href="../JUKE-PROJECT-GUIDE.html" class="doc-btn" target="_blank">
@@ -339,64 +589,72 @@
             </div>
 
             <section class="section">
-                <h2><i class="fas fa-headset"></i> Contact & Support</h2>
+                <h2 class="section-title">🎯 For Different Users</h2>
+                
+                <div class="how-it-works">
+                    <div class="step-card">
+                        <div class="step-number">🎵</div>
+                        <h3 class="step-title">For Artists</h3>
+                        <p class="step-description">
+                            Upload your music, build your fanbase, track your performance, 
+                            and connect with listeners worldwide. No middlemen - direct artist-to-fan connection!
+                        </p>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">👥</div>
+                        <h3 class="step-title">For Listeners</h3>
+                        <p class="step-description">
+                            Discover new independent artists, create personalized playlists, 
+                            follow your favorites, and support emerging talent. Your plays help artists grow!
+                        </p>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">💻</div>
+                        <h3 class="step-title">For Developers</h3>
+                        <p class="step-description">
+                            Open-source platform built with modern web technologies. 
+                            Contribute to the project, learn from the code, or build your own music platform!
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="contact-section">
+                <h2 class="section-title">📞 Get in Touch</h2>
+                
                 <div class="contact-grid">
                     <div class="contact-item">
                         <i class="fas fa-envelope"></i>
-                        <span><strong>Support:</strong> support@juke-platform.com</span>
+                        <span><strong>Email:</strong> support@juke-platform.com</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fab fa-github"></i>
+                        <span><strong>GitHub:</strong> github.com/arminisa95/juqeboks</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fab fa-discord"></i>
+                        <span><strong>Community:</strong> discord.gg/juke-platform</span>
                     </div>
                     <div class="contact-item">
                         <i class="fas fa-bug"></i>
-                        <span><strong>Bug Reports:</strong> github.com/arminisa95/juqeboks/issues</span>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-code-branch"></i>
-                        <span><strong>Source Code:</strong> github.com/arminisa95/juqeboks</span>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-comments"></i>
-                        <span><strong>Community:</strong> discord.gg/juke-platform</span>
+                        <span><strong>Bug Reports:</strong> GitHub Issues</span>
                     </div>
                 </div>
-                
-                <h3>Response Times</h3>
-                <ul>
-                    <li>Technical support: 24-48 hours</li>
-                    <li>Bug reports: 48-72 hours</li>
-                    <li>Feature requests: Reviewed weekly</li>
-                    <li>Copyright claims: Immediate attention</li>
-                </ul>
             </section>
-
-            <section class="section">
-                <h2><i class="fas fa-info"></i> Additional Information</h2>
-                
-                <h3>Platform Version</h3>
-                <p><strong>JUKE Platform v2.0</strong> - Built with modern web technologies and community feedback.</p>
-                
-                <h3>Technical Stack</h3>
-                <ul>
-                    <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript (ES6+)</li>
-                    <li><strong>Backend:</strong> Node.js, Express.js</li>
-                    <li><strong>Database:</strong> PostgreSQL 18.1</li>
-                    <li><strong>Storage:</strong> S3-compatible cloud storage</li>
-                    <li><strong>Deployment:</strong> Render, Cloudflare CDN</li>
-                </ul>
-                
-                <h3>Open Source</h3>
-                <p>JUKE is an open-source project. Contributions are welcome from the community. Please review our contribution guidelines and code of conduct.</p>
-            </section>
-
-            <div class="section" style="text-align: center; background: rgba(0, 255, 208, 0.1);">
-                <h2 style="text-align: center;"><i class="fas fa-heart"></i> Thank You!</h2>
-                <p>Thank you for being part of the JUKE community. Your support and contributions help make independent music accessible to everyone.</p>
-                <p style="margin-top: 1rem;"><strong>🎵 JUKE - Where Independent Music Thrives</strong></p>
-            </div>
         </div>
+
+        <footer class="footer">
+            <h3 class="footer-title">🎵 Join the JUKE Community!</h3>
+            <p>Whether you're an artist, listener, or developer - there's a place for you here.</p>
+            <p>Start your musical journey today and be part of the independent music revolution!</p>
+            <p style="margin-top: 1rem; color: #00ffd0;"><strong>Upload • Share • Discover • Grow</strong></p>
+        </footer>
     </main>
 
     <script>
-        // Add smooth scrolling for internal links
+        // Add smooth scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -410,19 +668,33 @@
             });
         });
 
-        // Add print functionality
-        window.addEventListener('beforeprint', () => {
-            document.body.classList.add('printing');
+        // Add entrance animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards
+        document.querySelectorAll('.step-card, .feature-item, .tech-item, .stat-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'all 0.6s ease';
+            observer.observe(card);
         });
 
-        window.addEventListener('afterprint', () => {
-            document.body.classList.remove('printing');
-        });
-
-        // Track document views (analytics)
+        // Track page view
         if (typeof gtag !== 'undefined') {
             gtag('event', 'page_view', {
-                page_title: 'Impressum',
+                page_title: 'How JUKE Works',
                 page_location: window.location.href
             });
         }
