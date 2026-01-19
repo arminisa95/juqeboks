@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Analytics Dashboard || JUKE</title>
+    
+    <!-- JUKE CSS Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/musicplayer.css">
+    <link rel="stylesheet" href="css/feed.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Analytics Styles -->
+    <style>
+        /* Analytics Dashboard Styles */
+        .analytics-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .analytics-title {
+            color: #fff;
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00ffd0, #00b896);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .analytics-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .date-selector {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .date-selector:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(0, 255, 208, 0.5);
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #00ffd0, #00b896);
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 208, 0.3);
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: #fff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* User Info Section */
+        .user-info-card {
+            background: linear-gradient(135deg, rgba(0, 255, 208, 0.1), rgba(0, 184, 150, 0.1));
+            border: 1px solid rgba(0, 255, 208, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-details {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00ffd0, #00b896);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #000;
+        }
+
+        .user-info h3 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-tier {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .credits-info {
+            text-align: right;
+        }
+
+        .credits-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .credits-value {
+            color: #00ffd0;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(79, 70, 229, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(139, 92, 246, 0.2);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .metric-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #8b5cf6;
+        }
+
+        .metric-change {
+            color: #10b981;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .metric-value {
+            color: #fff;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .chart-title {
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Activity Section */
+        .activity-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .activity-title {
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .activity-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 255, 208, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #00ffd0;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-text {
+            color: #fff;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+        }
+
+        /* Upgrade Prompt */
+        .upgrade-prompt {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 255, 208, 0.1));
+            border: 1px solid rgba(0, 255, 208, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 400px;
+            text-align: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .upgrade-title {
+            color: #00ffd0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .upgrade-text {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1.5rem;
+        }
+
+        .upgrade-btn {
+            background: linear-gradient(135deg, #00ffd0, #00b896);
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .upgrade-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 208, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .analytics-container {
+                padding: 1rem;
+            }
+
+            .analytics-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .analytics-controls {
+                flex-wrap: wrap;
+            }
+
+            .user-info-card {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="auth-page">
+    <!-- JUKE Header -->
+    <header>
+        <a href="index.html">
+            <img src="images/juqe.png" alt="Juke Logo" class="logo-img">
+        </a>
+    </header>
+
+    <!-- Analytics Dashboard -->
+    <main class="auth-main">
+        <div class="analytics-container">
+            <!-- Header -->
+            <div class="analytics-header">
+                <h1 class="analytics-title">Analytics Dashboard</h1>
+                <div class="analytics-controls">
+                    <select id="dateRange" class="date-selector">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="365">Last year</option>
+                    </select>
+                    <button onclick="refreshData()" class="refresh-btn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <a href="index.html" class="back-btn">
+                        <i class="fas fa-arrow-left"></i> Back to JUKE
+                    </a>
+                </div>
+            </div>
+
+            <!-- User Info -->
+            <div class="user-info-card">
+                <div class="user-details">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <h3 id="userName">Loading...</h3>
+                        <p class="user-tier" id="userTier">Premium Plan</p>
+                    </div>
+                </div>
+                <div class="credits-info">
+                    <div class="credits-label">Upload Credits</div>
+                    <div class="credits-value" id="uploadCredits">∞</div>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-play"></i>
+                        </div>
+                        <span class="metric-change">+12%</span>
+                    </div>
+                    <div class="metric-value" id="totalPlays">0</div>
+                    <div class="metric-label">Total Plays</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <span class="metric-change">+8%</span>
+                    </div>
+                    <div class="metric-value" id="totalMinutes">0</div>
+                    <div class="metric-label">Minutes Listened</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <span class="metric-change">+25%</span>
+                    </div>
+                    <div class="metric-value" id="totalUploads">0</div>
+                    <div class="metric-label">Tracks Uploaded</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <span class="metric-change">+15%</span>
+                    </div>
+                    <div class="metric-value" id="totalFollowers">0</div>
+                    <div class="metric-label">Followers</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">Plays Over Time</h3>
+                    <div class="chart-container">
+                        <canvas id="playsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">Genre Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="genreChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="activity-section">
+                <h3 class="activity-title">Recent Activity</h3>
+                <ul class="activity-list" id="activityList">
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-play"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-text">Someone played your track "Summer Vibes"</div>
+                            <div class="activity-time">2 minutes ago</div>
+                        </div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-text">New follower: @musiclover</div>
+                            <div class="activity-time">1 hour ago</div>
+                        </div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-text">You uploaded "Night Dreams"</div>
+                            <div class="activity-time">3 hours ago</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p class="contact">All rights reserved &copy; 2025 juqeboks</p>
+        <a id="mail" href="mailto:arminisa@outlook.com" class="contact">contact:mail</a>
+        <a id="phone" href="tel:06509014453" class="contact">contact:phone</a>
+    </footer>
+
+    <!-- Analytics JavaScript -->
+    <script>
+        // Initialize charts and data
+        let playsChart, genreChart;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadAnalyticsData();
+            
+            // Date range change handler
+            document.getElementById('dateRange').addEventListener('change', loadAnalyticsData);
+        });
+
+        function initializeCharts() {
+            // Plays Over Time Chart
+            const playsCtx = document.getElementById('playsChart').getContext('2d');
+            playsChart = new Chart(playsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Plays',
+                        data: [],
+                        borderColor: '#00ffd0',
+                        backgroundColor: 'rgba(0, 255, 208, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Genre Distribution Chart
+            const genreCtx = document.getElementById('genreChart').getContext('2d');
+            genreChart = new Chart(genreCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            '#00ffd0',
+                            '#8b5cf6',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#10b981',
+                            '#3b82f6'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadAnalyticsData() {
+            const dateRange = document.getElementById('dateRange').value;
+            
+            // Simulate API call with demo data
+            setTimeout(() => {
+                updateMetrics();
+                updateCharts(dateRange);
+                updateUserInfo();
+            }, 500);
+        }
+
+        function updateMetrics() {
+            // Generate random metrics for demo
+            document.getElementById('totalPlays').textContent = Math.floor(Math.random() * 10000) + 1000;
+            document.getElementById('totalMinutes').textContent = Math.floor(Math.random() * 50000) + 5000;
+            document.getElementById('totalUploads').textContent = Math.floor(Math.random() * 50) + 5;
+            document.getElementById('totalFollowers').textContent = Math.floor(Math.random() * 500) + 50;
+        }
+
+        function updateCharts(dateRange) {
+            const days = parseInt(dateRange);
+            const labels = [];
+            const playsData = [];
+
+            // Generate date labels
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString());
+                playsData.push(Math.floor(Math.random() * 200) + 50);
+            }
+
+            // Update plays chart
+            playsChart.data.labels = labels;
+            playsChart.data.datasets[0].data = playsData;
+            playsChart.update();
+
+            // Update genre chart
+            const genres = ['Electronic', 'Hip Hop', 'Rock', 'Pop', 'Jazz', 'R&B'];
+            const genreData = genres.map(() => Math.floor(Math.random() * 100) + 20);
+            
+            genreChart.data.labels = genres;
+            genreChart.data.datasets[0].data = genreData;
+            genreChart.update();
+        }
+
+        function updateUserInfo() {
+            // Simulate user data
+            document.getElementById('userName').textContent = 'JUKE Artist';
+            document.getElementById('userTier').textContent = 'Premium Plan';
+            document.getElementById('uploadCredits').textContent = '∞';
+        }
+
+        function refreshData() {
+            // Show loading state
+            const refreshBtn = document.querySelector('.refresh-btn');
+            const originalContent = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            // Reload data
+            loadAnalyticsData();
+            
+            // Reset button after 1 second
+            setTimeout(() => {
+                refreshBtn.innerHTML = originalContent;
+            }, 1000);
+        }
+
+        // Show upgrade prompt for free users (demo)
+        function showUpgradePrompt() {
+            const upgradeCard = document.createElement('div');
+            upgradeCard.className = 'upgrade-prompt';
+            upgradeCard.innerHTML = `
+                <h3 class="upgrade-title">Upgrade to Premium</h3>
+                <p class="upgrade-text">Get detailed analytics, unlimited uploads, and more!</p>
+                <a href="subscription-plans.html" class="upgrade-btn">Upgrade Now</a>
+            `;
+            document.body.appendChild(upgradeCard);
+
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (upgradeCard.parentNode) {
+                    upgradeCard.parentNode.removeChild(upgradeCard);
+                }
+            }, 10000);
+        }
+
+        // Show upgrade prompt after 5 seconds for demo
+        setTimeout(showUpgradePrompt, 5000);
+    </script>
+</body>
+</html>
