@@ -4,7 +4,7 @@
 */
 
 .register-container {
-    width: min(92vw, 360px);
+    width: min(92vw, 480px);
     margin: 0 auto;
     padding: 24px;
     background: rgba(255, 255, 255, 0.05);
@@ -21,6 +21,211 @@
     font-size: 1.6em;
 }
 
+/* SUBSCRIPTION PLANS STYLING */
+.subscription-section {
+    margin: 24px 0;
+}
+
+.subscription-title {
+    color: #fff;
+    font-size: 1.3em;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.subscription-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+}
+
+.subscription-plans {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.plan-card {
+    flex: 1;
+    padding: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.plan-card:hover {
+    border-color: rgba(0, 255, 208, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 255, 208, 0.2);
+}
+
+.plan-card.selected {
+    border-color: #00ffd0;
+    background: rgba(0, 255, 208, 0.1);
+}
+
+.plan-header {
+    margin-bottom: 16px;
+}
+
+.plan-name {
+    color: #fff;
+    font-size: 1.2em;
+    margin-bottom: 8px;
+}
+
+.plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.price {
+    color: #00ffd0;
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+.period {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9em;
+}
+
+.plan-badge {
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #000;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75em;
+    font-weight: bold;
+}
+
+.plan-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.plan-features li {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 4px 0;
+    font-size: 0.85em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.plan-features i {
+    color: #00ffd0;
+    font-size: 0.8em;
+}
+
+.plan-radio {
+    margin-top: 16px;
+    text-align: center;
+}
+
+.plan-radio input[type="radio"] {
+    display: none;
+}
+
+.radio-label {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.radio-label:hover {
+    border-color: rgba(0, 255, 208, 0.5);
+}
+
+.plan-radio input[type="radio"]:checked + .radio-label {
+    border-color: #00ffd0;
+    background: #00ffd0;
+}
+
+.plan-radio input[type="radio"]:checked + .radio-label::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: #000;
+    border-radius: 50%;
+}
+
+/* PAYMENT SECTION STYLING */
+.payment-section {
+    margin: 24px 0;
+}
+
+.payment-title {
+    color: #fff;
+    font-size: 1.1em;
+    margin-bottom: 16px;
+}
+
+.payment-methods {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.payment-option {
+    flex: 1;
+    position: relative;
+}
+
+.payment-option input[type="radio"] {
+    display: none;
+}
+
+.payment-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9em;
+}
+
+.payment-label:hover {
+    border-color: rgba(0, 255, 208, 0.3);
+}
+
+.payment-option.selected .payment-label {
+    border-color: #00ffd0;
+    background: rgba(0, 255, 208, 0.1);
+    color: #fff;
+}
+
+.card-details {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* FORM STYLING */
 .form-group {
     margin-bottom: 12px;
 }
@@ -58,21 +263,27 @@
     box-shadow: 0 0 0 2px rgba(0, 255, 208, 0.2);
 }
 
+.form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
 .register-btn {
     width: 100%;
-    padding: 10px;
-    background: #F72193;
-    color: white;
+    padding: 14px;
+    background: linear-gradient(135deg, #00ffd0, #00b896);
     border: none;
     border-radius: 8px;
-    font-size: 14px;
+    color: #000;
+    font-weight: bold;
+    font-size: 16px;
     cursor: pointer;
-    transition: background 0.3s ease;
-    margin-top: 10px;
+    transition: all 0.3s ease;
+    margin-top: 24px;
 }
 
 .register-btn:hover {
-    background: #00a8db;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 255, 208, 0.3);
 }
 
 .login-link {
@@ -172,4 +383,38 @@
 .social-btn.apple:hover {
     background: #333;
     border-color: #333;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 480px) {
+    .register-container {
+        width: 92vw;
+        padding: 16px;
+    }
+    
+    .subscription-plans {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .payment-methods {
+        flex-direction: column;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .plan-card {
+        padding: 16px;
+    }
+    
+    .subscription-title {
+        font-size: 1.1em;
+    }
+    
+    .price {
+        font-size: 1.5em;
+    }
 }

@@ -15,6 +15,131 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="../js/player.js" defer></script>
     <script src="../js/auth.js" defer></script>
+    <script>
+        // Plan selection functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const planCards = document.querySelectorAll('.plan-card');
+            const paymentOptions = document.querySelectorAll('.payment-option');
+            const cardNumber = document.getElementById('card-number');
+            const cardExpiry = document.getElementById('card-expiry');
+            const cardCvc = document.getElementById('card-cvc');
+
+            // Plan card selection
+            planCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Remove selected class from all cards
+                    planCards.forEach(c => c.classList.remove('selected'));
+                    // Add selected class to clicked card
+                    this.classList.add('selected');
+                    // Check the radio button
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = true;
+                });
+            });
+
+            // Payment method selection
+            paymentOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    paymentOptions.forEach(o => o.classList.remove('selected'));
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    // Check the radio button
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = true;
+                });
+            });
+
+            // Card number formatting
+            cardNumber.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s/g, '');
+                let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+                e.target.value = formattedValue;
+            });
+
+            // Card expiry formatting
+            cardExpiry.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.slice(0, 2) + '/' + value.slice(2, 4);
+                }
+                e.target.value = value;
+            });
+
+            // CVC formatting (numbers only)
+            cardCvc.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+
+            // Form validation
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Basic validation
+                    const password = document.getElementById('password').value;
+                    const confirmPassword = document.getElementById('confirm-password').value;
+                    
+                    if (password !== confirmPassword) {
+                        alert('Passwords do not match!');
+                        return;
+                    }
+
+                    if (password.length < 8) {
+                        alert('Password must be at least 8 characters!');
+                        return;
+                    }
+
+                    // Get selected plan
+                    const selectedPlan = document.querySelector('input[name="subscription-plan"]:checked');
+                    if (!selectedPlan) {
+                        alert('Please select a subscription plan!');
+                        return;
+                    }
+
+                    // Get payment method
+                    const selectedPayment = document.querySelector('input[name="payment-method"]:checked');
+                    if (!selectedPayment) {
+                        alert('Please select a payment method!');
+                        return;
+                    }
+
+                    // Validate card details if card payment selected
+                    if (selectedPayment.value === 'card') {
+                        const cardNum = cardNumber.value.replace(/\s/g, '');
+                        const expiry = cardExpiry.value;
+                        const cvc = cardCvc.value;
+
+                        if (cardNum.length < 13 || cardNum.length > 19) {
+                            alert('Please enter a valid card number!');
+                            return;
+                        }
+
+                        if (!expiry.match(/^\d{2}\/\d{2}$/)) {
+                            alert('Please enter a valid expiry date (MM/YY)!');
+                            return;
+                        }
+
+                        if (cvc.length < 3 || cvc.length > 4) {
+                            alert('Please enter a valid CVC!');
+                            return;
+                        }
+                    }
+
+                    // Simulate registration with subscription
+                    alert(`Registration successful! Welcome to JUKE ${selectedPlan.value.charAt(0).toUpperCase() + selectedPlan.value.slice(1)} plan!`);
+                    
+                    // Here you would normally send the data to your backend
+                    console.log('Registration data:', {
+                        plan: selectedPlan.value,
+                        payment: selectedPayment.value,
+                        // ... other form data
+                    });
+                });
+            }
+        });
+    </script>
 </head>
 <body class="auth-page">
     <header>
@@ -72,7 +197,101 @@
                     <label for="confirm-password">Confirm Password</label>
                     <input type="password" id="confirm-password" name="confirm-password" required>
                 </div>
-                <button type="submit" class="register-btn">Create Account</button>
+
+                <!-- Subscription Plans Selection -->
+                <div class="subscription-section">
+                    <h3 class="subscription-title">Choose Your Plan</h3>
+                    <p class="subscription-subtitle">Start your music journey with JUKE</p>
+                    
+                    <div class="subscription-plans">
+                        <div class="plan-card individual" data-plan="individual">
+                            <div class="plan-header">
+                                <h4 class="plan-name">Individual</h4>
+                                <div class="plan-price">
+                                    <span class="price">€4.99</span>
+                                    <span class="period">/month</span>
+                                </div>
+                            </div>
+                            <div class="plan-features">
+                                <ul>
+                                    <li><i class="fas fa-check"></i> Unlimited uploads</li>
+                                    <li><i class="fas fa-check"></i> High quality audio</li>
+                                    <li><i class="fas fa-check"></i> No ads</li>
+                                    <li><i class="fas fa-check"></i> Basic analytics</li>
+                                    <li><i class="fas fa-check"></i> 1 account</li>
+                                </ul>
+                            </div>
+                            <div class="plan-radio">
+                                <input type="radio" id="plan-individual" name="subscription-plan" value="individual" checked>
+                                <label for="plan-individual" class="radio-label"></label>
+                            </div>
+                        </div>
+
+                        <div class="plan-card household" data-plan="household">
+                            <div class="plan-header">
+                                <h4 class="plan-name">Household</h4>
+                                <div class="plan-price">
+                                    <span class="price">€14.99</span>
+                                    <span class="period">/month</span>
+                                </div>
+                                <div class="plan-badge">Popular</div>
+                            </div>
+                            <div class="plan-features">
+                                <ul>
+                                    <li><i class="fas fa-check"></i> Everything in Individual</li>
+                                    <li><i class="fas fa-check"></i> Up to 6 accounts</li>
+                                    <li><i class="fas fa-check"></i> Family Mix playlist</li>
+                                    <li><i class="fas fa-check"></i> Advanced analytics</li>
+                                    <li><i class="fas fa-check"></i> Priority support</li>
+                                </ul>
+                            </div>
+                            <div class="plan-radio">
+                                <input type="radio" id="plan-household" name="subscription-plan" value="household">
+                                <label for="plan-household" class="radio-label"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method Section -->
+                <div class="payment-section">
+                    <h3 class="payment-title">Payment Method</h3>
+                    <div class="payment-methods">
+                        <div class="payment-option selected" data-method="card">
+                            <input type="radio" id="payment-card" name="payment-method" value="card" checked>
+                            <label for="payment-card" class="payment-label">
+                                <i class="fas fa-credit-card"></i>
+                                <span>Credit/Debit Card</span>
+                            </label>
+                        </div>
+                        <div class="payment-option" data-method="paypal">
+                            <input type="radio" id="payment-paypal" name="payment-method" value="paypal">
+                            <label for="payment-paypal" class="payment-label">
+                                <i class="fab fa-paypal"></i>
+                                <span>PayPal</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="card-details">
+                        <div class="form-group">
+                            <label for="card-number">Card Number</label>
+                            <input type="text" id="card-number" name="card-number" placeholder="1234 5678 9012 3456" maxlength="19">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="card-expiry">Expiry Date</label>
+                                <input type="text" id="card-expiry" name="card-expiry" placeholder="MM/YY" maxlength="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="card-cvc">CVC</label>
+                                <input type="text" id="card-cvc" name="card-cvc" placeholder="123" maxlength="3">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="register-btn">Start Your Free Trial</button>
             </form>
 
             <div class="login-link">
