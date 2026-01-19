@@ -838,3 +838,16 @@ margin-left: 120px;
     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
     background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
 }
+
+.profile-btn.danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+    border: none;
+    font-weight: bold;
+}
+
+.profile-btn.danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+}

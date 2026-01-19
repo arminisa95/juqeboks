@@ -198,7 +198,8 @@ async function login(username, password) {
 function setupProfilePage() {
     const profileForm = document.getElementById('profileForm');
     const logoutBtn = document.getElementById('logoutBtn');
-    if (!profileForm && !logoutBtn) return;
+    const deleteProfileBtn = document.getElementById('deleteProfileBtn');
+    if (!profileForm && !logoutBtn && !deleteProfileBtn) return;
 
     if (profileForm && profileForm.dataset.bound === 'true') {
         return;
@@ -206,6 +207,7 @@ function setupProfilePage() {
 
     if (profileForm) profileForm.dataset.bound = 'true';
     if (logoutBtn) logoutBtn.dataset.bound = 'true';
+    if (deleteProfileBtn) deleteProfileBtn.dataset.bound = 'true';
 
     requireAuth();
     const token = localStorage.getItem('juke_token');
@@ -302,6 +304,11 @@ function setupProfilePage() {
     // Logout button handler
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => logout());
+    }
+
+    // Delete profile button handler
+    if (deleteProfileBtn) {
+        deleteProfileBtn.addEventListener('click', () => deleteProfile());
     }
 
     // Form submission handler
@@ -569,6 +576,58 @@ function setupRegisterForm() {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Sign Up';
     });
+}
+
+// Delete profile function
+async function deleteProfile() {
+    const token = localStorage.getItem('juke_token');
+    if (!token) {
+        logout();
+        return;
+    }
+
+    // Show confirmation dialog
+    const confirmed = confirm('Are you sure you want to delete your profile? This action cannot be undone and will permanently delete all your data including tracks, playlists, and account information.');
+    
+    if (!confirmed) {
+        return;
+    }
+
+    // Second confirmation for safety
+    const doubleConfirmed = confirm('This is your last chance! Are you absolutely sure you want to permanently delete your JUKE profile?');
+    
+    if (!doubleConfirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/users/profile', {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            // Show success message
+            alert('Your profile has been successfully deleted. You will be redirected to the home page.');
+            
+            // Clear local storage and logout
+            localStorage.removeItem('juke_token');
+            localStorage.removeItem('juke_user');
+            
+            // Redirect to home page
+            window.location.hash = '#/feed';
+            window.location.reload();
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete profile');
+        }
+    } catch (error) {
+        console.error('Delete profile error:', error);
+        alert(`Failed to delete profile: ${error.message}. Please try again or contact support.`);
+    }
 }
 
 // Initialize auth on page load

@@ -537,6 +537,70 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
     }
 });
 
+app.delete('/api/users/profile', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Start transaction
+        await db.query('BEGIN');
+
+        try {
+            // Delete user's playlists
+            await db.query('DELETE FROM playlists WHERE user_id = $1', [userId]);
+
+            // Delete user's favorites
+            await db.query('DELETE FROM user_favorites WHERE user_id = $1', [userId]);
+
+            // Delete user's likes
+            await db.query('DELETE FROM user_likes WHERE liker_id = $1 OR liked_user_id = $1', [userId]);
+
+            // Delete user's tracks (this will cascade to track-related data)
+            // First get all tracks uploaded by this user
+            const userTracks = await db.getAll('SELECT id FROM tracks WHERE uploader_id = $1', [userId]);
+            
+            // Delete track-related data for each track
+            for (const track of userTracks) {
+                await db.query('DELETE FROM user_favorites WHERE track_id = $1', [track.id]);
+                await db.query('DELETE FROM playlist_tracks WHERE track_id = $1', [track.id]);
+                await db.query('DELETE FROM user_likes WHERE track_id = $1', [track.id]);
+            }
+
+            // Delete the tracks
+            await db.query('DELETE FROM tracks WHERE uploader_id = $1', [userId]);
+
+            // Delete user's subscription data (if monetization schema is available)
+            try {
+                await db.query('DELETE FROM user_subscriptions WHERE user_id = $1', [userId]);
+                await db.query('DELETE FROM upload_credits WHERE user_id = $1', [userId]);
+            } catch (error) {
+                // Ignore if monetization tables don't exist
+                console.log('Monetization tables not found, skipping...');
+            }
+
+            // Delete the user
+            const result = await db.query('DELETE FROM users WHERE id = $1', [userId]);
+
+            if (result.rowCount === 0) {
+                await db.query('ROLLBACK');
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            // Commit transaction
+            await db.query('COMMIT');
+
+            res.json({ message: 'Profile deleted successfully' });
+
+        } catch (error) {
+            await db.query('ROLLBACK');
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('Delete profile error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.get('/api/users/:id/summary', authenticateToken, async (req, res) => {
     try {
         const viewerId = req.user.id;
