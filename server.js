@@ -8,6 +8,8 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const MonetizationService = require('./payment-integration');
+const monetizationRoutes = require('./monetization-api-simple');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1529,7 +1531,36 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
-app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }, { name: 'videoFile', maxCount: 1 }]), async (req, res) => {
+// Upload Credits Check Middleware
+async function checkUploadCredits(req, res, next) {
+    try {
+        const user = await db.get('SELECT subscription_tier FROM users WHERE id = ?', [req.user.id]);
+        
+        // Premium+ users have unlimited uploads
+        if (user.subscription_tier !== 'free') {
+            return next();
+        }
+
+        // Check free user credits
+        const credits = await db.get('SELECT credits FROM upload_credits WHERE user_id = ?', [req.user.id]);
+        
+        if (!credits || credits.credits <= 0) {
+            return res.status(402).json({ 
+                success: false, 
+                error: 'No upload credits remaining. Upgrade to Premium for unlimited uploads.',
+                upgradeRequired: true,
+                subscriptionUrl: '/subscription-plans.html'
+            });
+        }
+
+        next();
+    } catch (error) {
+        console.error('Upload credits check error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }, { name: 'videoFile', maxCount: 1 }]), async (req, res) => {
     try {
         const { title, artist: artistRaw, genre } = req.body;
 
@@ -1649,6 +1680,22 @@ app.post('/api/upload', authenticateToken, upload.fields([{ name: 'audioFile', m
             is_available: true
         });
 
+        // Consume upload credit for free users
+        const user = await db.get('SELECT subscription_tier FROM users WHERE id = ?', [userId]);
+        if (user.subscription_tier === 'free') {
+            await db.run('UPDATE upload_credits SET credits = credits - 1 WHERE user_id = ?', [userId]);
+            
+            // Log credit transaction
+            await db.insert('credit_transactions', {
+                user_id: userId,
+                track_id: result.id,
+                credits_spent: 1,
+                transaction_type: 'upload',
+                description: 'Track upload',
+                created_at: new Date().toISOString()
+            });
+        }
+
         res.json({ success: true, track: result });
     } catch (error) {
         console.error('Upload error:', error);
@@ -1710,6 +1757,12 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+// Initialize Monetization Service
+const monetizationService = new MonetizationService();
+
+// Add Monetization Routes
+app.use('/api/monetization', monetizationRoutes);
 
 // Initialize database and start server
 initializeDatabase().then(async () => {

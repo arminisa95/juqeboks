@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUKE Premium - Choose Your Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+        .card-gradient {
+            background: linear-gradient(135deg, rgba(0, 255, 208, 0.1) 0%, rgba(29, 185, 84, 0.1) 100%);
+            border: 1px solid rgba(0, 255, 208, 0.3);
+        }
+        .premium-gradient {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 140, 0, 0.2) 100%);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            transform: scale(1.05);
+        }
+        .pro-gradient {
+            background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(79, 70, 229, 0.2) 100%);
+            border: 2px solid rgba(147, 51, 234, 0.5);
+        }
+        .label-gradient {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
+            border: 2px solid rgba(239, 68, 68, 0.5);
+        }
+        .feature-check {
+            color: #10b981;
+        }
+        .feature-cross {
+            color: #ef4444;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Header -->
+    <header class="py-6 px-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <img src="../images/juqe.png" alt="JUKE" class="h-10">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent">
+                    JUKE Premium
+                </h1>
+            </div>
+            <nav class="hidden md:flex space-x-6">
+                <a href="#features" class="hover:text-cyan-400 transition">Features</a>
+                <a href="#pricing" class="hover:text-cyan-400 transition">Pricing</a>
+                <a href="#faq" class="hover:text-cyan-400 transition">FAQ</a>
+                <a href="../index.html" class="hover:text-cyan-400 transition">
+                    <i class="fas fa-home mr-2"></i>Back to JUKE
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="py-20 px-8">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-5xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent">
+                Upgrade Your Music Experience
+            </h2>
+            <p class="text-xl text-gray-300 mb-8">
+                Join thousands of artists and music lovers who've already upgraded to JUKE Premium
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                    <span>Unlimited uploads</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                    <span>HD audio quality</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                    <span>No advertisements</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                    <span>Advanced analytics</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Cards -->
+    <section id="pricing" class="py-16 px-8">
+        <div class="max-w-7xl mx-auto">
+            <h3 class="text-3xl font-bold text-center mb-12">Choose Your Plan</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                
+                <!-- Free Plan -->
+                <div class="card-gradient rounded-2xl p-8 hover:shadow-2xl transition-all duration-300">
+                    <div class="text-center mb-6">
+                        <h4 class="text-2xl font-bold mb-2">Free</h4>
+                        <div class="text-4xl font-bold mb-4">
+                            €0<span class="text-lg text-gray-400">/month</span>
+                        </div>
+                        <p class="text-gray-400">Perfect for getting started</p>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>3 track uploads per month</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Standard audio quality</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Basic playlists (5 max)</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Community features</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-times-circle feature-cross mr-3"></i>
+                            <span class="text-gray-400">Advertisements</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-times-circle feature-cross mr-3"></i>
+                            <span class="text-gray-400">Analytics dashboard</span>
+                        </li>
+                    </ul>
+                    
+                    <button class="w-full py-3 px-6 rounded-lg bg-gray-600 text-gray-300 cursor-not-allowed" disabled>
+                        Current Plan
+                    </button>
+                </div>
+
+                <!-- Premium Plan -->
+                <div class="card-gradient rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 premium-gradient">
+                    <div class="text-center mb-6">
+                        <div class="inline-block bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-bold mb-4 pulse">
+                            MOST POPULAR
+                        </div>
+                        <h4 class="text-2xl font-bold mb-2">Premium</h4>
+                        <div class="text-4xl font-bold mb-4">
+                            €9.99<span class="text-lg text-gray-400">/month</span>
+                        </div>
+                        <p class="text-gray-400">For serious music creators</p>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Unlimited track uploads</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>High quality audio (320kbps)</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Unlimited playlists</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>No advertisements</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Basic analytics</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Priority support</span>
+                        </li>
+                    </ul>
+                    
+                    <button class="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 subscribe-btn" data-plan="premium">
+                        Upgrade to Premium
+                    </button>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="card-gradient rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 pro-gradient">
+                    <div class="text-center mb-6">
+                        <h4 class="text-2xl font-bold mb-2">Pro</h4>
+                        <div class="text-4xl font-bold mb-4">
+                            €19.99<span class="text-lg text-gray-400">/month</span>
+                        </div>
+                        <p class="text-gray-400">For professional artists</p>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Everything in Premium</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Lossless audio quality</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Advanced analytics</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Promotion tools</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>API access</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Custom branding</span>
+                        </li>
+                    </ul>
+                    
+                    <button class="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 subscribe-btn" data-plan="pro">
+                        Upgrade to Pro
+                    </button>
+                </div>
+
+                <!-- Label Plan -->
+                <div class="card-gradient rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 label-gradient">
+                    <div class="text-center mb-6">
+                        <h4 class="text-2xl font-bold mb-2">Label</h4>
+                        <div class="text-4xl font-bold mb-4">
+                            €99.99<span class="text-lg text-gray-400">/month</span>
+                        </div>
+                        <p class="text-gray-400">For record labels</p>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Everything in Pro</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Multi-artist management</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Advanced analytics</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>White-label options</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Dedicated account manager</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle feature-check mr-3"></i>
+                            <span>Custom integrations</span>
+                        </li>
+                    </ul>
+                    
+                    <button class="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold hover:from-red-600 hover:to-pink-600 transition-all duration-300 subscribe-btn" data-plan="label">
+                        Contact Sales
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-16 px-8">
+        <div class="max-w-6xl mx-auto">
+            <h3 class="text-3xl font-bold text-center mb-12">Premium Features</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-cyan-400">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">Unlimited Uploads</h4>
+                    <p class="text-gray-400">Upload as many tracks as you want with no monthly limits</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-cyan-400">
+                        <i class="fas fa-headphones"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">HD Audio Quality</h4>
+                    <p class="text-gray-400">Stream and upload in crystal clear high-definition audio</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-cyan-400">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">Advanced Analytics</h4>
+                    <p class="text-gray-400">Track your performance with detailed insights and metrics</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-cyan-400">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">No Ads</h4>
+                    <p class="text-gray-400">Enjoy uninterrupted music without any advertisements</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-cyan-400">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">Promotion Tools</h4>
+                    <p class="text-gray-400">Boost your visibility with promotional campaigns</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-4xl mb-4 text-cyan-400">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">API Access</h4>
+                    <p class="text-gray-400">Integrate JUKE with your own applications and services</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-16 px-8">
+        <div class="max-w-4xl mx-auto">
+            <h3 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h3>
+            
+            <div class="space-y-6">
+                <div class="card-gradient rounded-lg p-6">
+                    <h4 class="text-xl font-bold mb-3">Can I change or cancel my subscription anytime?</h4>
+                    <p class="text-gray-400">Yes! You can upgrade, downgrade, or cancel your subscription at any time. Changes take effect at the next billing cycle.</p>
+                </div>
+                
+                <div class="card-gradient rounded-lg p-6">
+                    <h4 class="text-xl font-bold mb-3">What payment methods do you accept?</h4>
+                    <p class="text-gray-400">We accept all major credit cards, debit cards, and PayPal through our secure payment processor Stripe.</p>
+                </div>
+                
+                <div class="card-gradient rounded-lg p-6">
+                    <h4 class="text-xl font-bold mb-3">Is there a free trial?</h4>
+                    <p class="text-gray-400">New users get a 14-day free trial of Premium. No credit card required to start your trial.</p>
+                </div>
+                
+                <div class="card-gradient rounded-lg p-6">
+                    <h4 class="text-xl font-bold mb-3">What happens to my music if I cancel?</h4>
+                    <p class="text-gray-400">Your music stays on JUKE forever! If you cancel, you'll keep your tracks but lose premium features.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 px-8 border-t border-gray-800">
+        <div class="max-w-6xl mx-auto text-center">
+            <p class="text-gray-400">© 2026 JUKE Music Platform. All rights reserved.</p>
+            <div class="mt-4 space-x-6">
+                <a href="#" class="text-gray-400 hover:text-cyan-400 transition">Terms of Service</a>
+                <a href="#" class="text-gray-400 hover:text-cyan-400 transition">Privacy Policy</a>
+                <a href="#" class="text-gray-400 hover:text-cyan-400 transition">Contact Support</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-gray-900 rounded-2xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold mb-4">Complete Your Subscription</h3>
+            <div class="mb-6">
+                <p class="text-gray-400">Plan: <span id="selectedPlan" class="text-white font-bold"></span></p>
+                <p class="text-2xl font-bold mt-2">€<span id="planPrice"></span>/month</p>
+            </div>
+            
+            <!-- Stripe Elements -->
+            <div id="cardElement" class="mb-6">
+                <!-- Stripe card element will be inserted here -->
+            </div>
+            
+            <div id="cardErrors" class="text-red-500 mb-4"></div>
+            
+            <div class="flex space-x-4">
+                <button id="cancelPayment" class="flex-1 py-3 px-6 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition">
+                    Cancel
+                </button>
+                <button id="confirmPayment" class="flex-1 py-3 px-6 rounded-lg bg-gradient-to-r from-cyan-500 to-green-500 text-white font-bold hover:from-cyan-600 hover:to-green-600 transition">
+                    Subscribe Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Stripe (use your actual publishable key)
+        const stripe = Stripe('pk_test_your_stripe_publishable_key');
+        const elements = stripe.elements();
+        
+        // Create card element
+        const cardElement = elements.create('card', {
+            style: {
+                base: {
+                    color: '#ffffff',
+                    backgroundColor: '#1f2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    padding: '12px',
+                },
+            },
+        });
+        
+        cardElement.mount('#cardElement');
+        
+        // Plan pricing
+        const planPricing = {
+            premium: 9.99,
+            pro: 19.99,
+            label: 99.99
+        };
+        
+        // Modal handling
+        const paymentModal = document.getElementById('paymentModal');
+        const selectedPlanSpan = document.getElementById('selectedPlan');
+        const planPriceSpan = document.getElementById('planPrice');
+        const cardErrors = document.getElementById('cardErrors');
+        
+        // Subscribe button clicks
+        document.querySelectorAll('.subscribe-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const plan = this.dataset.plan;
+                const price = planPricing[plan];
+                
+                selectedPlanSpan.textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
+                planPriceSpan.textContent = price;
+                
+                paymentModal.classList.remove('hidden');
+                paymentModal.classList.add('flex');
+            });
+        });
+        
+        // Cancel payment
+        document.getElementById('cancelPayment').addEventListener('click', function() {
+            paymentModal.classList.add('hidden');
+            paymentModal.classList.remove('flex');
+            cardErrors.textContent = '';
+        });
+        
+        // Confirm payment
+        document.getElementById('confirmPayment').addEventListener('click', async function() {
+            const { token, error } = await stripe.createToken(cardElement);
+            
+            if (error) {
+                cardErrors.textContent = error.message;
+            } else {
+                // Send token to your server
+                try {
+                    const response = await fetch('/api/subscribe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            token: token.id,
+                            plan: selectedPlanSpan.textContent.toLowerCase(),
+                            price: planPriceSpan.textContent
+                        }),
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Redirect to success page
+                        window.location.href = '/subscription-success';
+                    } else {
+                        cardErrors.textContent = result.error || 'Payment failed';
+                    }
+                } catch (err) {
+                    cardErrors.textContent = 'Payment processing error';
+                }
+            }
+        });
+        
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
