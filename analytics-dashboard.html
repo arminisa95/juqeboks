@@ -354,6 +354,69 @@
             box-shadow: 0 4px 12px rgba(0, 255, 208, 0.3);
         }
 
+        /* Top Artists Lists */
+        .top-artists-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .artist-rank-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .artist-rank-item:last-child {
+            border-bottom: none;
+        }
+
+        .artist-rank-number {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #00ffd0, #00b896);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+            font-size: 0.8rem;
+        }
+
+        .artist-rank-number.top-3 {
+            background: linear-gradient(135deg, #ffd700, #ff9500);
+        }
+
+        .artist-info {
+            flex: 1;
+        }
+
+        .artist-name {
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .artist-stats {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+        }
+
+        .artist-metric {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .artist-metric.plays {
+            color: #00ffd0;
+        }
+
+        .artist-metric.revenue {
+            color: #ffd700;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .analytics-container {
@@ -480,6 +543,53 @@
                 </div>
             </div>
 
+            <!-- Business Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <span class="metric-change">+23%</span>
+                    </div>
+                    <div class="metric-value" id="totalUsers">0</div>
+                    <div class="metric-label">Total Users</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-euro-sign"></i>
+                        </div>
+                        <span class="metric-change">+18%</span>
+                    </div>
+                    <div class="metric-value" id="monthlyRevenue">€0</div>
+                    <div class="metric-label">Monthly Revenue</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-hand-holding-usd"></i>
+                        </div>
+                        <span class="metric-change">+31%</span>
+                    </div>
+                    <div class="metric-value" id="artistPayouts">€0</div>
+                    <div class="metric-label">Artist Payouts This Month</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <span class="metric-change">+45%</span>
+                    </div>
+                    <div class="metric-value" id="activeArtists">0</div>
+                    <div class="metric-label">Active Artists</div>
+                </div>
+            </div>
+
             <!-- Charts -->
             <div class="charts-grid">
                 <div class="chart-card">
@@ -493,6 +603,23 @@
                     <h3 class="chart-title">Genre Distribution</h3>
                     <div class="chart-container">
                         <canvas id="genreChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Artists Section -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">Top 10 Most Listened Artists</h3>
+                    <div class="top-artists-list" id="topListenedArtists">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">Top 10 Highest Paid Artists</h3>
+                    <div class="top-artists-list" id="topPaidArtists">
+                        <!-- Will be populated by JavaScript -->
                     </div>
                 </div>
             </div>
@@ -640,6 +767,7 @@
                 updateMetrics();
                 updateCharts(dateRange);
                 updateUserInfo();
+                updateTopArtists();
             }, 500);
         }
 
@@ -649,6 +777,12 @@
             document.getElementById('totalMinutes').textContent = Math.floor(Math.random() * 50000) + 5000;
             document.getElementById('totalUploads').textContent = Math.floor(Math.random() * 50) + 5;
             document.getElementById('totalFollowers').textContent = Math.floor(Math.random() * 500) + 50;
+            
+            // Business metrics
+            document.getElementById('totalUsers').textContent = (Math.floor(Math.random() * 50000) + 10000).toLocaleString();
+            document.getElementById('monthlyRevenue').textContent = '€' + (Math.floor(Math.random() * 50000) + 10000).toLocaleString();
+            document.getElementById('artistPayouts').textContent = '€' + (Math.floor(Math.random() * 30000) + 5000).toLocaleString();
+            document.getElementById('activeArtists').textContent = (Math.floor(Math.random() * 2000) + 500).toLocaleString();
         }
 
         function updateCharts(dateRange) {
@@ -683,6 +817,60 @@
             document.getElementById('userName').textContent = 'JUKE Artist';
             document.getElementById('userTier').textContent = 'Premium Plan';
             document.getElementById('uploadCredits').textContent = '∞';
+        }
+
+        function updateTopArtists() {
+            // Generate demo data for top listened artists
+            const listenedArtists = [
+                { name: 'Electronic Dreams', plays: 45234, tracks: 12 },
+                { name: 'Hip Hop Kings', plays: 38921, tracks: 8 },
+                { name: 'Rock Legends', plays: 35678, tracks: 15 },
+                { name: 'Pop Sensation', plays: 32145, tracks: 6 },
+                { name: 'Jazz Masters', plays: 28934, tracks: 10 },
+                { name: 'R&B Stars', plays: 26789, tracks: 9 },
+                { name: 'Indie Vibes', plays: 24567, tracks: 11 },
+                { name: 'Classical Works', plays: 22345, tracks: 7 },
+                { name: 'Folk Stories', plays: 20123, tracks: 13 },
+                { name: 'Metal Force', plays: 18976, tracks: 5 }
+            ];
+
+            const listenedContainer = document.getElementById('topListenedArtists');
+            listenedContainer.innerHTML = listenedArtists.map((artist, index) => `
+                <div class="artist-rank-item">
+                    <div class="artist-rank-number ${index < 3 ? 'top-3' : ''}">${index + 1}</div>
+                    <div class="artist-info">
+                        <div class="artist-name">${artist.name}</div>
+                        <div class="artist-stats">${artist.tracks} tracks</div>
+                    </div>
+                    <div class="artist-metric plays">${artist.plays.toLocaleString()} plays</div>
+                </div>
+            `).join('');
+
+            // Generate demo data for top paid artists
+            const paidArtists = [
+                { name: 'Electronic Dreams', revenue: 12456, plays: 45234 },
+                { name: 'Hip Hop Kings', revenue: 11234, plays: 38921 },
+                { name: 'Rock Legends', revenue: 9876, plays: 35678 },
+                { name: 'Pop Sensation', revenue: 8901, plays: 32145 },
+                { name: 'Jazz Masters', revenue: 7654, plays: 28934 },
+                { name: 'R&B Stars', revenue: 6789, plays: 26789 },
+                { name: 'Indie Vibes', revenue: 5678, plays: 24567 },
+                { name: 'Classical Works', revenue: 4567, plays: 22345 },
+                { name: 'Folk Stories', revenue: 3456, plays: 20123 },
+                { name: 'Metal Force', revenue: 2890, plays: 18976 }
+            ];
+
+            const paidContainer = document.getElementById('topPaidArtists');
+            paidContainer.innerHTML = paidArtists.map((artist, index) => `
+                <div class="artist-rank-item">
+                    <div class="artist-rank-number ${index < 3 ? 'top-3' : ''}">${index + 1}</div>
+                    <div class="artist-info">
+                        <div class="artist-name">${artist.name}</div>
+                        <div class="artist-stats">${artist.plays.toLocaleString()} plays</div>
+                    </div>
+                    <div class="artist-metric revenue">€${artist.revenue.toLocaleString()}</div>
+                </div>
+            `).join('');
         }
 
         function refreshData() {
