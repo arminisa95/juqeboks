@@ -1076,8 +1076,6 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                 var mediaViewer = document.getElementById('jukeMediaViewerRoot');
                 if (!mediaViewer || !mediaViewer.classList.contains('open')) return;
                 
-                console.log('Key pressed:', e.key); // Debug log
-                
                 if (e.key === 'Escape') {
                     close();
                     return;
@@ -1085,34 +1083,18 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                 
                 // Arrow key navigation
                 if (e.key === 'ArrowLeft') {
-                    console.log('ArrowLeft pressed, navigating to previous'); // Debug log
                     try {
                         var prevBtn = mediaViewer.querySelector('.juke-media-prev');
-                        if (prevBtn && !prevBtn.disabled) {
-                            console.log('Previous button clicked'); // Debug log
-                            prevBtn.click();
-                        } else {
-                            console.log('Previous button disabled or not found'); // Debug log
-                        }
-                    } catch (_) {
-                        console.log('Error in previous navigation'); // Debug log
-                    }
+                        if (prevBtn && !prevBtn.disabled) prevBtn.click();
+                    } catch (_) {}
                     return;
                 }
                 
                 if (e.key === 'ArrowRight') {
-                    console.log('ArrowRight pressed, navigating to next'); // Debug log
                     try {
                         var nextBtn = mediaViewer.querySelector('.juke-media-next');
-                        if (nextBtn && !nextBtn.disabled) {
-                            console.log('Next button clicked'); // Debug log
-                            nextBtn.click();
-                        } else {
-                            console.log('Next button disabled or not found'); // Debug log
-                        }
-                    } catch (_) {
-                        console.log('Error in next navigation'); // Debug log
-                    }
+                        if (nextBtn && !nextBtn.disabled) nextBtn.click();
+                    } catch (_) {}
                     return;
                 }
                 

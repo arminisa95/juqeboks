@@ -1,3 +1,19 @@
+
+function isSpaMode() {
+    return !!(document.body && document.body.dataset && document.body.dataset.spa);
+}
+
+function resolveAssetUrl(url, fallback) {
+    if (!url) return fallback;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return `${window.JukeAPIBase.getApiOrigin()}${url}`;
+    return url;
+}
+
+function getAuthToken() {
+    return localStorage.getItem('juke_token');
+}
+
 function isTokenExpired() {
     try {
         const token = getAuthToken();

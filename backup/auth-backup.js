@@ -1,6 +1,25 @@
 // JUKE Authentication System
+var API_BASE = (function () {
+    try {
+        if (window.location && window.location.origin) {
+            var host = String(window.location.hostname || '');
+            if (host.endsWith('github.io')) return 'https://juke-api.onrender.com/api';
+            return window.location.origin.replace(/\/$/, '') + '/api';
+        }
+    } catch (_) {
+    }
+    return 'https://juke-api.onrender.com/api';
+})();
+
+function getAuthApiBases() {
+    var bases = [API_BASE, 'https://juke-api.onrender.com/api'];
+    return bases.filter(function (v, i, a) {
+        return !!v && a.indexOf(v) === i;
+    });
+}
+
 async function postAuthJson(path, payload, validateOkData) {
-    var bases = window.JukeAPIBase.getApiBases();
+    var bases = getAuthApiBases();
     var lastErr = null;
 
     for (var i = 0; i < bases.length; i++) {
