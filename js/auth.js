@@ -439,10 +439,10 @@ function updateAuthUI() {
         loginLinks.forEach(link => link.style.display = 'none');
         userLinks.forEach(link => {
             link.style.display = '';
-            // Update auth-user links to show username with turquoise color
-            if (link.textContent === '_U') {
-                link.textContent = `_${user.username || user.firstName || 'User'}`;
-                link.style.color = '#00ffd0';
+            // Keep auth-user links as "_U" (don't show username in top nav)
+            if (link.textContent.startsWith('_') && link.textContent !== '_U') {
+                link.textContent = '_U';
+                link.style.color = '';
             }
         });
         
@@ -457,11 +457,6 @@ function updateAuthUI() {
         loginLinks.forEach(link => link.style.display = '');
         userLinks.forEach(link => {
             link.style.display = 'none';
-            // Reset text and color when logged out
-            if (link.textContent.startsWith('_') && link.textContent !== '_U') {
-                link.textContent = '_U';
-                link.style.color = '';
-            }
         });
         
         if (usernameDisplay) {
