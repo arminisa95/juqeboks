@@ -57,21 +57,6 @@ window.isTrackLiked = function (trackId) {
     }
 };
 
-function isSpaMode() {
-    return !!(document.body && document.body.dataset && document.body.dataset.spa);
-}
-
-function getAuthToken() {
-    return localStorage.getItem('juke_token');
-}
-
-function resolveAssetUrl(url, fallback) {
-    if (!url) return fallback;
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/')) return `${window.JukeAPIBase.getApiOrigin()}${url}`;
-    return url;
-}
-
 function resolveLocalAssetUrl(pathFromRoot) {
     try {
         var p = (window.location && window.location.pathname) ? String(window.location.pathname).replace(/\\/g, '/') : '';
