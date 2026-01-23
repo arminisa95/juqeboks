@@ -442,6 +442,9 @@ function updateAuthUI() {
         if (usernameDisplay) {
             usernameDisplay.textContent = user.username || user.firstName || 'User';
         }
+        
+        // Update koleqtion text with username
+        updateKoleqtionText(user.username || user.firstName || 'User');
     } else {
         // Show login elements
         loginLinks.forEach(link => link.style.display = '');
@@ -450,10 +453,41 @@ function updateAuthUI() {
         if (usernameDisplay) {
             usernameDisplay.textContent = '';
         }
+        
+        // Reset koleqtion text
+        updateKoleqtionText(null);
     }
 
     if (typeof setFloatingButtonDestination === 'function') {
         setFloatingButtonDestination();
+    }
+}
+
+// Update koleqtion text to show username with underscore
+function updateKoleqtionText(username) {
+    const koleqtionElements = document.querySelectorAll('.library-nav-title');
+    const koleqtionLinks = document.querySelectorAll('a[href*="koleqtion"], a[href="#/koleqtion"]');
+    const mobileKoleqtion = document.querySelector('.mobile-nav-item[data-nav="koleqtion"] span');
+    
+    const displayText = username ? `_${username}` : '_koleqtion';
+    
+    // Update library nav titles
+    koleqtionElements.forEach(element => {
+        if (element.textContent.includes('_koleqtion') || element.textContent.startsWith('_')) {
+            element.textContent = displayText;
+        }
+    });
+    
+    // Update koleqtion links
+    koleqtionLinks.forEach(link => {
+        if (link.textContent.includes('_koleqtion') || link.textContent.startsWith('_')) {
+            link.textContent = displayText;
+        }
+    });
+    
+    // Update mobile navigation
+    if (mobileKoleqtion) {
+        mobileKoleqtion.textContent = displayText;
     }
 }
 
