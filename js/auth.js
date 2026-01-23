@@ -437,7 +437,14 @@ function updateAuthUI() {
     if (user) {
         // Show user-specific elements
         loginLinks.forEach(link => link.style.display = 'none');
-        userLinks.forEach(link => link.style.display = '');
+        userLinks.forEach(link => {
+            link.style.display = '';
+            // Update auth-user links to show username with turquoise color
+            if (link.textContent === '_U') {
+                link.textContent = `_${user.username || user.firstName || 'User'}`;
+                link.style.color = '#00ffd0';
+            }
+        });
         
         if (usernameDisplay) {
             usernameDisplay.textContent = user.username || user.firstName || 'User';
@@ -448,7 +455,14 @@ function updateAuthUI() {
     } else {
         // Show login elements
         loginLinks.forEach(link => link.style.display = '');
-        userLinks.forEach(link => link.style.display = 'none');
+        userLinks.forEach(link => {
+            link.style.display = 'none';
+            // Reset text and color when logged out
+            if (link.textContent.startsWith('_') && link.textContent !== '_U') {
+                link.textContent = '_U';
+                link.style.color = '';
+            }
+        });
         
         if (usernameDisplay) {
             usernameDisplay.textContent = '';
@@ -470,11 +484,13 @@ function updateKoleqtionText(username) {
     const mobileKoleqtion = document.querySelector('.mobile-nav-item[data-nav="koleqtion"] span');
     
     const displayText = username ? `_${username}` : '_koleqtion';
+    const isUserLoggedIn = !!username;
     
     // Update library nav titles
     koleqtionElements.forEach(element => {
         if (element.textContent.includes('_koleqtion') || element.textContent.startsWith('_')) {
             element.textContent = displayText;
+            element.style.color = isUserLoggedIn ? '#00ffd0' : '';
         }
     });
     
@@ -482,12 +498,14 @@ function updateKoleqtionText(username) {
     koleqtionLinks.forEach(link => {
         if (link.textContent.includes('_koleqtion') || link.textContent.startsWith('_')) {
             link.textContent = displayText;
+            link.style.color = isUserLoggedIn ? '#00ffd0' : '';
         }
     });
     
     // Update mobile navigation
     if (mobileKoleqtion) {
         mobileKoleqtion.textContent = displayText;
+        mobileKoleqtion.style.color = isUserLoggedIn ? '#00ffd0' : '';
     }
 }
 
