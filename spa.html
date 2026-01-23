@@ -313,6 +313,11 @@
 
                 <form id="profileForm">
                     <div class="form-group">
+                        <label for="profileUsername">Username</label>
+                        <input type="text" id="profileUsername" name="profileUsername" required>
+                    </div>
+
+                    <div class="form-group">
                         <label for="profileEmail">Email</label>
                         <input type="email" id="profileEmail" name="profileEmail" disabled>
                     </div>
@@ -331,6 +336,26 @@
                     <div class="form-group">
                         <label for="profileBio">Bio</label>
                         <input type="text" id="profileBio" name="profileBio" placeholder="Tell us something about you">
+                    </div>
+
+                    <div class="profile-section" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <h3 style="color: #00ffd0; margin-bottom: 1rem; font-size: 1.1rem;">Change Password</h3>
+                        
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password" minlength="8">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password" minlength="8">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">

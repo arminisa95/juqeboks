@@ -213,12 +213,18 @@ function setupProfilePage() {
     }
 
     // Get form elements
+    const usernameEl = document.getElementById('profileUsername');
     const emailEl = document.getElementById('profileEmail');
     const firstNameEl = document.getElementById('profileFirstName');
     const lastNameEl = document.getElementById('profileLastName');
     const bioEl = document.getElementById('profileBio');
     const avatarEl = document.getElementById('profileAvatar');
     const messageEl = document.getElementById('profileMessage');
+
+    // Password change elements
+    const currentPasswordEl = document.getElementById('currentPassword');
+    const newPasswordEl = document.getElementById('newPassword');
+    const confirmPasswordEl = document.getElementById('confirmPassword');
 
     // Avatar upload elements
     const avatarPreview = document.getElementById('avatarPreview');
@@ -228,6 +234,7 @@ function setupProfilePage() {
     const removeBtn = document.getElementById('avatarRemoveBtn');
 
     // Populate form fields
+    if (usernameEl) usernameEl.value = user.username || '';
     if (emailEl) emailEl.value = user.email || '';
     if (firstNameEl) firstNameEl.value = user.firstName || '';
     if (lastNameEl) lastNameEl.value = user.lastName || '';
@@ -330,6 +337,68 @@ function setupProfilePage() {
 
             // Update profile data
             try {
+                // Handle password change if provided
+                if (currentPasswordEl && newPasswordEl && confirmPasswordEl) {
+                    const currentPassword = currentPasswordEl.value.trim();
+                    const newPassword = newPasswordEl.value.trim();
+                    const confirmPassword = confirmPasswordEl.value.trim();
+
+                    if (currentPassword && newPassword && confirmPassword) {
+                        if (newPassword !== confirmPassword) {
+                            showMessage(messageEl, 'New passwords do not match.', 'error');
+                            return;
+                        }
+
+                        if (newPassword.length < 8) {
+                            showMessage(messageEl, 'New password must be at least 8 characters.', 'error');
+                            return;
+                        }
+
+                        try {
+                            await apiFetchJson('/auth/change-password', {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    currentPassword: currentPassword,
+                                    newPassword: newPassword
+                                })
+                            });
+
+                            // Clear password fields
+                            currentPasswordEl.value = '';
+                            newPasswordEl.value = '';
+                            confirmPasswordEl.value = '';
+
+                            showMessage(messageEl, 'Password changed successfully!', 'success');
+                        } catch (error) {
+                            showMessage(messageEl, 'Failed to change password. Please check your current password.', 'error');
+                            return;
+                        }
+                    }
+                }
+
+                // Handle username change
+                const newUsername = usernameEl ? usernameEl.value.trim() : user.username;
+                if (newUsername && newUsername !== user.username) {
+                    try {
+                        await apiFetchJson('/auth/change-username', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                newUsername: newUsername
+                            })
+                        });
+                    } catch (error) {
+                        showMessage(messageEl, 'Username already taken or invalid.', 'error');
+                        return;
+                    }
+                }
 
                 const result = await apiFetchJson('/users/profile', {
                     method: 'PUT',
@@ -338,6 +407,7 @@ function setupProfilePage() {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
+                        username: newUsername,
                         first_name: firstNameEl ? firstNameEl.value.trim() : user.firstName,
                         last_name: lastNameEl ? lastNameEl.value.trim() : user.lastName,
                         bio: bioEl ? bioEl.value.trim() : user.bio,
@@ -356,11 +426,15 @@ function setupProfilePage() {
                     // Update local user data
                     const updatedUser = {
                         ...user,
+                        username: newUsername,
                         firstName: firstNameEl ? firstNameEl.value.trim() : user.firstName,
                         lastName: lastNameEl ? lastNameEl.value.trim() : user.lastName,
                         bio: bioEl ? bioEl.value.trim() : user.bio,
                         avatarUrl: avatarEl ? avatarEl.value.trim() : user.avatarUrl,
                     };
+
+                    // Update currentUser
+                    currentUser = updatedUser;
 
                     // Update UI
                     updateAuthUI();

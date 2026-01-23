@@ -476,6 +476,132 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// Change password
+app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.user.id;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Current password and new password are required' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ error: 'New password must be at least 8 characters' });
+        }
+
+        // Get current user data
+        const user = await db.get(
+            'SELECT id, username, password_hash FROM users WHERE id = $1',
+            [userId]
+        );
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Verify current password
+        const bcrypt = require('bcrypt');
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+
+        // Hash new password
+        const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+        // Update password
+        await db.query(
+            'UPDATE users SET password_hash = $1 WHERE id = $2',
+            [newPasswordHash, userId]
+        );
+
+        res.json({ message: 'Password changed successfully' });
+
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Change username
+app.post('/api/auth/change-username', authenticateToken, async (req, res) => {
+    try {
+        const { newUsername } = req.body;
+        const userId = req.user.id;
+
+        if (!newUsername) {
+            return res.status(400).json({ error: 'New username is required' });
+        }
+
+        if (newUsername.length < 3) {
+            return res.status(400).json({ error: 'Username must be at least 3 characters' });
+        }
+
+        // Check if username is already taken
+        const existingUser = await db.get(
+            'SELECT id FROM users WHERE username = $1 AND id != $2',
+            [newUsername, userId]
+        );
+
+        if (existingUser) {
+            return res.status(409).json({ error: 'Username is already taken' });
+        }
+
+        // Get current user data
+        const user = await db.get(
+            'SELECT id, username, email, first_name, last_name, avatar_url, bio FROM users WHERE id = $1',
+            [userId]
+        );
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Update username
+        await db.query(
+            'UPDATE users SET username = $1 WHERE id = $2',
+            [newUsername, userId]
+        );
+
+        // Generate new token with updated username
+        const jwt = require('jsonwebtoken');
+        const newToken = jwt.sign(
+            {
+                id: user.id,
+                username: newUsername,
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                avatar_url: user.avatar_url,
+                bio: user.bio,
+                is_admin: !!(user && user.is_admin)
+            },
+            process.env.JWT_SECRET || 'your-secret-key',
+            { expiresIn: '7d' }
+        );
+
+        res.json({ 
+            message: 'Username changed successfully',
+            token: newToken,
+            user: {
+                id: user.id,
+                username: newUsername,
+                email: user.email,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                avatarUrl: user.avatar_url,
+                bio: user.bio
+            }
+        });
+
+    } catch (error) {
+        console.error('Change username error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.get('/api/users/profile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
