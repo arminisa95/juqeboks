@@ -300,7 +300,12 @@
     <template id="tpl-login">
         <main class="auth-main">
             <div class="login-container">
-                <h1 class="login-title">Welcome to Juke</h1>
+                <div class="login-header">
+                    <h1 class="login-title">Welcome to Juke</h1>
+                    <button class="login-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close login">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
                 <form id="loginForm">
                     <div class="form-group">
                         <label for="username">Username or Email</label>
@@ -322,7 +327,12 @@
     <template id="tpl-register">
         <main class="auth-main">
             <div class="register-container">
-                <h1 class="register-title">Create Account</h1>
+                <div class="register-header">
+                    <h1 class="register-title">Create Account</h1>
+                    <button class="register-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close register">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
 
                 <div class="social-buttons">
                     <button type="button" class="social-btn google">
@@ -381,7 +391,12 @@
     <template id="tpl-profile">
         <main class="auth-main">
             <div class="profile-container">
-                <h1 class="profile-title">Profile & Settings</h1>
+                <div class="profile-header">
+                    <h1 class="profile-title">Profile & Settings</h1>
+                    <button class="profile-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close profile">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
 
                 <div class="profile-subtitle">Signed in as <span class="username-display"></span></div>
 
