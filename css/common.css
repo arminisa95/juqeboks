@@ -1,0 +1,71 @@
+/* Common utility styles for inline CSS extractions */
+
+/* Hide elements by default */
+.auth-user {
+    display: none;
+}
+
+/* Show elements when needed */
+.auth-user.show {
+    display: inline-block;
+}
+
+/* Hidden elements */
+.hidden {
+    display: none !important;
+}
+
+/* Feed title hidden by default */
+.feed-title {
+    display: none;
+}
+
+/* Lists panel hidden by default */
+.lists-panel[data-panel="playlist"] {
+    display: none;
+}
+
+.lists-panel[data-panel="playlist"].show {
+    display: block;
+}
+
+/* File input hidden */
+.file-input-hidden {
+    display: none;
+}
+
+/* Profile message hidden by default */
+.profile-message {
+    display: none;
+}
+
+.profile-message.show {
+    display: block;
+}
+
+/* Avatar file inputs hidden */
+.avatar-input-hidden {
+    display: none;
+}
+
+/* Small text with muted color */
+.text-muted {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Links with turquoise color */
+.link-turquoise {
+    color: #00ffd0;
+}
+
+/* Upload specific styles */
+.upload-terms a {
+    color: #00ffd0;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .mobile-hidden {
+        display: none !important;
+    }
+}

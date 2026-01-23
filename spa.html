@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="css/upload.css">
     <link rel="stylesheet" href="css/login.css">
     <link rel="stylesheet" href="css/register.css">
-    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/common.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -49,8 +49,8 @@
                     <a href="#/upload" class="app">_uqload</a>
                     <a href="#/koleqtion" class="register">_koleqtion</a>
                     <a href="#/login" class="login auth-login">_U</a>
-                    <a href="#/profile" class="login auth-user" style="display:none;">_U</a>
-                    <a href="#" class="login auth-user" style="display:none;" onclick="logout()">Logout</a>
+                    <a href="#/profile" class="login auth-user">_U</a>
+                    <a href="#" class="login auth-user" onclick="logout()">Logout</a>
                 </div>
             </div>
         </nav>
@@ -142,7 +142,7 @@
                         <div id="likedTracks" class="cards-grid"></div>
                     </div>
 
-                    <div class="lists-panel" id="listsPanelPlaylist" data-panel="playlist" role="tabpanel" style="display:none;">
+                    <div class="lists-panel" id="listsPanelPlaylist" data-panel="playlist" role="tabpanel">
                         <div class="lists-panel-header">
                             <button class="lists-back" type="button" id="playlistBack">Back</button>
                             <div class="lists-panel-title" id="playlistTitle">Playlist</div>
@@ -168,7 +168,7 @@
                         <i class="fas fa-cloud-upload-alt"></i>
                         <p>Drag & drop your audio files here or</p>
                         <p><span class="browse-link">browse</span> your files</p>
-                        <input type="file" id="fileInput" accept="audio/*" style="display: none;" multiple>
+                        <input type="file" id="fileInput" accept="audio/*" class="file-input-hidden" multiple>
                         <div class="file-info" id="fileInfo">No files selected</div>
                     </div>
 
@@ -211,7 +211,7 @@
                     <div class="form-group">
                         <label>
                             <input type="checkbox" id="terms" required>
-                            I have the rights to upload this content and agree to the <a href="#" style="color: #00ffd0;">Terms of Service</a>.
+                            I have the rights to upload this content and agree to the <a href="#" class="link-turquoise">Terms of Service</a>.
                         </label>
                     </div>
 
@@ -309,7 +309,7 @@
 
                 <div class="profile-subtitle">Signed in as <span class="username-display"></span></div>
 
-                <div id="profileMessage" class="profile-message" style="display:none"></div>
+                <div id="profileMessage" class="profile-message"></div>
 
                 <form id="profileForm">
                     <div class="form-group">

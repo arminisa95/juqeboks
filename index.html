@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="css/register.css">
     <link rel="stylesheet" href="css/profile.css">
     <link rel="stylesheet" href="css/media-editor.css">
-    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/common.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -55,7 +55,7 @@
                     <a href="#/upload" class="app">_uqload</a>
                     <a href="#/koleqtion" class="register">_koleqtion</a>
                     <a href="#/login" class="login auth-login">_U</a>
-                    <a href="#/profile" class="login auth-user" style="display:none;">_U</a>
+                    <a href="#/profile" class="login auth-user">_U</a>
                 </div>
             </div>
         </nav>
@@ -64,7 +64,7 @@
     <template id="tpl-feed">
         <section class="music-feed">
             <div class="feed-container">
-                <h1 class="feed-title" style="display:none;">Feed</h1>
+                <h1 class="feed-title">Feed</h1>
                 <div class="music-grid"></div>
             </div>
         </section>
@@ -206,7 +206,7 @@
                         <div id="myPlaylists" class="cards-grid"></div>
                     </div>
 
-                    <div class="lists-panel" id="listsPanelPlaylist" data-panel="playlist" role="tabpanel" style="display:none;">
+                    <div class="lists-panel" id="listsPanelPlaylist" data-panel="playlist" role="tabpanel">
                         <div class="lists-panel-header">
                             <button class="lists-back" type="button" id="playlistBack">Back</button>
                             <div class="lists-panel-title" id="playlistTitle">Playlist</div>
@@ -232,7 +232,7 @@
                         <i class="fas fa-cloud-upload-alt"></i>
                         <p>Drag & drop your audio files here or</p>
                         <p><span class="browse-link">browse</span> your files</p>
-                        <input type="file" id="fileInput" accept="audio/*" style="display: none;" multiple>
+                        <input type="file" id="fileInput" accept="audio/*" class="file-input-hidden" multiple>
                         <div class="file-info" id="fileInfo">No files selected</div>
                     </div>
 
@@ -246,7 +246,7 @@
                         <label for="videoInput"><i class="fas fa-video"></i> Music Video (optional)</label>
                         <input type="file" id="videoInput" class="form-control" accept="video/*">
                         <div class="file-info" id="videoInfo">No video selected</div>
-                        <small style="color: rgba(255,255,255,0.5);">Add a music video to play alongside your track</small>
+                        <small class="text-muted">Add a music video to play alongside your track</small>
                     </div>
 
                     <div class="form-group">
@@ -287,7 +287,7 @@
                     <div class="form-group">
                         <label>
                             <input type="checkbox" id="terms" required>
-                            I have the rights to upload this content and agree to the <a href="#" style="color: #00ffd0;">Terms of Service</a>.
+                            I have the rights to upload this content and agree to the <a href="#" class="link-turquoise">Terms of Service</a>.
                         </label>
                     </div>
 
@@ -400,7 +400,7 @@
 
                 <div class="profile-subtitle">Signed in as <span class="username-display"></span></div>
 
-                <div id="profileMessage" class="profile-message" style="display:none"></div>
+                <div id="profileMessage" class="profile-message"></div>
 
                 <form id="profileForm">
                     <div class="form-group">
@@ -434,10 +434,10 @@
                                     <span>Click to upload</span>
                                 </div>
                             </div>
-                            <input type="file" id="profileAvatarFile" name="profileAvatarFile" accept="image/*" style="display: none;">
-                            <input type="url" id="profileAvatar" name="profileAvatar" placeholder="https://..." style="display: none;">
+                            <input type="file" id="profileAvatarFile" name="profileAvatarFile" accept="image/*" class="avatar-input-hidden">
+                            <input type="url" id="profileAvatar" name="profileAvatar" placeholder="https://..." class="avatar-input-hidden">
                             <button type="button" id="avatarUploadBtn" class="profile-btn secondary">Upload Picture</button>
-                            <button type="button" id="avatarRemoveBtn" class="profile-btn secondary" style="display: none;">Remove Picture</button>
+                            <button type="button" id="avatarRemoveBtn" class="profile-btn secondary hidden">Remove Picture</button>
                         </div>
                     </div>
 
