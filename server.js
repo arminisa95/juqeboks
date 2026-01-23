@@ -663,6 +663,70 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
     }
 });
 
+app.put('/api/users/profile', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { username, first_name, last_name, bio, avatar_url } = req.body;
+
+        // Get current user data
+        const currentUser = await db.get(
+            'SELECT id, username, email, first_name, last_name, avatar_url, bio FROM users WHERE id = $1',
+            [userId]
+        );
+
+        if (!currentUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Update user profile
+        const updatedUser = await db.query(
+            'UPDATE users SET username = $1, first_name = $2, last_name = $3, bio = $4, avatar_url = $5 WHERE id = $6 RETURNING id, username, email, first_name, last_name, avatar_url, bio',
+            [username || currentUser.username, first_name || currentUser.first_name, last_name || currentUser.last_name, bio || currentUser.bio, avatar_url || currentUser.avatar_url, userId]
+        );
+
+        if (updatedUser.rowCount === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const user = updatedUser.rows[0];
+
+        // Generate new token with updated data
+        const jwt = require('jsonwebtoken');
+        const newToken = jwt.sign(
+            {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                avatar_url: user.avatar_url,
+                bio: user.bio,
+                is_admin: !!(user && user.is_admin)
+            },
+            process.env.JWT_SECRET || 'your-secret-key',
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            message: 'Profile updated successfully',
+            token: newToken,
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                avatarUrl: user.avatar_url,
+                bio: user.bio
+            }
+        });
+
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.delete('/api/users/profile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
