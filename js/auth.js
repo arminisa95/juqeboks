@@ -308,20 +308,19 @@ function setupProfilePage() {
                 try {
                     const avatarFormData = new FormData();
                     avatarFormData.append('avatar', avatarFileInput.files[0]);
-                    
-                    const response = await fetch('/api/users/avatar', {
+
+                    const result = await apiFetchJson('/users/avatar', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`
                         },
                         body: avatarFormData
+                    }, function (d) {
+                        return !!d && typeof d === 'object' && !Array.isArray(d);
                     });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        avatarEl.value = result.avatar_url;
-                    } else {
-                        throw new Error('Avatar upload failed');
+
+                    if (avatarEl) {
+                        avatarEl.value = result.avatar_url || '';
                     }
                 } catch (error) {
                     showMessage(messageEl, 'Failed to upload avatar. Please try again.', 'error');
@@ -331,7 +330,8 @@ function setupProfilePage() {
 
             // Update profile data
             try {
-                const response = await fetch('/api/users/profile', {
+
+                const result = await apiFetchJson('/users/profile', {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -343,11 +343,11 @@ function setupProfilePage() {
                         bio: bioEl ? bioEl.value.trim() : user.bio,
                         avatar_url: avatarEl ? avatarEl.value.trim() : user.avatarUrl
                     })
+                }, function (d) {
+                    return !!d && typeof d === 'object' && !Array.isArray(d);
                 });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    
+                if (result) {
                     // Update token with new data
                     if (result.token) {
                         localStorage.setItem('juke_token', result.token);
@@ -369,8 +369,6 @@ function setupProfilePage() {
                     if (avatarPreview) delete avatarPreview.dataset.newAvatar;
 
                     showMessage(messageEl, 'Profile updated successfully!', 'success');
-                } else {
-                    throw new Error('Profile update failed');
                 }
             } catch (error) {
                 console.error('Profile update error:', error);
@@ -561,7 +559,7 @@ function setupRegisterForm() {
 
 // Delete profile function
 async function deleteProfile() {
-    const token = localStorage.getItem('juke_token');
+    const token = getAuthToken();
     if (!token) {
         logout();
         return;
@@ -582,15 +580,18 @@ async function deleteProfile() {
     }
 
     try {
-        const response = await fetch('/api/users/profile', {
+
+        await apiFetchJson('/users/profile', {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
+        }, function (d) {
+            return !d || (typeof d === 'object');
         });
 
-        if (response.ok) {
+        {
             // Show success message
             alert('Your profile has been successfully deleted. You will be redirected to the home page.');
             
@@ -601,9 +602,6 @@ async function deleteProfile() {
             // Redirect to home page
             window.location.hash = '#/feed';
             window.location.reload();
-        } else {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete profile');
         }
     } catch (error) {
         console.error('Delete profile error:', error);

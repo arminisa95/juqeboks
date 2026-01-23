@@ -11,13 +11,6 @@
         return getBasePath() + '/' + relPathFromRoot.replace(/^\//, '');
     }
 
-    function resolveAssetUrl(url) {
-        if (!url) return null;
-        if (url.startsWith('http://') || url.startsWith('https://')) return url;
-        if (url.startsWith('/')) return window.JukeAPIBase.getApiOrigin() + url;
-        return url;
-    }
-
     function isAuthed() {
         try {
             return !!localStorage.getItem('juke_token');

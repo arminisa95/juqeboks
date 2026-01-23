@@ -20,8 +20,6 @@
         }
     })();
 
-    var API_ORIGIN = API_BASE.replace(/\/api$/, '');
-
     // Export to window for global access
     window.JukeAPIBase = {
         getApiBase: function() {
@@ -42,5 +40,20 @@
                 return !!v && a.indexOf(v) === i;
             });
         }
+    };
+
+    window.isSpaMode = function () {
+        return !!(document.body && document.body.dataset && document.body.dataset.spa);
+    };
+
+    window.getAuthToken = function () {
+        return localStorage.getItem('juke_token');
+    };
+
+    window.resolveAssetUrl = function (url, fallback) {
+        if (!url) return fallback;
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        if (url.startsWith('/')) return '' + window.JukeAPIBase.getApiOrigin() + url;
+        return url;
     };
 })();
