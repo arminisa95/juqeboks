@@ -617,7 +617,17 @@ async function renderUserHeader(userId) {
 }
 
 // Fetch all tracks for feed
+var isLoadTracksRunning = false;
+
 async function loadTracks() {
+    // Prevent multiple simultaneous calls
+    if (isLoadTracksRunning) {
+        console.log('loadTracks() already running, skipping duplicate call');
+        return;
+    }
+    
+    isLoadTracksRunning = true;
+    
     try {
         const tracksGrid = document.getElementById('tracksGrid');
 
@@ -634,12 +644,15 @@ async function loadTracks() {
             return;
         }
 
+        // Only run this fallback if neither grid exists
         const tracks = await apiFetchJson('/tracks', {}, function (d) {
             return Array.isArray(d);
         });
         displayFeedTracks(tracks);
     } catch (error) {
         console.error('Error loading tracks:', error);
+    } finally {
+        isLoadTracksRunning = false;
     }
 }
 
@@ -2190,6 +2203,12 @@ async function loadFeedStream(reset) {
     if (!grid) return;
 
     if (reset) {
+        // Prevent multiple simultaneous resets
+        if (feedState.loading && feedState.offset === 0) {
+            console.log('loadFeedStream() reset already in progress, skipping');
+            return;
+        }
+        
         feedState.offset = 0;
         feedState.done = false;
         feedState.storiesLoaded = false;
