@@ -630,21 +630,27 @@ async function loadTracks() {
     
     try {
         const tracksGrid = document.getElementById('tracksGrid');
+        console.log('loadTracks(): tracksGrid exists:', !!tracksGrid);
 
         await loadLikedTrackIds();
 
         if (tracksGrid) {
+            console.log('loadTracks(): taking loadMyTracks() path');
             await loadMyTracks();
             return;
         }
 
         const feedGrid = document.querySelector('.music-grid');
+        console.log('loadTracks(): feedGrid exists:', !!feedGrid);
+        
         if (feedGrid) {
+            console.log('loadTracks(): taking loadFeedStream() path');
             await loadFeedStream(true);
             return;
         }
 
         // Only run this fallback if neither grid exists
+        console.log('loadTracks(): taking fallback displayFeedTracks() path');
         const tracks = await apiFetchJson('/tracks', {}, function (d) {
             return Array.isArray(d);
         });
@@ -2199,8 +2205,12 @@ async function renderStoriesBar() {
 }
 
 async function loadFeedStream(reset) {
+    console.log('loadFeedStream() called with reset:', reset);
     const grid = document.querySelector('.music-grid');
-    if (!grid) return;
+    if (!grid) {
+        console.log('loadFeedStream(): no grid found, returning');
+        return;
+    }
 
     if (reset) {
         // Prevent multiple simultaneous resets
@@ -2209,6 +2219,7 @@ async function loadFeedStream(reset) {
             return;
         }
         
+        console.log('loadFeedStream(): resetting feed state');
         feedState.offset = 0;
         feedState.done = false;
         feedState.storiesLoaded = false;
@@ -2219,7 +2230,10 @@ async function loadFeedStream(reset) {
         renderStoriesBar();
     }
 
-    if (feedState.loading || feedState.done) return;
+    if (feedState.loading || feedState.done) {
+        console.log('loadFeedStream(): already loading or done, returning');
+        return;
+    }
     feedState.loading = true;
 
     try {
@@ -2292,9 +2306,14 @@ async function loadFeedStream(reset) {
 }
 
 function displayFeedTracks(tracks) {
+    console.log('displayFeedTracks() called with', tracks?.length, 'tracks');
     const musicGrid = document.querySelector('.music-grid');
-    if (!musicGrid) return;
+    if (!musicGrid) {
+        console.log('displayFeedTracks(): no music-grid found, returning');
+        return;
+    }
 
+    console.log('displayFeedTracks(): clearing grid and adding', tracks.length, 'tracks');
     musicGrid.innerHTML = '';
 
     // Set global track list for prev/next functionality
