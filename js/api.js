@@ -616,9 +616,13 @@ async function renderUserHeader(userId) {
     }
 }
 
-// Fetch all tracks for feed
+// Add a global loading guard for loadTracks to prevent double calls
 var isLoadTracksRunning = false;
 
+// Add a global feed initialization guard
+window.isFeedInitialized = false;
+
+// Fetch all tracks for feed
 async function loadTracks() {
     // Prevent multiple simultaneous calls
     if (isLoadTracksRunning) {
@@ -649,6 +653,12 @@ async function loadTracks() {
         
         if (feedGrid) {
             console.log('loadTracks(): taking loadFeedStream() path');
+            // Additional guard to prevent duplicate feed initialization
+            if (window.isFeedInitialized) {
+                console.log('loadTracks(): feed already initialized, skipping');
+                return;
+            }
+            window.isFeedInitialized = true;
             await loadFeedStream(true);
             return;
         }

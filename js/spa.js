@@ -99,6 +99,11 @@
     function initRouteHandlers(baseRoute, fullRoute) {
         if (typeof updateAuthUI === 'function') updateAuthUI();
 
+        // Reset feed initialization when navigating away from feed
+        if (baseRoute !== '#/feed' && window.isFeedInitialized) {
+            window.isFeedInitialized = false;
+        }
+
         var userK = parseUserKoleqtionRoute(baseRoute);
         if (userK && window.JukeApi && typeof window.JukeApi.loadUserTracks === 'function') {
             window.JukeApi.loadUserTracks(userK);
