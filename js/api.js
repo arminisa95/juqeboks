@@ -625,24 +625,17 @@ window.isFeedInitialized = false;
 async function loadTracks() {
     // Prevent multiple simultaneous calls
     if (isLoadTracksRunning) {
-        console.log('loadTracks() already running, skipping duplicate call');
-        console.trace('loadTracks() call stack');
         return;
     }
-    
-    console.log('loadTracks() called from:');
-    console.trace();
     
     isLoadTracksRunning = true;
     
     try {
         const tracksGrid = document.getElementById('tracksGrid');
-        console.log('loadTracks(): tracksGrid exists:', !!tracksGrid);
 
         await loadLikedTrackIds();
 
         if (tracksGrid) {
-            console.log('loadTracks(): taking loadMyTracks() path');
             await loadMyTracks();
             return;
         }
@@ -653,7 +646,6 @@ async function loadTracks() {
             var baseHash = String(window.location.hash || '');
             baseHash = baseHash ? baseHash.split('?')[0] : '';
             if (baseHash !== '#/feed') {
-                console.log('loadTracks(): not on feed route, skipping');
                 return;
             }
         } catch (_) {
@@ -661,13 +653,10 @@ async function loadTracks() {
 
         const appRoot = document.getElementById('app');
         const feedGrid = document.getElementById('feedGrid') || (appRoot ? appRoot.querySelector('.music-grid') : null);
-        console.log('loadTracks(): feedGrid exists:', !!feedGrid);
         
         if (feedGrid) {
-            console.log('loadTracks(): taking loadFeedStream() path');
             // Additional guard to prevent duplicate feed initialization
             if (window.isFeedInitialized) {
-                console.log('loadTracks(): feed already initialized, skipping');
                 return;
             }
             window.isFeedInitialized = true;
@@ -676,7 +665,6 @@ async function loadTracks() {
         }
 
         // Only run this fallback if neither grid exists
-        console.log('loadTracks(): taking fallback displayFeedTracks() path');
         const tracks = await apiFetchJson('/tracks', {}, function (d) {
             return Array.isArray(d);
         });
@@ -2231,13 +2219,11 @@ async function renderStoriesBar() {
 }
 
 async function loadFeedStream(reset) {
-    console.log('loadFeedStream() called with reset:', reset);
     // Always enforce feed route guard (even if SPA detection is incorrect).
     try {
         var baseHash = String(window.location.hash || '');
         baseHash = baseHash ? baseHash.split('?')[0] : '';
         if (baseHash !== '#/feed') {
-            console.log('loadFeedStream(): not on feed route, skipping');
             return;
         }
     } catch (_) {
@@ -2246,18 +2232,15 @@ async function loadFeedStream(reset) {
     const appRoot = document.getElementById('app');
     const grid = document.getElementById('feedGrid') || (appRoot ? appRoot.querySelector('.music-grid') : null);
     if (!grid) {
-        console.log('loadFeedStream(): no grid found, returning');
         return;
     }
 
     if (reset) {
         // Prevent multiple simultaneous resets
         if (feedState.loading && feedState.offset === 0) {
-            console.log('loadFeedStream() reset already in progress, skipping');
             return;
         }
-        
-        console.log('loadFeedStream(): resetting feed state');
+
         feedState.offset = 0;
         feedState.done = false;
         feedState.storiesLoaded = false;
@@ -2269,7 +2252,6 @@ async function loadFeedStream(reset) {
     }
 
     if (feedState.loading || feedState.done) {
-        console.log('loadFeedStream(): already loading or done, returning');
         return;
     }
     feedState.loading = true;
@@ -2284,16 +2266,12 @@ async function loadFeedStream(reset) {
             return Array.isArray(d);
         });
 
-        console.log('loadFeedStream(): fetched', tracks?.length, 'tracks at offset', feedState.offset);
-
         if (!Array.isArray(tracks) || tracks.length === 0) {
             feedState.done = true;
             return;
         }
 
-        console.log('loadFeedStream(): adding', tracks.length, 'tracks to grid');
         tracks.forEach(function (t) {
-            console.log('loadFeedStream(): adding track', t.id, t.title);
             grid.appendChild(createFeedPostCard(t));
             try {
                 if (t && t.id != null) {
@@ -2350,15 +2328,12 @@ async function loadFeedStream(reset) {
                     
                     // Only allow scroll loading if we have some content already loaded
                     if (feedState.trackIds.length === 0) {
-                        console.log('scroll event: no content loaded yet, skipping');
                         return;
                     }
                     
                     // Increased threshold from 900px to 1500px to prevent premature loading
                     var nearBottom = (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 1500);
-                    console.log('scroll event: nearBottom=', nearBottom, 'loading=', feedState.loading, 'done=', feedState.done, 'trackCount=', feedState.trackIds.length);
                     if (nearBottom) {
-                        console.log('scroll event: triggering loadFeedStream(false)');
                         loadFeedStream(false);
                     }
                 } catch (_) {
@@ -2369,15 +2344,12 @@ async function loadFeedStream(reset) {
 }
 
 function displayFeedTracks(tracks) {
-    console.log('displayFeedTracks() called with', tracks?.length, 'tracks');
     const appRoot = document.getElementById('app');
     const musicGrid = document.getElementById('feedGrid') || (appRoot ? appRoot.querySelector('.music-grid') : null);
     if (!musicGrid) {
-        console.log('displayFeedTracks(): no music-grid found, returning');
         return;
     }
 
-    console.log('displayFeedTracks(): clearing grid and adding', tracks.length, 'tracks');
     musicGrid.innerHTML = '';
 
     // Set global track list for prev/next functionality
