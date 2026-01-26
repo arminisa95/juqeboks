@@ -647,6 +647,17 @@ async function loadTracks() {
             return;
         }
 
+        // In SPA, only allow feed loading on the actual feed route.
+        // This prevents accidental feed rendering into other views that may have a grid-like container.
+        try {
+            var baseHash = String(window.location.hash || '').split('?')[0];
+            if (baseHash && baseHash !== '#/feed') {
+                console.log('loadTracks(): not on feed route, skipping');
+                return;
+            }
+        } catch (_) {
+        }
+
         const appRoot = document.getElementById('app');
         const feedGrid = appRoot ? appRoot.querySelector('.music-grid') : null;
         console.log('loadTracks(): feedGrid exists:', !!feedGrid);
@@ -2220,15 +2231,14 @@ async function renderStoriesBar() {
 
 async function loadFeedStream(reset) {
     console.log('loadFeedStream() called with reset:', reset);
-    if (isSpaMode()) {
-        try {
-            var baseHash = String(window.location.hash || '').split('?')[0];
-            if (baseHash && baseHash !== '#/feed') {
-                console.log('loadFeedStream(): not on feed route, skipping');
-                return;
-            }
-        } catch (_) {
+    // Always enforce feed route guard (even if SPA detection is incorrect).
+    try {
+        var baseHash = String(window.location.hash || '').split('?')[0];
+        if (baseHash && baseHash !== '#/feed') {
+            console.log('loadFeedStream(): not on feed route, skipping');
+            return;
         }
+    } catch (_) {
     }
 
     const appRoot = document.getElementById('app');
@@ -2327,6 +2337,13 @@ async function loadFeedStream(reset) {
             window.addEventListener('scroll', function () {
                 try {
                     if (feedState.loading || feedState.done) return;
+
+                    // Never load feed items if we're not on the feed route.
+                    try {
+                        var baseHash = String(window.location.hash || '').split('?')[0];
+                        if (baseHash && baseHash !== '#/feed') return;
+                    } catch (_) {
+                    }
                     
                     // Only allow scroll loading if we have some content already loaded
                     if (feedState.trackIds.length === 0) {
