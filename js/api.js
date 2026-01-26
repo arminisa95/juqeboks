@@ -619,7 +619,6 @@ async function renderUserHeader(userId) {
 // Add a global loading guard for loadTracks to prevent double calls
 var isLoadTracksRunning = false;
 
-// Add a global feed initialization guard
 window.isFeedInitialized = false;
 
 // Fetch all tracks for feed
@@ -648,7 +647,8 @@ async function loadTracks() {
             return;
         }
 
-        const feedGrid = document.querySelector('.music-grid');
+        const appRoot = document.getElementById('app');
+        const feedGrid = appRoot ? appRoot.querySelector('.music-grid') : null;
         console.log('loadTracks(): feedGrid exists:', !!feedGrid);
         
         if (feedGrid) {
@@ -2220,7 +2220,19 @@ async function renderStoriesBar() {
 
 async function loadFeedStream(reset) {
     console.log('loadFeedStream() called with reset:', reset);
-    const grid = document.querySelector('.music-grid');
+    if (isSpaMode()) {
+        try {
+            var baseHash = String(window.location.hash || '').split('?')[0];
+            if (baseHash && baseHash !== '#/feed') {
+                console.log('loadFeedStream(): not on feed route, skipping');
+                return;
+            }
+        } catch (_) {
+        }
+    }
+
+    const appRoot = document.getElementById('app');
+    const grid = appRoot ? appRoot.querySelector('.music-grid') : null;
     if (!grid) {
         console.log('loadFeedStream(): no grid found, returning');
         return;
@@ -2338,7 +2350,8 @@ async function loadFeedStream(reset) {
 
 function displayFeedTracks(tracks) {
     console.log('displayFeedTracks() called with', tracks?.length, 'tracks');
-    const musicGrid = document.querySelector('.music-grid');
+    const appRoot = document.getElementById('app');
+    const musicGrid = appRoot ? appRoot.querySelector('.music-grid') : null;
     if (!musicGrid) {
         console.log('displayFeedTracks(): no music-grid found, returning');
         return;
@@ -2999,7 +3012,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    if (document.querySelector('.music-grid') || document.getElementById('tracksGrid')) {
+    // Only legacy pages that still rely on loadTracks should trigger it here.
+    // Avoid triggering on other legacy pages that also contain a .music-grid (e.g. disqo.html).
+    if (document.getElementById('tracksGrid')) {
         loadTracks();
     }
 });
