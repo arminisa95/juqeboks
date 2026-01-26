@@ -623,8 +623,12 @@ async function loadTracks() {
     // Prevent multiple simultaneous calls
     if (isLoadTracksRunning) {
         console.log('loadTracks() already running, skipping duplicate call');
+        console.trace('loadTracks() call stack');
         return;
     }
+    
+    console.log('loadTracks() called from:');
+    console.trace();
     
     isLoadTracksRunning = true;
     
@@ -2296,18 +2300,21 @@ async function loadFeedStream(reset) {
 
     if (!feedState.bound) {
         feedState.bound = true;
-        window.addEventListener('scroll', function () {
-            try {
-                if (feedState.loading || feedState.done) return;
-                var nearBottom = (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 900);
-                console.log('scroll event: nearBottom=', nearBottom, 'loading=', feedState.loading, 'done=', feedState.done);
-                if (nearBottom) {
-                    console.log('scroll event: triggering loadFeedStream(false)');
-                    loadFeedStream(false);
+        // Delay binding scroll listener to prevent immediate triggering
+        setTimeout(() => {
+            window.addEventListener('scroll', function () {
+                try {
+                    if (feedState.loading || feedState.done) return;
+                    var nearBottom = (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 900);
+                    console.log('scroll event: nearBottom=', nearBottom, 'loading=', feedState.loading, 'done=', feedState.done);
+                    if (nearBottom) {
+                        console.log('scroll event: triggering loadFeedStream(false)');
+                        loadFeedStream(false);
+                    }
+                } catch (_) {
                 }
-            } catch (_) {
-            }
-        });
+            });
+        }, 1000); // 1 second delay
     }
 }
 
