@@ -2246,12 +2246,16 @@ async function loadFeedStream(reset) {
             return Array.isArray(d);
         });
 
+        console.log('loadFeedStream(): fetched', tracks?.length, 'tracks at offset', feedState.offset);
+
         if (!Array.isArray(tracks) || tracks.length === 0) {
             feedState.done = true;
             return;
         }
 
+        console.log('loadFeedStream(): adding', tracks.length, 'tracks to grid');
         tracks.forEach(function (t) {
+            console.log('loadFeedStream(): adding track', t.id, t.title);
             grid.appendChild(createFeedPostCard(t));
             try {
                 if (t && t.id != null) {
@@ -2296,7 +2300,9 @@ async function loadFeedStream(reset) {
             try {
                 if (feedState.loading || feedState.done) return;
                 var nearBottom = (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 900);
+                console.log('scroll event: nearBottom=', nearBottom, 'loading=', feedState.loading, 'done=', feedState.done);
                 if (nearBottom) {
+                    console.log('scroll event: triggering loadFeedStream(false)');
                     loadFeedStream(false);
                 }
             } catch (_) {
