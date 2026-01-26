@@ -2305,8 +2305,16 @@ async function loadFeedStream(reset) {
             window.addEventListener('scroll', function () {
                 try {
                     if (feedState.loading || feedState.done) return;
-                    var nearBottom = (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 900);
-                    console.log('scroll event: nearBottom=', nearBottom, 'loading=', feedState.loading, 'done=', feedState.done);
+                    
+                    // Only allow scroll loading if we have some content already loaded
+                    if (feedState.trackIds.length === 0) {
+                        console.log('scroll event: no content loaded yet, skipping');
+                        return;
+                    }
+                    
+                    // Increased threshold from 900px to 1500px to prevent premature loading
+                    var nearBottom = (window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 1500);
+                    console.log('scroll event: nearBottom=', nearBottom, 'loading=', feedState.loading, 'done=', feedState.done, 'trackCount=', feedState.trackIds.length);
                     if (nearBottom) {
                         console.log('scroll event: triggering loadFeedStream(false)');
                         loadFeedStream(false);

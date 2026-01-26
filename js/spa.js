@@ -106,9 +106,12 @@
 
         switch (baseRoute) {
             case '#/feed':
+                console.log('SPA: handling feed route, JukeApi exists:', !!(window.JukeApi && typeof window.JukeApi.loadTracks === 'function'));
                 if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
+                    console.log('SPA: calling window.JukeApi.loadTracks()');
                     window.JukeApi.loadTracks();
                 } else if (typeof loadTracks === 'function') {
+                    console.log('SPA: calling loadTracks() fallback');
                     loadTracks();
                 }
                 break;
