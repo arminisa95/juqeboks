@@ -2991,6 +2991,14 @@ async function addToPlaylist(trackId) {
 // Load tracks when page loads
 document.addEventListener('DOMContentLoaded', function() {
     if (isSpaMode()) return;
+    
+    // Check if we're in user.html and redirect to SPA instead of loading
+    if (window.location.pathname.includes('/html/user.html')) {
+        console.log('Detected user.html, redirecting to SPA feed');
+        window.location.replace('../index.html#/feed');
+        return;
+    }
+    
     if (document.querySelector('.music-grid') || document.getElementById('tracksGrid')) {
         loadTracks();
     }
