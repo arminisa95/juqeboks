@@ -647,11 +647,12 @@ async function loadTracks() {
             return;
         }
 
-        // In SPA, only allow feed loading on the actual feed route.
-        // This prevents accidental feed rendering into other views that may have a grid-like container.
+        // Only allow feed loading on the actual feed route.
+        // Require an explicit '#/feed' hash so we don't accidentally load during initial navigation.
         try {
-            var baseHash = String(window.location.hash || '').split('?')[0];
-            if (baseHash && baseHash !== '#/feed') {
+            var baseHash = String(window.location.hash || '');
+            baseHash = baseHash ? baseHash.split('?')[0] : '';
+            if (baseHash !== '#/feed') {
                 console.log('loadTracks(): not on feed route, skipping');
                 return;
             }
@@ -2233,8 +2234,9 @@ async function loadFeedStream(reset) {
     console.log('loadFeedStream() called with reset:', reset);
     // Always enforce feed route guard (even if SPA detection is incorrect).
     try {
-        var baseHash = String(window.location.hash || '').split('?')[0];
-        if (baseHash && baseHash !== '#/feed') {
+        var baseHash = String(window.location.hash || '');
+        baseHash = baseHash ? baseHash.split('?')[0] : '';
+        if (baseHash !== '#/feed') {
             console.log('loadFeedStream(): not on feed route, skipping');
             return;
         }
@@ -2340,8 +2342,9 @@ async function loadFeedStream(reset) {
 
                     // Never load feed items if we're not on the feed route.
                     try {
-                        var baseHash = String(window.location.hash || '').split('?')[0];
-                        if (baseHash && baseHash !== '#/feed') return;
+                        var baseHash = String(window.location.hash || '');
+                        baseHash = baseHash ? baseHash.split('?')[0] : '';
+                        if (baseHash !== '#/feed') return;
                     } catch (_) {
                     }
                     
