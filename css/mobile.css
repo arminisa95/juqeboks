@@ -48,9 +48,9 @@
     line-height: 1;
 }
 
-.mobile-nav-item .mobile-nav-logo {
-    height: 0.3rem;
-    width: auto;
+.mobile-nav-items .mobile-nav-item .mobile-nav-logo {
+    height: 0.3rem !important;
+    width: auto !important;
     margin-bottom: 0;
 }
 
