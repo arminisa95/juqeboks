@@ -48,6 +48,12 @@
     line-height: 1;
 }
 
+.mobile-nav-item .mobile-nav-logo {
+    height: 1.1rem;
+    width: auto;
+    margin-bottom: 0;
+}
+
 .mobile-nav-item:hover {
     color: rgba(255, 255, 255, 0.7);
 }
