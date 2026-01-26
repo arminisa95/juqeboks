@@ -660,7 +660,7 @@ async function loadTracks() {
         }
 
         const appRoot = document.getElementById('app');
-        const feedGrid = appRoot ? appRoot.querySelector('.music-grid') : null;
+        const feedGrid = document.getElementById('feedGrid') || (appRoot ? appRoot.querySelector('.music-grid') : null);
         console.log('loadTracks(): feedGrid exists:', !!feedGrid);
         
         if (feedGrid) {
@@ -2244,7 +2244,7 @@ async function loadFeedStream(reset) {
     }
 
     const appRoot = document.getElementById('app');
-    const grid = appRoot ? appRoot.querySelector('.music-grid') : null;
+    const grid = document.getElementById('feedGrid') || (appRoot ? appRoot.querySelector('.music-grid') : null);
     if (!grid) {
         console.log('loadFeedStream(): no grid found, returning');
         return;
@@ -2371,7 +2371,7 @@ async function loadFeedStream(reset) {
 function displayFeedTracks(tracks) {
     console.log('displayFeedTracks() called with', tracks?.length, 'tracks');
     const appRoot = document.getElementById('app');
-    const musicGrid = appRoot ? appRoot.querySelector('.music-grid') : null;
+    const musicGrid = document.getElementById('feedGrid') || (appRoot ? appRoot.querySelector('.music-grid') : null);
     if (!musicGrid) {
         console.log('displayFeedTracks(): no music-grid found, returning');
         return;
