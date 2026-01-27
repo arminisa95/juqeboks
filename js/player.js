@@ -413,8 +413,8 @@
                         <button class="share-btn" aria-label="Share track" data-track-id="">
                             <i class="far fa-paper-plane"></i>
                         </button>
-                        <button class="queue-btn" id="queueToggle" aria-label="Queue">
-                            <i class="fas fa-bars"></i>
+                        <button class="queue-btn" id="queueToggle" aria-label="Queue" title="Queue">
+                            <i class="fas fa-list"></i>
                         </button>
                     </div>
                 </div>
