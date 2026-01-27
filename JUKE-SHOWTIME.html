@@ -311,19 +311,19 @@
             <div class="slide-number">1 / 20</div>
         </div>
 
-        <!-- Slide 2: What is JUKE? -->
+        <!-- Slide 2: What is JUQE? -->
         <div class="slide">
             <div class="emoji">🎧</div>
-            <h2>What is JUKE?</h2>
-            <p>JUKE is like <span class="highlight-pink">Spotify</span>, but we built it ourselves!</p>
-            <p style="margin-top: 1rem;">It's a website where you can <span class="highlight-turquoise">listen to music</span>, <span class="highlight-pink">upload songs</span>, and <span class="highlight-turquoise">share with friends</span>.</p>
+            <h2>What is JUQE?</h2>
+            <p>JUQE is like <span class="highlight-pink">Spotify</span>, just fair, cool and really nice. Making love, not war.</p>
+            <p style="margin-top: 1rem;">It's a website where you can <span class="highlight-turquoise">listen to music</span>, <span class="highlight-pink">upload songs, images, videos</span>, and <span class="highlight-turquoise">share with friends</span>.</p>
             <div class="slide-number">2 / 20</div>
         </div>
 
         <!-- Slide 3: The Building Blocks -->
         <div class="slide">
             <i class="fas fa-cubes icon-big"></i>
-            <h2>The Building Blocks</h2>
+            <h2>Building Blocks</h2>
             <p>Every website is made of 3 things:</p>
             <div class="feature-grid" style="margin-top: 2rem;">
                 <div class="feature-card">
@@ -688,6 +688,9 @@
         <button class="nav-btn" id="prevBtn" disabled>
             <i class="fas fa-arrow-left"></i> Previous
         </button>
+        <button class="nav-btn" id="fullscreenBtn" title="Toggle Fullscreen">
+            <i class="fas fa-expand"></i>
+        </button>
         <button class="nav-btn" id="nextBtn">
             Next <i class="fas fa-arrow-right"></i>
         </button>
@@ -697,8 +700,32 @@
         const slides = document.querySelectorAll('.slide');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
         const progressBar = document.getElementById('progressBar');
         let currentSlide = 0;
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log('Fullscreen error:', err);
+                });
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                document.exitFullscreen();
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
 
         function showSlide(index) {
             slides.forEach((slide, i) => {
@@ -739,6 +766,10 @@
                 nextSlide();
             } else if (e.key === 'ArrowLeft') {
                 prevSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            } else if (e.key === 'Escape' && document.fullscreenElement) {
+                // Escape is handled by browser, but we update icon
             }
         });
 
