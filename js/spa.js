@@ -145,10 +145,17 @@
                 break;
 
             case '#/lists':
+                if (window.JukeLists && typeof window.JukeLists.initHistory === 'function') {
+                    window.JukeLists.initHistory();
+                }
                 if (window.JukeLists && typeof window.JukeLists.loadLists === 'function') {
                     window.JukeLists.loadLists();
                 } else if (typeof loadLists === 'function') {
                     loadLists();
+                }
+                // Render history on initial load
+                if (window.JukeHistory && typeof window.JukeHistory.render === 'function') {
+                    window.JukeHistory.render();
                 }
                 break;
 

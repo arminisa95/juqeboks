@@ -896,6 +896,15 @@
             await audio.play();
             state.isPlaying = true;
             saveState();
+            
+            // Add to listening history
+            try {
+                if (window.JukeHistory && typeof window.JukeHistory.add === 'function') {
+                    window.JukeHistory.add(track);
+                }
+                // Dispatch event for history tracking
+                document.dispatchEvent(new CustomEvent('juke:trackplay', { detail: { track: track } }));
+            } catch (_) {}
         } catch (_) {
             state.isPlaying = false;
             saveState();

@@ -168,6 +168,27 @@
     <template id="tpl-lists">
         <main>
             <div class="lists-shell" id="listsShell">
+                <!-- Mobile Tab Bar -->
+                <div class="lists-mobile-tabs">
+                    <button class="lists-tab active" data-tab="history">
+                        <i class="fas fa-history"></i>
+                        <span>History</span>
+                    </button>
+                    <button class="lists-tab" data-tab="liked">
+                        <i class="fas fa-heart"></i>
+                        <span>Liked</span>
+                    </button>
+                    <button class="lists-tab" data-tab="playlists">
+                        <i class="fas fa-list"></i>
+                        <span>Playlists</span>
+                    </button>
+                    <button class="lists-tab" data-tab="liked-playlists">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Saved</span>
+                    </button>
+                </div>
+
+                <!-- Desktop Sidebar -->
                 <aside class="lists-nav" aria-label="Lists directories">
                     <div class="lists-nav-title">
                         _lists
@@ -177,6 +198,7 @@
                     </div>
                     <div class="lists-nav-subtitle">Directories</div>
                     <div class="lists-nav-items" role="tablist">
+                        <button class="lists-nav-item" type="button" role="tab" data-view="history">_history</button>
                         <button class="lists-nav-item" type="button" role="tab" data-view="liked">_liked tracks</button>
                         <button class="lists-nav-item" type="button" role="tab" data-view="liked-playlists">_liked playlists</button>
                     </div>
@@ -184,6 +206,18 @@
                 </aside>
 
                 <section class="lists-content" aria-label="Lists content">
+                    <!-- History Panel -->
+                    <div class="lists-panel active" id="listsPanelHistory" data-panel="history" role="tabpanel">
+                        <div class="lists-panel-header">
+                            <div class="lists-panel-title">_history</div>
+                            <div class="lists-panel-hint">Recently played tracks</div>
+                            <button class="lists-clear-btn" id="clearHistoryBtn" type="button">
+                                <i class="fas fa-trash-alt"></i> Clear
+                            </button>
+                        </div>
+                        <div id="historyTracks" class="history-list"></div>
+                    </div>
+
                     <div class="lists-panel" id="listsPanelLiked" data-panel="liked" role="tabpanel">
                         <div class="lists-panel-header">
                             <div class="lists-panel-title">_liked tracks</div>
@@ -200,7 +234,7 @@
                         <div id="likedPlaylists" class="cards-grid"></div>
                     </div>
 
-                    <div class="lists-panel" id="listsPanelLists" data-panel="lists" role="tabpanel">
+                    <div class="lists-panel" id="listsPanelLists" data-panel="playlists" role="tabpanel">
                         <div class="lists-panel-header">
                             <div class="lists-panel-title">_lists</div>
                             <div class="lists-panel-hint">Your playlists</div>

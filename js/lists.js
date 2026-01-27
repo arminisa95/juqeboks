@@ -1299,9 +1299,267 @@ document.addEventListener('DOMContentLoaded', () => {
     tryBind();
 });
 
+// ============================================
+// LISTENING HISTORY FEATURE
+// ============================================
+
+const HISTORY_STORAGE_KEY = 'juke_listening_history';
+const MAX_HISTORY_ITEMS = 100;
+
+function getListeningHistory() {
+    try {
+        const data = localStorage.getItem(HISTORY_STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        console.error('Error reading history:', e);
+        return [];
+    }
+}
+
+function saveListeningHistory(history) {
+    try {
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+    } catch (e) {
+        console.error('Error saving history:', e);
+    }
+}
+
+function addToHistory(track) {
+    if (!track || !track.id) return;
+    
+    const history = getListeningHistory();
+    const now = new Date().toISOString();
+    
+    // Create history entry
+    const entry = {
+        id: track.id,
+        title: track.title || 'Unknown',
+        artist: track.artist_name || track.artist || 'Unknown Artist',
+        cover: track.cover_image_url || track.cover || 'images/juke.png',
+        playedAt: now
+    };
+    
+    // Remove duplicate if exists (same track played again)
+    const filtered = history.filter(h => !(h.id === track.id && isSameDay(new Date(h.playedAt), new Date(now))));
+    
+    // Add new entry at the beginning
+    filtered.unshift(entry);
+    
+    // Limit history size
+    const trimmed = filtered.slice(0, MAX_HISTORY_ITEMS);
+    
+    saveListeningHistory(trimmed);
+}
+
+function isSameDay(d1, d2) {
+    return d1.getFullYear() === d2.getFullYear() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getDate() === d2.getDate();
+}
+
+function formatHistoryDate(dateStr) {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (isSameDay(date, now)) {
+        return 'Today';
+    } else if (isSameDay(date, yesterday)) {
+        return 'Yesterday';
+    } else {
+        const options = { weekday: 'long', month: 'short', day: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
+    }
+}
+
+function formatHistoryTime(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+function groupHistoryByDate(history) {
+    const groups = {};
+    
+    history.forEach(item => {
+        const dateKey = formatHistoryDate(item.playedAt);
+        if (!groups[dateKey]) {
+            groups[dateKey] = [];
+        }
+        groups[dateKey].push(item);
+    });
+    
+    return groups;
+}
+
+function renderHistory() {
+    const historyEl = document.getElementById('historyTracks');
+    if (!historyEl) return;
+    
+    const history = getListeningHistory();
+    
+    if (!history || history.length === 0) {
+        historyEl.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-history" style="font-size: 3rem; color: rgba(255,255,255,0.2); margin-bottom: 1rem;"></i>
+                <p>No listening history yet</p>
+                <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">Start playing some tracks!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const grouped = groupHistoryByDate(history);
+    historyEl.innerHTML = '';
+    
+    Object.keys(grouped).forEach(dateKey => {
+        const group = document.createElement('div');
+        group.className = 'history-date-group';
+        
+        const header = document.createElement('div');
+        header.className = 'history-date-header';
+        header.innerHTML = `<i class="fas fa-calendar-alt"></i> ${dateKey}`;
+        group.appendChild(header);
+        
+        grouped[dateKey].forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'history-item';
+            row.innerHTML = `
+                <img class="history-cover" src="${item.cover}" alt="" onerror="this.src='images/juke.png'">
+                <div class="history-info">
+                    <div class="history-title">${item.title}</div>
+                    <div class="history-artist">${item.artist}</div>
+                </div>
+                <div class="history-time">${formatHistoryTime(item.playedAt)}</div>
+                <button class="history-play-btn" data-track-id="${item.id}" aria-label="Play">
+                    <i class="fas fa-play"></i>
+                </button>
+            `;
+            
+            row.addEventListener('click', function(e) {
+                if (e.target.closest('.history-play-btn')) return;
+                if (typeof window.playTrack === 'function') {
+                    window.playTrack(item.id);
+                }
+            });
+            
+            const playBtn = row.querySelector('.history-play-btn');
+            if (playBtn) {
+                playBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (typeof window.playTrack === 'function') {
+                        window.playTrack(item.id);
+                    }
+                });
+            }
+            
+            group.appendChild(row);
+        });
+        
+        historyEl.appendChild(group);
+    });
+}
+
+function clearHistory() {
+    if (confirm('Clear all listening history?')) {
+        saveListeningHistory([]);
+        renderHistory();
+    }
+}
+
+function bindHistoryUI() {
+    const clearBtn = document.getElementById('clearHistoryBtn');
+    if (clearBtn && !clearBtn.dataset.bound) {
+        clearBtn.dataset.bound = '1';
+        clearBtn.addEventListener('click', clearHistory);
+    }
+}
+
+// Bind mobile tabs
+function bindMobileTabs() {
+    const tabs = document.querySelectorAll('.lists-tab');
+    const panels = document.querySelectorAll('.lists-panel[data-panel]');
+    
+    tabs.forEach(tab => {
+        if (tab.dataset.bound) return;
+        tab.dataset.bound = '1';
+        
+        tab.addEventListener('click', function() {
+            const targetPanel = this.getAttribute('data-tab');
+            
+            // Update tabs
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update panels
+            panels.forEach(p => {
+                const panelName = p.getAttribute('data-panel');
+                if (panelName === targetPanel) {
+                    p.classList.add('active');
+                } else {
+                    p.classList.remove('active');
+                }
+            });
+            
+            // Load content for the panel
+            if (targetPanel === 'history') {
+                renderHistory();
+            } else if (targetPanel === 'liked') {
+                loadLikedTracks();
+            } else if (targetPanel === 'playlists') {
+                loadLists();
+            } else if (targetPanel === 'liked-playlists') {
+                const likedPlaylistsEl = document.getElementById('likedPlaylists');
+                if (likedPlaylistsEl) loadLikedPlaylistsInto(likedPlaylistsEl);
+            }
+        });
+    });
+}
+
+// Hook into player to track history
+function hookPlayerForHistory() {
+    // Listen for track play events
+    if (window.JukePlayer && typeof window.JukePlayer.onTrackPlay === 'function') {
+        const originalOnPlay = window.JukePlayer.onTrackPlay;
+        window.JukePlayer.onTrackPlay = function(track) {
+            addToHistory(track);
+            if (originalOnPlay) originalOnPlay(track);
+        };
+    }
+    
+    // Also listen for custom events
+    document.addEventListener('juke:trackplay', function(e) {
+        if (e.detail && e.detail.track) {
+            addToHistory(e.detail.track);
+        }
+    });
+}
+
+// Initialize history on lists page load
+function initHistoryFeature() {
+    bindHistoryUI();
+    bindMobileTabs();
+    hookPlayerForHistory();
+    
+    // Render history if on history panel
+    const historyPanel = document.getElementById('listsPanelHistory');
+    if (historyPanel && historyPanel.classList.contains('active')) {
+        renderHistory();
+    }
+}
+
+// Export history functions
+window.JukeHistory = {
+    add: addToHistory,
+    get: getListeningHistory,
+    clear: clearHistory,
+    render: renderHistory
+};
+
 window.JukeLists = {
     loadLists,
-    createPlaylist
+    createPlaylist,
+    initHistory: initHistoryFeature
 };
 
 window.createPlaylist = createPlaylist;
