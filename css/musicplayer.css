@@ -9,10 +9,10 @@ MUSIC PLAYER - Enhanced Modern Design
     left: 0;
     right: 0;
     height: 90px;
-    background: rgba(35, 35, 35, 0.85);
+    background: var(--bg-secondary);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--border-secondary);
     border-radius: 6px 6px 0 0;
     display: flex;
     justify-content: space-between;
@@ -20,8 +20,8 @@ MUSIC PLAYER - Enhanced Modern Design
     padding: 0 24px;
     padding-right: 100px;
     z-index: 1000;
-    box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.45),
-                inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    box-shadow: var(--shadow-lg),
+                inset 0 1px 0 var(--shadow-sm);
 }
 
 /* Video container in player */
@@ -32,11 +32,11 @@ MUSIC PLAYER - Enhanced Modern Design
     transform: translateX(-50%);
     width: 356px;
     height: 200px;
-    background: rgba(25, 25, 25, 0.95);
+    background: var(--bg-overlay);
     border-radius: 6px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-secondary);
+    box-shadow: var(--shadow-lg);
     display: none;
     z-index: 1001;
 }
@@ -59,7 +59,7 @@ MUSIC PLAYER - Enhanced Modern Design
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--bg-secondary);
     border: none;
     color: #fff;
     cursor: pointer;
@@ -96,7 +96,7 @@ MUSIC PLAYER - Enhanced Modern Design
     height: 60px;
     border-radius: 4px;
     object-fit: cover;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-sm);
     transition: transform 0.3s ease;
     cursor: pointer;
 }
@@ -106,7 +106,7 @@ MUSIC PLAYER - Enhanced Modern Design
 }
 
 .music-player .now-playing-cover.has-video {
-    border: 2px solid rgba(255, 255, 255, 0.22);
+    border: 1px solid var(--border-primary);
 }
 
 .music-player .track-details {
@@ -124,7 +124,7 @@ MUSIC PLAYER - Enhanced Modern Design
 }
 
 .music-player .now-playing-artist {
-    color: #a0a0a0;
+    color: var(--text-secondary);
     font-size: 0.8rem;
     margin: 2px 0 0;
     white-space: nowrap;
@@ -150,7 +150,7 @@ MUSIC PLAYER - Enhanced Modern Design
 .music-player .control-btn {
     background: none;
     border: none;
-    color: #a0a0a0;
+    color: var(--text-secondary);
     font-size: 1rem;
     cursor: pointer;
     transition: color 0.2s ease;
@@ -189,39 +189,39 @@ MUSIC PLAYER - Enhanced Modern Design
 
 .music-player .like-btn i {
     font-size: 1.45rem;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--text-secondary);
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .music-player .share-btn i {
     font-size: 1.45rem;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--text-secondary);
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .music-player .queue-btn i {
     font-size: 1.3rem;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--text-secondary);
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .music-player .like-btn:hover i {
     transform: scale(1.06);
-    color: rgba(255, 255, 255, 0.9);
+    color: white;
 }
 
 .music-player .share-btn:hover i {
     transform: scale(1.06);
-    color: rgba(255, 255, 255, 0.9);
+    color: white;
 }
 
 .music-player .queue-btn:hover i {
     transform: scale(1.06);
-    color: rgba(255, 255, 255, 0.9);
+    color: white;
 }
 
 .music-player .like-btn i.fas {
-    color: #F72193;
+    color: var(--primary-color);
 }
 
 .music-player .control-btn:hover {
@@ -261,7 +261,7 @@ MUSIC PLAYER - Enhanced Modern Design
 .music-player .progress-bar {
     flex: 1;
     height: 4px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
     border-radius: 2px;
     cursor: pointer;
     position: relative;
@@ -273,13 +273,13 @@ MUSIC PLAYER - Enhanced Modern Design
     left: 0;
     height: 100%;
     width: 0%;
-    background: rgba(255, 255, 255, 0.7);
+    background: var(--primary-color);
     border-radius: 2px;
     transition: width 0.1s linear;
 }
 
 .music-player .time {
-    color: #a0a0a0;
+    color: var(--text-secondary);
     font-size: 0.7rem;
     min-width: 35px;
     text-align: center;
@@ -295,7 +295,7 @@ MUSIC PLAYER - Enhanced Modern Design
 .music-player .volume-btn {
     background: none;
     border: none;
-    color: #a0a0a0;
+    color: var(--text-secondary);
     font-size: 1rem;
     cursor: pointer;
     padding: 0;
@@ -322,7 +322,7 @@ MUSIC PLAYER - Enhanced Modern Design
     height: 4px;
     -webkit-appearance: none;
     appearance: none;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
     border-radius: 2px;
     outline: none;
     cursor: pointer;
@@ -441,7 +441,7 @@ main {
 .juke-queue-root .juke-queue-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.55);
+    background: var(--black-55);
     opacity: 0;
     transition: opacity 220ms ease;
 }
@@ -453,10 +453,10 @@ main {
     transform: translate(-50%, 16px);
     width: min(520px, calc(100vw - 18px));
     max-height: min(70vh, 560px);
-    background: rgba(18, 18, 18, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: var(--bg-overlay);
+    border: 1px solid var(--border-primary);
     border-radius: 16px 16px 0 0;
-    box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
     opacity: 0;
     transition: transform 220ms ease, opacity 220ms ease;

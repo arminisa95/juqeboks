@@ -7,11 +7,11 @@
     width: min(92vw, 480px);
     margin: 0 auto;
     padding: 24px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
     border-radius: 10px;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid var(--border-tertiary);
 }
 
 .register-header {
@@ -30,7 +30,7 @@
 .register-close-btn {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--white-60);
     font-size: 1.2em;
     cursor: pointer;
     padding: 8px;
@@ -40,7 +40,7 @@
 
 .register-close-btn:hover {
     color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-card-hover);
 }
 
 /* SUBSCRIPTION PLANS STYLING */
@@ -56,7 +56,7 @@
 }
 
 .subscription-subtitle {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--white-70);
     text-align: center;
     margin-bottom: 20px;
     font-size: 0.9em;
@@ -71,23 +71,23 @@
 .plan-card {
     flex: 1;
     padding: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--border-primary);
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
 }
 
 .plan-card:hover {
-    border-color: rgba(0, 255, 208, 0.3);
+    border-color: var(--border-primary-hover);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 255, 208, 0.2);
+    box-shadow: 0 8px 24px var(--shadow-secondary);
 }
 
 .plan-card.selected {
     border-color: #00ffd0;
-    background: rgba(0, 255, 208, 0.1);
+    background: var(--bg-card-hover);
 }
 
 .plan-header {
@@ -113,7 +113,7 @@
 }
 
 .period {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--white-70);
     font-size: 0.9em;
 }
 
@@ -136,7 +136,7 @@
 }
 
 .plan-features li {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--white-80);
     padding: 4px 0;
     font-size: 0.85em;
     display: flex;
@@ -162,7 +162,7 @@
     display: inline-block;
     width: 20px;
     height: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--border-primary);
     border-radius: 50%;
     cursor: pointer;
     position: relative;
@@ -170,7 +170,7 @@
 }
 
 .radio-label:hover {
-    border-color: rgba(0, 255, 208, 0.5);
+    border-color: var(--border-primary-hover);
 }
 
 .plan-radio input[type="radio"]:checked + .radio-label {
@@ -221,30 +221,30 @@
     align-items: center;
     gap: 8px;
     padding: 12px 16px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--border-primary);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
     cursor: pointer;
     transition: all 0.3s ease;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--white-80);
     font-size: 0.9em;
 }
 
 .payment-label:hover {
-    border-color: rgba(0, 255, 208, 0.3);
+    border: 1px solid var(--border-primary-hover);
 }
 
 .payment-option.selected .payment-label {
     border-color: #00ffd0;
-    background: rgba(0, 255, 208, 0.1);
+    background: var(--bg-card-hover);
     color: #fff;
 }
 
 .card-details {
     padding: 16px;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--bg-card-hover);
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-secondary);
 }
 
 /* FORM STYLING */
@@ -271,8 +271,8 @@
 .form-group input {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-secondary);
+    background: var(--bg-card);
     border-radius: 8px;
     color: #fff;
     font-size: 14px;
@@ -286,7 +286,7 @@
 }
 
 .form-group input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--white-40);
 }
 
 .register-btn {
@@ -345,7 +345,7 @@
 .divider::after {
     content: '';
     flex: 1;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-secondary);
 }
 
 .divider:not(:empty)::before {
@@ -368,9 +368,9 @@
     align-items: center;
     justify-content: center;
     padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-secondary);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
     color: #dbd8d8;
     font-size: 13px;
     cursor: pointer;

@@ -23,7 +23,7 @@
     width: 280px;
     float: left;
     margin-right: 32px;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--bg-secondary);
     border-radius: 4px;
     padding: 24px;
     backdrop-filter: blur(20px);
@@ -41,7 +41,7 @@
 
 .lists-panel {
     display: none;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-tertiary);
     border-radius: 4px;
     padding: 32px;
     backdrop-filter: blur(20px);
@@ -298,7 +298,7 @@
 .card:hover {
     background: rgba(255, 255, 255, 0.08);
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
 }
 
 .card-cover {
@@ -410,7 +410,7 @@
     position: absolute;
     top: 100%;
     right: 0;
-    background: rgba(0, 0, 0, 0.9);
+    background: var(--black-90);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 4px;
     padding: 4px 0;
@@ -605,7 +605,7 @@
         right: 0;
         height: 60px;
         padding: 0 16px;
-        background: rgba(0, 0, 0, 0.95);
+        background: var(--bg-modal);
         backdrop-filter: blur(20px);
         border: none;
         border-radius: 0;
@@ -874,20 +874,6 @@
     }
     
     /* Mobile Bottom Navigation - Higher specificity */
-    body .mobile-bottom-nav {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        background: rgba(0, 0, 0, 0.98) !important;
-        backdrop-filter: blur(20px) !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-        padding: 8px 0 !important;
-        z-index: 1000 !important;
-        display: flex !important;
-        justify-content: space-around !important;
-        align-items: center !important;
-        height: 60px !important;
     }
     
     body .mobile-nav-item {

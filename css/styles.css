@@ -152,18 +152,18 @@ a:hover {
 }
 
 .search-bar:focus {
-    border-color: #00ffd0 !important;
+    border-color: var(--border-color-focus) !important;
     border: 2px solid;
-    color: #ffffff !important;
+    color: var(--white) !important;
 }
 
 .search-bar::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--white-60);
 }
 
 .search-btn {
     height: 44px;
-    background-color: rgb(155, 151, 151);
+    background-color: var(--background-btn);
     border: none;
     padding: 0 20px;
     border-radius: 0 20px 20px 0;
@@ -206,7 +206,7 @@ a:hover {
 }
 
 .search-results__item:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--bg-card-hover);
 }
 
 .search-results__item--muted {
@@ -491,9 +491,9 @@ footer a:hover {
         z-index: 3000;
         min-width: 0;
         padding: 6px 10px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        background: rgba(0, 0, 0, 0.45);
-        color: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid var(--border-secondary);
+        background: var(--bg-card);
+        color: var(--white-90) !important;
         backdrop-filter: blur(10px);
     }
 
@@ -785,10 +785,9 @@ margin-left: 120px;
     align-items: center;
     justify-content: center;
     padding: 12px 20px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    color: #fff;
+    border: 1px solid var(--border-primary);
+    background: var(--bg-card);
+    color: var(--white);
     text-decoration: none;
     font-weight: 500;
     font-size: 14px;
@@ -799,14 +798,14 @@ margin-left: 120px;
 }
 
 .profile-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--bg-card-hover);
+    border-color: var(--border-primary);
     transform: translateY(-1px);
 }
 
 .profile-btn.secondary {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--bg-card);
+    border-color: var(--border-secondary);
 }
 
 .profile-btn.secondary:hover {

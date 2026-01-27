@@ -7,11 +7,11 @@
     width: min(92vw, 360px);
     margin: 0 auto;
     padding: 24px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
     border-radius: 10px;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid var(--border-tertiary);
 }
 
 .profile-title {
@@ -30,7 +30,7 @@
 .profile-close-btn {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--white-60);
     font-size: 1.2em;
     cursor: pointer;
     padding: 8px;
@@ -40,7 +40,7 @@
 
 .profile-close-btn:hover {
     color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-card-hover);
 }
 
 .profile-subtitle {
@@ -91,8 +91,8 @@
 .form-group input {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-secondary);
+    background: var(--bg-card);
     border-radius: 8px;
     color: #fff;
     font-size: 14px;
@@ -123,16 +123,16 @@
 }
 
 .profile-btn:hover {
-    background: #e01a82;
+    background: var(--bg-btn-primary-hover);
 }
 
 .profile-btn.secondary {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--bg-btn-secondary);
+    border: 1px solid var(--border-primary);
 }
 
 .profile-btn.secondary:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--bg-btn-secondary-hover);
 }
 
 .profile-links {
@@ -159,25 +159,25 @@
     gap: 12px;
     margin: 20px 0;
     padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-secondary);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--bg-card-hover);
 }
 
 .avatar-preview {
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.2);
+    border: 3px solid var(--border-primary);
     overflow: hidden;
     cursor: pointer;
     position: relative;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
     transition: all 0.3s ease;
 }
 
 .avatar-preview:hover {
-    border-color: rgba(255, 255, 255, 0.4);
+    border-color: var(--border-primary);
     transform: scale(1.05);
 }
 
@@ -198,16 +198,16 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--white-60);
     font-size: 12px;
     text-align: center;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--bg-secondary);
     transition: all 0.3s ease;
 }
 
 .avatar-preview:hover .avatar-preview-placeholder {
-    background: rgba(0, 0, 0, 0.5);
-    color: rgba(255, 255, 255, 0.8);
+    background: var(--bg-secondary);
+    color: var(--white-80);
 }
 
 .avatar-preview-placeholder i {
