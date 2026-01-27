@@ -2,7 +2,7 @@
 // ======================================
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy');
-const { query, getTransaction } = require('./database/connection');
+const { query, getTransaction } = require('../database/connection');
 
 class MonetizationService {
     
