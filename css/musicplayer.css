@@ -124,7 +124,7 @@ MUSIC PLAYER - Enhanced Modern Design
 }
 
 .music-player .now-playing-artist {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.7);
     font-size: 0.8rem;
     margin: 2px 0 0;
     white-space: nowrap;
@@ -150,7 +150,7 @@ MUSIC PLAYER - Enhanced Modern Design
 .music-player .control-btn {
     background: none;
     border: none;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.85);
     font-size: 1rem;
     cursor: pointer;
     transition: color 0.2s ease;
@@ -189,19 +189,19 @@ MUSIC PLAYER - Enhanced Modern Design
 
 .music-player .like-btn i {
     font-size: 1.45rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.85);
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .music-player .share-btn i {
     font-size: 1.45rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.85);
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .music-player .queue-btn i {
     font-size: 1.3rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.85);
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
@@ -279,7 +279,7 @@ MUSIC PLAYER - Enhanced Modern Design
 }
 
 .music-player .time {
-    color: var(--text-secondary);
+    color: white;
     font-size: 0.7rem;
     min-width: 35px;
     text-align: center;
@@ -295,7 +295,7 @@ MUSIC PLAYER - Enhanced Modern Design
 .music-player .volume-btn {
     background: none;
     border: none;
-    color: var(--text-secondary);
+    color: white;
     font-size: 1rem;
     cursor: pointer;
     padding: 0;
