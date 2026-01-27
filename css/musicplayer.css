@@ -261,7 +261,7 @@ MUSIC PLAYER - Enhanced Modern Design
 .music-player .progress-bar {
     flex: 1;
     height: 4px;
-    background: var(--bg-secondary);
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 2px;
     cursor: pointer;
     position: relative;
@@ -322,7 +322,7 @@ MUSIC PLAYER - Enhanced Modern Design
     height: 4px;
     -webkit-appearance: none;
     appearance: none;
-    background: var(--bg-secondary);
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 2px;
     outline: none;
     cursor: pointer;
