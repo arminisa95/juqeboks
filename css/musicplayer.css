@@ -221,7 +221,7 @@ MUSIC PLAYER - Enhanced Modern Design
 }
 
 .music-player .like-btn i.fas {
-    color: var(--primary-color);
+    color: #F72193;
 }
 
 .music-player .control-btn:hover {
