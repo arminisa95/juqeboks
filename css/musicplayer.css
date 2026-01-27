@@ -150,7 +150,7 @@ MUSIC PLAYER - Enhanced Modern Design
 .music-player .control-btn {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.85);
+    color: white;
     font-size: 1rem;
     cursor: pointer;
     transition: color 0.2s ease;
@@ -189,35 +189,35 @@ MUSIC PLAYER - Enhanced Modern Design
 
 .music-player .like-btn i {
     font-size: 1.45rem;
-    color: rgba(255, 255, 255, 0.85);
+    color: white;
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .music-player .share-btn i {
     font-size: 1.45rem;
-    color: rgba(255, 255, 255, 0.85);
+    color: white;
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .music-player .queue-btn i {
     font-size: 1.3rem;
-    color: rgba(255, 255, 255, 0.85);
+    color: white;
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .music-player .like-btn:hover i {
     transform: scale(1.06);
-    color: white;
+    color: #F72193;
 }
 
 .music-player .share-btn:hover i {
     transform: scale(1.06);
-    color: white;
+    color: #F72193;
 }
 
 .music-player .queue-btn:hover i {
     transform: scale(1.06);
-    color: white;
+    color: #F72193;
 }
 
 .music-player .like-btn i.fas {
@@ -225,7 +225,7 @@ MUSIC PLAYER - Enhanced Modern Design
 }
 
 .music-player .control-btn:hover {
-    color: white;
+    color: #F72193;
 }
 
 .music-player .play-btn.large {
@@ -308,7 +308,7 @@ MUSIC PLAYER - Enhanced Modern Design
 }
 
 .music-player .volume-btn:hover {
-    color: white;
+    color: #F72193;
 }
 
 .music-player .volume-slider-container {
