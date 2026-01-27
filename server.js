@@ -8,8 +8,8 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
-const MonetizationService = require('./payment-integration');
-const monetizationRoutes = require('./monetization-api-simple');
+const MonetizationService = require('./monetization/payment-integration');
+const monetizationRoutes = require('./monetization/monetization-api-simple');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1803,7 +1803,7 @@ async function checkUploadCredits(req, res, next) {
                 success: false, 
                 error: 'No upload credits remaining. Upgrade to Premium for unlimited uploads.',
                 upgradeRequired: true,
-                subscriptionUrl: '/subscription-plans.html'
+                subscriptionUrl: '/html/subscription-plans.html'
             });
         }
 

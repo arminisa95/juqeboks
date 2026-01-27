@@ -104,7 +104,7 @@ router.post('/credits/consume', requireAuth, async (req, res) => {
                 success: false, 
                 error: 'No upload credits remaining. Upgrade to Premium for unlimited uploads.',
                 upgradeRequired: true,
-                subscriptionUrl: '/subscription-plans.html'
+                subscriptionUrl: '/html/subscription-plans.html'
             });
         }
 
