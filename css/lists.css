@@ -723,237 +723,329 @@
     color: #f44336;
 }
 
-/* Responsive Design */
+/* =====================================================
+   MOBILE LISTS - Complete Redesign
+   Spotify/Apple Music inspired mobile-first design
+   ===================================================== */
+
 @media (max-width: 768px) {
+    /* Base Shell */
     .lists-shell {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #121212 0%, #000 100%);
         padding: 0;
         margin: 0;
-        min-height: 100vh;
-        max-width: 100%;
-        background: #000;
-        padding-bottom: 140px;
         padding-top: 56px;
+        padding-bottom: 140px;
     }
 
-    /* Hide desktop nav on mobile */
+    /* Hide desktop sidebar */
     .lists-nav {
         display: none !important;
     }
 
-    /* Mobile Tab Bar */
+    /* ===== MOBILE TAB BAR ===== */
     .lists-mobile-tabs {
         display: flex;
         position: fixed;
         top: 56px;
         left: 0;
         right: 0;
-        height: 56px;
-        background: rgba(18, 18, 18, 0.95);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        height: 52px;
+        background: linear-gradient(180deg, rgba(18, 18, 18, 0.98) 0%, rgba(0, 0, 0, 0.95) 100%);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
         z-index: 997;
-        padding: 8px 12px;
-        gap: 8px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-
-    .lists-mobile-tabs::-webkit-scrollbar {
-        display: none;
+        padding: 6px 8px;
+        gap: 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .lists-tab {
         flex: 1;
-        min-width: 70px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 4px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.65rem;
-        font-weight: 500;
-        padding: 6px 8px;
+        gap: 3px;
+        background: transparent;
+        border: none;
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.6rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        padding: 6px 4px;
         cursor: pointer;
-        transition: all 0.2s ease;
-        white-space: nowrap;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
     }
 
     .lists-tab i {
-        font-size: 1rem;
+        font-size: 1.15rem;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .lists-tab:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
+    .lists-tab span {
+        text-transform: uppercase;
+    }
+
+    .lists-tab:active {
+        transform: scale(0.95);
     }
 
     .lists-tab.active {
-        background: linear-gradient(135deg, rgba(247, 33, 147, 0.3), rgba(0, 255, 208, 0.2));
-        border-color: #F72193;
         color: #fff;
+        background: rgba(247, 33, 147, 0.15);
     }
 
     .lists-tab.active i {
         color: #F72193;
+        transform: scale(1.1);
     }
-    
-    .lists-nav-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin-bottom: 0;
-        text-transform: none;
-        letter-spacing: 0;
-        color: #ffffff;
+
+    .lists-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 20px;
+        height: 3px;
+        background: #F72193;
+        border-radius: 3px 3px 0 0;
+    }
+
+    /* ===== CONTENT AREA ===== */
+    .lists-content {
+        flex: 1;
+        background: transparent;
+        padding: 68px 0 0 0;
+        margin: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* ===== PANELS ===== */
+    .lists-panel {
+        display: none !important;
+        padding: 16px;
+        background: transparent;
+        border: none;
+        animation: fadeSlideIn 0.3s ease;
+    }
+
+    .lists-panel.active {
+        display: block !important;
+    }
+
+    @keyframes fadeSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ===== PANEL HEADER ===== */
+    .lists-panel-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        padding: 0 0 20px 0;
+        margin: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 16px;
+    }
+
+    .lists-panel-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #fff;
+        margin: 0;
+        flex: 1;
+        letter-spacing: -0.5px;
+    }
+
+    .lists-panel-hint {
+        width: 100%;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        margin: -8px 0 0 0;
+        order: 3;
+    }
+
+    .lists-clear-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        width: 100%;
+        gap: 6px;
     }
-    
-    .lists-nav-subtitle {
-        display: none;
+
+    .lists-clear-btn:active {
+        transform: scale(0.95);
+        background: rgba(244, 67, 54, 0.3);
+        color: #ff6b6b;
     }
-    
-    .lists-add-btn {
-        background: rgba(29, 185, 84, 0.2);
-        border: 1px solid rgba(29, 185, 84, 0.4);
+
+    /* ===== HISTORY LIST ===== */
+    .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .history-date-group {
+        margin-bottom: 8px;
+    }
+
+    .history-date-header {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #F72193;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 16px 4px 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: sticky;
+        top: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 80%, transparent 100%);
+        z-index: 10;
+    }
+
+    .history-date-header i {
+        font-size: 0.65rem;
+        opacity: 0.8;
+    }
+
+    .history-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 8px;
+        background: transparent;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0 -8px;
+        position: relative;
+    }
+
+    .history-item:active {
+        background: rgba(255, 255, 255, 0.08);
+        transform: scale(0.98);
+    }
+
+    .history-cover {
+        width: 52px;
+        height: 52px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .history-info {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .history-title {
+        font-size: 0.95rem;
+        font-weight: 600;
         color: #fff;
-        width: 32px;
-        height: 32px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 3px;
+    }
+
+    .history-artist {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.5);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .history-time {
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.35);
+        flex-shrink: 0;
+        font-weight: 500;
+    }
+
+    .history-play-btn {
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
+        background: #F72193;
+        border: none;
+        color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
+        cursor: pointer;
+        flex-shrink: 0;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 15px rgba(247, 33, 147, 0.4);
         transition: all 0.2s ease;
     }
-    
-    .lists-add-btn:hover {
-        background: rgba(29, 185, 84, 0.3);
-        transform: scale(1.05);
+
+    .history-play-btn:active {
+        transform: scale(0.9);
+        box-shadow: 0 2px 8px rgba(247, 33, 147, 0.6);
     }
-    
-    .lists-nav-items {
-        display: flex;
-        flex-direction: row;
-        gap: 0;
-        margin: 0;
-    }
-    
-    .lists-nav-item {
-        padding: 8px 12px;
-        border-radius: 20px;
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.9rem;
-        font-weight: 600;
-        min-height: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        box-shadow: none;
-        margin: 0;
-        flex: 1;
-    }
-    
-    .lists-nav-item:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        transform: none;
-        box-shadow: none;
-        border-color: rgba(255, 255, 255, 0.3);
-    }
-    
-    .lists-nav-item.active {
-        background: rgba(29, 185, 84, 0.2);
-        color: #fff;
-        border: 1px solid rgba(29, 185, 84, 0.4);
-        box-shadow: none;
-    }
-    
-    .lists-nav-item.active:hover {
-        background: rgba(29, 185, 84, 0.3);
-        transform: none;
-        box-shadow: none;
-    }
-    
-    .lists-nav-item.active::before {
-        display: none;
-    }
-    
-    .lists-nav-footer {
-        display: none;
-    }
-    
-    .lists-content {
-        background: #000;
-        border-radius: 0;
-        padding: 60px 16px 16px;
-        margin: 0;
-        min-height: 100vh;
-    }
-    
-    .lists-panel {
-        display: block;
-        padding: 0;
-        margin: 0;
-    }
-    
-    .lists-panel-header {
-        padding: 0;
-        margin: 0 0 16px 0;
-    }
-    
-    .lists-panel-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 4px;
-    }
-    
-    .lists-panel-hint {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.9rem;
-        margin-bottom: 0;
-    }
-    
+
+    /* ===== CARDS GRID (Liked tracks, playlists) ===== */
     .cards-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-        padding: 0;
-    }
-    
-    .card {
-        background: rgba(255, 255, 255, 0.06);
-        border-radius: 12px;
-        margin-bottom: 0;
         display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 12px;
-        padding: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        flex-direction: column;
+        gap: 2px;
     }
-    
-    .card:hover {
-        transform: none;
-        box-shadow: none;
+
+    .card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 8px;
+        background: transparent;
+        border: none;
+        border-radius: 12px;
+        margin: 0 -8px;
+        transition: all 0.2s ease;
+    }
+
+    .card:active {
+        background: rgba(255, 255, 255, 0.08);
+        transform: scale(0.98);
     }
 
     .card-cover {
         width: 56px;
         height: 56px;
-        flex-shrink: 0;
-        border-radius: 10px;
+        border-radius: 8px;
         overflow: hidden;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         position: relative;
     }
 
@@ -961,35 +1053,31 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        display: block;
     }
 
     .card-actions {
-        opacity: 1;
+        display: none;
     }
 
-    .card-action-btn {
-        width: 30px;
-        height: 30px;
-        font-size: 0.8rem;
-    }
-    
     .card-body {
-        padding: 0;
         flex: 1;
         min-width: 0;
+        padding: 0;
     }
-    
+
     .card-title {
         font-size: 0.95rem;
-        margin: 0 0 2px;
+        font-weight: 600;
+        color: #fff;
+        margin: 0 0 3px 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    
+
     .card-subtitle {
         font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.5);
         margin: 0;
         white-space: nowrap;
         overflow: hidden;
@@ -997,171 +1085,187 @@
     }
 
     .card-meta {
-        margin-top: 6px;
-        font-size: 0.75rem;
-        color: rgba(255, 255, 255, 0.55);
-        gap: 10px;
-        flex-wrap: nowrap;
-    }
-    
-    .lists-tracklist {
-        padding: 0;
-    }
-    
-    .lists-track-item {
-        padding: 12px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .lists-track-meta {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-    
-    .lists-track-action {
-        width: 32px;
-        height: 32px;
-    }
-    
-    body .lists-track-title {
-        font-size: 0.9rem !important;
-        margin-bottom: 1px !important;
-    }
-    
-    body .lists-track-artist {
-        font-size: 0.8rem !important;
-    }
-    
-    body .lists-track-meta {
-        font-size: 0.8rem !important;
-    }
-    
-    body .lists-track-actions {
-        gap: 6px !important;
-    }
-    
-    body .lists-track-action {
-        width: 28px !important;
-        height: 28px !important;
-        font-size: 0.8rem !important;
-    }
-    
-    /* Hide header on mobile (already handled by main styles.css) */
-    header {
-        display: none !important;
-    }
-    
-    /* Adjust main for mobile */
-    main {
-        padding-top: 0 !important;
-    }
-    
-    /* Hide footer on mobile */
-    footer {
-        display: none !important;
-    }
-    
-    /* Mobile History Styles */
-    .history-item {
-        padding: 12px;
-        gap: 10px;
+        display: none;
     }
 
-    .history-cover {
-        width: 44px;
-        height: 44px;
-    }
-
-    .history-play-btn {
-        opacity: 1;
-        width: 32px;
-        height: 32px;
-    }
-
-    .history-title {
+    /* Card play button on tap */
+    .card::after {
+        content: '\f04b';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 16px;
+        color: rgba(255, 255, 255, 0.3);
         font-size: 0.9rem;
     }
 
-    .history-artist {
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        color: rgba(247, 33, 147, 0.3);
+    }
+
+    .empty-state p {
+        font-size: 1rem;
+        margin: 0 0 8px 0;
+    }
+
+    /* ===== PLAYLIST PANEL ===== */
+    .lists-back {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .lists-back::before {
+        content: '\f053';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 0.7rem;
+    }
+
+    .lists-back:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* ===== TRACK LIST IN PLAYLIST ===== */
+    .lists-tracklist {
+        padding: 0;
+    }
+
+    .lists-track-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .lists-track-row:active {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .lists-track-num {
+        width: 24px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .lists-track-play-hover {
+        display: none;
+    }
+
+    .lists-track-cover {
+        width: 44px;
+        height: 44px;
+        border-radius: 6px;
+        object-fit: cover;
+    }
+
+    .lists-track-meta {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .lists-track-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .lists-track-artist {
         font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
     }
 
-    .lists-content {
-        padding-top: 70px;
+    .lists-track-actions {
+        display: none;
     }
 
-    /* Mobile panel visibility */
-    .lists-panel {
+    .lists-track-duration {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.8rem;
+    }
+
+    /* ===== PLAYLIST CONTROLS ===== */
+    .playlist-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 0;
+        margin-bottom: 8px;
+    }
+
+    .playlist-play-btn {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #F72193;
+        border: none;
+        color: #fff;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 20px rgba(247, 33, 147, 0.5);
+        cursor: pointer;
+    }
+
+    .playlist-play-btn:active {
+        transform: scale(0.95);
+    }
+
+    .playlist-control-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .playlist-control-btn.active {
+        color: #00ffd0;
+        background: rgba(0, 255, 208, 0.15);
+    }
+
+    .playlist-control-btn:active {
+        transform: scale(0.9);
+    }
+
+    /* Hide desktop-only elements */
+    .lists-nav-subtitle,
+    .lists-nav-footer {
         display: none !important;
-    }
-
-    .lists-panel.active {
-        display: block !important;
-    }
-}
-
-/* Mobile Bottom Navigation - Higher specificity */
-@media (max-width: 768px) {
-    body .mobile-nav-item {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 4px !important;
-        color: rgba(255, 255, 255, 0.6) !important;
-        text-decoration: none !important;
-        font-size: 0.7rem !important;
-        transition: color 0.2s ease !important;
-        padding: 4px 8px !important;
-        border-radius: 4px !important;
-    }
-    
-    body .mobile-nav-item:hover,
-    body .mobile-nav-item.active {
-        color: #fff !important;
-    }
-    
-    body .mobile-nav-item i {
-        font-size: 1.2rem !important;
-    }
-    
-    /* Mobile Search Bar - Higher specificity */
-    body .mobile-search-bar {
-        position: fixed !important;
-        top: 60px !important;
-        left: 16px !important;
-        right: 16px !important;
-        z-index: 999 !important;
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 20px !important;
-        padding: 8px 16px !important;
-        color: #fff !important;
-        font-size: 0.9rem !important;
-        backdrop-filter: blur(20px) !important;
-        display: none !important;
-    }
-    
-    body .mobile-search-bar::placeholder {
-        color: rgba(255, 255, 255, 0.6) !important;
-    }
-    
-    body .mobile-search-bar:focus {
-        outline: none !important;
-        background: rgba(255, 255, 255, 0.15) !important;
-        border-color: rgba(255, 255, 255, 0.3) !important;
-    }
-    
-    /* Show search when needed - Higher specificity */
-    body .mobile-search-active .mobile-search-bar {
-        display: block !important;
-    }
-    
-    body .mobile-search-active .lists-nav {
-        top: 100px !important;
-    }
-    
-    body .mobile-search-active .lists-content {
-        padding-top: 100px !important;
     }
 }
