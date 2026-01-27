@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUKE _showtime</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, #F72193, #00ffd0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: #F72193;
+        }
+
+        h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #00ffd0;
+        }
+
+        p {
+            font-size: 1.8rem;
+            line-height: 1.8;
+            max-width: 900px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .emoji {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .icon-big {
+            font-size: 6rem;
+            margin-bottom: 1.5rem;
+            color: #F72193;
+        }
+
+        .icon-turquoise {
+            color: #00ffd0;
+        }
+
+        .logo {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 60px rgba(247, 33, 147, 0.5);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(247, 33, 147, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(247, 33, 147, 0.3);
+        }
+
+        .feature-card i {
+            font-size: 3rem;
+            color: #F72193;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h4 {
+            font-size: 1.5rem;
+            color: #00ffd0;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .code-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #F72193;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 1.5rem;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3rem;
+            color: #00ffd0;
+            max-width: 800px;
+            overflow-x: auto;
+        }
+
+        .code-box .pink { color: #F72193; }
+        .code-box .white { color: white; }
+        .code-box .gray { color: rgba(255,255,255,0.5); }
+
+        .tech-stack {
+            display: flex;
+            gap: 3rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tech-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tech-item i {
+            font-size: 4rem;
+        }
+
+        .tech-item span {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .nav-controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: rgba(247, 33, 147, 0.2);
+            border: 2px solid #F72193;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #F72193;
+            transform: scale(1.05);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #F72193, #00ffd0);
+            transition: width 0.3s;
+            z-index: 100;
+        }
+
+        .list-simple {
+            text-align: left;
+            margin-top: 1.5rem;
+        }
+
+        .list-simple li {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            list-style: none;
+        }
+
+        .list-simple li i {
+            color: #F72193;
+            margin-right: 1rem;
+        }
+
+        .two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .two-cols .left {
+            text-align: left;
+        }
+
+        .diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .diagram-box {
+            background: rgba(247, 33, 147, 0.1);
+            border: 2px solid #F72193;
+            border-radius: 15px;
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+
+        .diagram-box.turquoise {
+            border-color: #00ffd0;
+            background: rgba(0, 255, 208, 0.1);
+        }
+
+        .diagram-arrow {
+            font-size: 2rem;
+            color: #F72193;
+        }
+
+        .highlight-pink {
+            color: #F72193;
+            font-weight: bold;
+        }
+
+        .highlight-turquoise {
+            color: #00ffd0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <div class="presentation" id="presentation">
+        
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <img src="images/juqe.png" alt="JUKE Logo" class="logo">
+            <h1>Welcome to JUKE!</h1>
+            <p>A music streaming platform built with love 🎵</p>
+            <p style="font-size: 1.2rem; margin-top: 2rem; color: rgba(255,255,255,0.5);">Use arrow keys or buttons to navigate</p>
+            <div class="slide-number">1 / 20</div>
+        </div>
+
+        <!-- Slide 2: What is JUKE? -->
+        <div class="slide">
+            <div class="emoji">🎧</div>
+            <h2>What is JUKE?</h2>
+            <p>JUKE is like <span class="highlight-pink">Spotify</span>, but we built it ourselves!</p>
+            <p style="margin-top: 1rem;">It's a website where you can <span class="highlight-turquoise">listen to music</span>, <span class="highlight-pink">upload songs</span>, and <span class="highlight-turquoise">share with friends</span>.</p>
+            <div class="slide-number">2 / 20</div>
+        </div>
+
+        <!-- Slide 3: The Building Blocks -->
+        <div class="slide">
+            <i class="fas fa-cubes icon-big"></i>
+            <h2>The Building Blocks</h2>
+            <p>Every website is made of 3 things:</p>
+            <div class="feature-grid" style="margin-top: 2rem;">
+                <div class="feature-card">
+                    <i class="fab fa-html5"></i>
+                    <h4>HTML</h4>
+                    <p>The skeleton - what things ARE</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fab fa-css3-alt"></i>
+                    <h4>CSS</h4>
+                    <p>The clothes - how things LOOK</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fab fa-js-square"></i>
+                    <h4>JavaScript</h4>
+                    <p>The brain - how things WORK</p>
+                </div>
+            </div>
+            <div class="slide-number">3 / 20</div>
+        </div>
+
+        <!-- Slide 4: Tech Stack -->
+        <div class="slide">
+            <i class="fas fa-layer-group icon-big icon-turquoise"></i>
+            <h2>Our Tech Stack</h2>
+            <p>The tools we used to build JUKE:</p>
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <i class="fab fa-node-js" style="color: #68a063;"></i>
+                    <span>Node.js</span>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-server" style="color: #F72193;"></i>
+                    <span>Express</span>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-database" style="color: #00ffd0;"></i>
+                    <span>SQLite</span>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-cloud" style="color: #ff9900;"></i>
+                    <span>AWS S3</span>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-key" style="color: #F72193;"></i>
+                    <span>JWT</span>
+                </div>
+            </div>
+            <div class="slide-number">4 / 20</div>
+        </div>
+
+        <!-- Slide 5: How Data Flows -->
+        <div class="slide">
+            <h2>How Data Flows</h2>
+            <p>When you click "Play", here's what happens:</p>
+            <div class="diagram">
+                <div class="diagram-box">
+                    <i class="fas fa-mouse-pointer"></i>
+                    <p>You Click</p>
+                </div>
+                <i class="fas fa-arrow-right diagram-arrow"></i>
+                <div class="diagram-box turquoise">
+                    <i class="fas fa-code"></i>
+                    <p>JavaScript</p>
+                </div>
+                <i class="fas fa-arrow-right diagram-arrow"></i>
+                <div class="diagram-box">
+                    <i class="fas fa-server"></i>
+                    <p>Server</p>
+                </div>
+                <i class="fas fa-arrow-right diagram-arrow"></i>
+                <div class="diagram-box turquoise">
+                    <i class="fas fa-database"></i>
+                    <p>Database</p>
+                </div>
+                <i class="fas fa-arrow-right diagram-arrow"></i>
+                <div class="diagram-box">
+                    <i class="fas fa-music"></i>
+                    <p>Music Plays!</p>
+                </div>
+            </div>
+            <div class="slide-number">5 / 20</div>
+        </div>
+
+        <!-- Slide 6: HTML - The Skeleton -->
+        <div class="slide">
+            <i class="fab fa-html5 icon-big" style="color: #e34c26;"></i>
+            <h2>HTML - The Skeleton</h2>
+            <p>HTML tells the browser <span class="highlight-pink">WHAT</span> to show.</p>
+            <div class="code-box">
+                <span class="gray">&lt;!-- A play button --&gt;</span><br>
+                <span class="pink">&lt;button</span> <span class="white">class=</span><span class="pink">"play-btn"</span><span class="pink">&gt;</span><br>
+                &nbsp;&nbsp;<span class="pink">&lt;i</span> <span class="white">class=</span><span class="pink">"fas fa-play"</span><span class="pink">&gt;&lt;/i&gt;</span><br>
+                <span class="pink">&lt;/button&gt;</span>
+            </div>
+            <p style="margin-top: 1rem; font-size: 1.3rem;">This creates a button with a play icon inside!</p>
+            <div class="slide-number">6 / 20</div>
+        </div>
+
+        <!-- Slide 7: HTML Templates -->
+        <div class="slide">
+            <i class="fas fa-file-code icon-big icon-turquoise"></i>
+            <h2>HTML Templates</h2>
+            <p>We use <span class="highlight-pink">&lt;template&gt;</span> tags to store page layouts.</p>
+            <p style="margin-top: 1rem;">Think of them like <span class="highlight-turquoise">blueprints</span> - ready to use when needed!</p>
+            <div class="code-box">
+                <span class="pink">&lt;template</span> <span class="white">id=</span><span class="pink">"tpl-feed"</span><span class="pink">&gt;</span><br>
+                &nbsp;&nbsp;<span class="gray">&lt;!-- The music feed page lives here --&gt;</span><br>
+                &nbsp;&nbsp;<span class="pink">&lt;section</span> <span class="white">class=</span><span class="pink">"music-feed"</span><span class="pink">&gt;</span>...<span class="pink">&lt;/section&gt;</span><br>
+                <span class="pink">&lt;/template&gt;</span>
+            </div>
+            <div class="slide-number">7 / 20</div>
+        </div>
+
+        <!-- Slide 8: CSS - The Clothes -->
+        <div class="slide">
+            <i class="fab fa-css3-alt icon-big" style="color: #264de4;"></i>
+            <h2>CSS - The Clothes</h2>
+            <p>CSS tells the browser <span class="highlight-pink">HOW</span> things should look.</p>
+            <div class="code-box">
+                <span class="pink">.play-btn</span> {<br>
+                &nbsp;&nbsp;<span class="white">background:</span> <span style="color: #F72193;">#F72193</span>; <span class="gray">/* JUKE pink! */</span><br>
+                &nbsp;&nbsp;<span class="white">border-radius:</span> 50%;<br>
+                &nbsp;&nbsp;<span class="white">color:</span> white;<br>
+                }
+            </div>
+            <p style="margin-top: 1rem; font-size: 1.3rem;">Now our button is pink and round! 🎀</p>
+            <div class="slide-number">8 / 20</div>
+        </div>
+
+        <!-- Slide 9: CSS Variables -->
+        <div class="slide">
+            <i class="fas fa-palette icon-big"></i>
+            <h2>CSS Variables</h2>
+            <p>We save colors in <span class="highlight-turquoise">variables</span> so we can reuse them!</p>
+            <div class="code-box">
+                <span class="pink">:root</span> {<br>
+                &nbsp;&nbsp;<span class="white">--juke-pink:</span> <span style="color: #F72193;">#F72193</span>;<br>
+                &nbsp;&nbsp;<span class="white">--juke-turquoise:</span> <span style="color: #00ffd0;">#00ffd0</span>;<br>
+                &nbsp;&nbsp;<span class="white">--bg-dark:</span> #0a0a0a;<br>
+                }
+            </div>
+            <p style="margin-top: 1rem; font-size: 1.3rem;">Change one variable = change everywhere! ✨</p>
+            <div class="slide-number">9 / 20</div>
+        </div>
+
+        <!-- Slide 10: JavaScript - The Brain -->
+        <div class="slide">
+            <i class="fab fa-js-square icon-big" style="color: #f7df1e;"></i>
+            <h2>JavaScript - The Brain</h2>
+            <p>JavaScript makes things <span class="highlight-pink">happen</span> when you interact!</p>
+            <div class="code-box">
+                <span class="pink">playBtn</span>.<span class="white">addEventListener</span>(<span style="color: #98c379;">'click'</span>, () => {<br>
+                &nbsp;&nbsp;<span class="gray">// When button clicked...</span><br>
+                &nbsp;&nbsp;<span class="pink">audio</span>.<span class="white">play</span>();  <span class="gray">// Play the music!</span><br>
+                });
+            </div>
+            <p style="margin-top: 1rem; font-size: 1.3rem;">Click → Music plays! 🎵</p>
+            <div class="slide-number">10 / 20</div>
+        </div>
+
+        <!-- Slide 11: SPA Router -->
+        <div class="slide">
+            <i class="fas fa-route icon-big icon-turquoise"></i>
+            <h2>Single Page App (SPA)</h2>
+            <p>JUKE loads <span class="highlight-pink">one page</span> and swaps content inside!</p>
+            <ul class="list-simple">
+                <li><i class="fas fa-check"></i> <span class="highlight-turquoise">#/feed</span> → Shows music feed</li>
+                <li><i class="fas fa-check"></i> <span class="highlight-turquoise">#/login</span> → Shows login form</li>
+                <li><i class="fas fa-check"></i> <span class="highlight-turquoise">#/profile</span> → Shows your profile</li>
+            </ul>
+            <p style="margin-top: 1rem; font-size: 1.3rem;">No page reloads = super fast! ⚡</p>
+            <div class="slide-number">11 / 20</div>
+        </div>
+
+        <!-- Slide 12: The Music Player -->
+        <div class="slide">
+            <i class="fas fa-play-circle icon-big"></i>
+            <h2>The Music Player</h2>
+            <p>The heart of JUKE! It uses the <span class="highlight-turquoise">HTML5 Audio API</span>.</p>
+            <div class="code-box">
+                <span class="pink">const</span> audio = <span class="pink">new</span> <span class="white">Audio</span>();<br><br>
+                audio.<span class="white">src</span> = <span style="color: #98c379;">"song.mp3"</span>;<br>
+                audio.<span class="white">play</span>();   <span class="gray">// Start playing</span><br>
+                audio.<span class="white">pause</span>();  <span class="gray">// Stop playing</span><br>
+                audio.<span class="white">volume</span> = 0.5; <span class="gray">// Half volume</span>
+            </div>
+            <div class="slide-number">12 / 20</div>
+        </div>
+
+        <!-- Slide 13: Like System -->
+        <div class="slide">
+            <i class="fas fa-heart icon-big"></i>
+            <h2>The Like System</h2>
+            <p>Click the heart → Song is saved to your favorites!</p>
+            <div class="diagram" style="margin-top: 2rem;">
+                <div class="diagram-box">
+                    <i class="far fa-heart" style="font-size: 2rem;"></i>
+                    <p>Empty Heart</p>
+                </div>
+                <i class="fas fa-arrow-right diagram-arrow"></i>
+                <div class="diagram-box" style="border-color: #F72193;">
+                    <i class="fas fa-heart" style="font-size: 2rem; color: #F72193;"></i>
+                    <p>Pink Heart!</p>
+                </div>
+            </div>
+            <p style="margin-top: 1.5rem; font-size: 1.3rem;">We store liked songs in a <span class="highlight-turquoise">Set</span> for fast lookup!</p>
+            <div class="slide-number">13 / 20</div>
+        </div>
+
+        <!-- Slide 14: Backend Server -->
+        <div class="slide">
+            <i class="fas fa-server icon-big icon-turquoise"></i>
+            <h2>The Backend Server</h2>
+            <p>Node.js + Express handles all the behind-the-scenes work!</p>
+            <div class="code-box">
+                <span class="pink">const</span> express = <span class="white">require</span>(<span style="color: #98c379;">'express'</span>);<br>
+                <span class="pink">const</span> app = <span class="white">express</span>();<br><br>
+                app.<span class="white">get</span>(<span style="color: #98c379;">'/api/tracks'</span>, (req, res) => {<br>
+                &nbsp;&nbsp;<span class="gray">// Send all songs to the browser</span><br>
+                &nbsp;&nbsp;res.<span class="white">json</span>(tracks);<br>
+                });
+            </div>
+            <div class="slide-number">14 / 20</div>
+        </div>
+
+        <!-- Slide 15: Database -->
+        <div class="slide">
+            <i class="fas fa-database icon-big"></i>
+            <h2>The Database</h2>
+            <p>SQLite stores all our data in <span class="highlight-turquoise">tables</span>!</p>
+            <div class="feature-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="feature-card">
+                    <i class="fas fa-user"></i>
+                    <h4>Users</h4>
+                    <p>Names, emails</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-music"></i>
+                    <h4>Tracks</h4>
+                    <p>Songs info</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-heart"></i>
+                    <h4>Likes</h4>
+                    <p>Who likes what</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-list"></i>
+                    <h4>Playlists</h4>
+                    <p>Song collections</p>
+                </div>
+            </div>
+            <div class="slide-number">15 / 20</div>
+        </div>
+
+        <!-- Slide 16: Authentication -->
+        <div class="slide">
+            <i class="fas fa-lock icon-big icon-turquoise"></i>
+            <h2>Login & Security</h2>
+            <p>We use <span class="highlight-pink">JWT tokens</span> - like a VIP wristband! 🎟️</p>
+            <div class="diagram">
+                <div class="diagram-box">
+                    <i class="fas fa-user"></i>
+                    <p>Login</p>
+                </div>
+                <i class="fas fa-arrow-right diagram-arrow"></i>
+                <div class="diagram-box turquoise">
+                    <i class="fas fa-check"></i>
+                    <p>Server checks</p>
+                </div>
+                <i class="fas fa-arrow-right diagram-arrow"></i>
+                <div class="diagram-box">
+                    <i class="fas fa-ticket-alt"></i>
+                    <p>Get token</p>
+                </div>
+                <i class="fas fa-arrow-right diagram-arrow"></i>
+                <div class="diagram-box turquoise">
+                    <i class="fas fa-door-open"></i>
+                    <p>Access granted!</p>
+                </div>
+            </div>
+            <div class="slide-number">16 / 20</div>
+        </div>
+
+        <!-- Slide 17: File Upload -->
+        <div class="slide">
+            <i class="fas fa-cloud-upload-alt icon-big"></i>
+            <h2>Uploading Music</h2>
+            <p>Songs go to <span class="highlight-turquoise">AWS S3</span> - a cloud storage!</p>
+            <ul class="list-simple">
+                <li><i class="fas fa-check"></i> Pick your MP3 file</li>
+                <li><i class="fas fa-check"></i> Add title & cover art</li>
+                <li><i class="fas fa-check"></i> Click upload</li>
+                <li><i class="fas fa-check"></i> File goes to the cloud ☁️</li>
+                <li><i class="fas fa-check"></i> Everyone can listen!</li>
+            </ul>
+            <div class="slide-number">17 / 20</div>
+        </div>
+
+        <!-- Slide 18: API Endpoints -->
+        <div class="slide">
+            <i class="fas fa-plug icon-big icon-turquoise"></i>
+            <h2>API Endpoints</h2>
+            <p>The server has <span class="highlight-pink">doors</span> for different actions:</p>
+            <ul class="list-simple">
+                <li><i class="fas fa-sign-in-alt"></i> <span class="highlight-turquoise">POST /api/login</span> → Sign in</li>
+                <li><i class="fas fa-music"></i> <span class="highlight-turquoise">GET /api/tracks</span> → Get all songs</li>
+                <li><i class="fas fa-heart"></i> <span class="highlight-turquoise">POST /tracks/:id/like</span> → Like a song</li>
+                <li><i class="fas fa-upload"></i> <span class="highlight-turquoise">POST /api/upload</span> → Upload music</li>
+            </ul>
+            <div class="slide-number">18 / 20</div>
+        </div>
+
+        <!-- Slide 19: Project Structure -->
+        <div class="slide">
+            <i class="fas fa-folder-tree icon-big"></i>
+            <h2>Project Structure</h2>
+            <p>How our files are organized:</p>
+            <div class="code-box" style="font-size: 1.1rem;">
+                📁 <span class="pink">JUKE/</span><br>
+                ├── 📄 <span class="white">index.html</span> <span class="gray">← Main page</span><br>
+                ├── 📄 <span class="white">server.js</span> <span class="gray">← Backend brain</span><br>
+                ├── 📁 <span class="pink">css/</span> <span class="gray">← All styles</span><br>
+                ├── 📁 <span class="pink">js/</span> <span class="gray">← All JavaScript</span><br>
+                ├── 📁 <span class="pink">html/</span> <span class="gray">← Page templates</span><br>
+                ├── 📁 <span class="pink">database/</span> <span class="gray">← Data storage</span><br>
+                └── 📁 <span class="pink">images/</span> <span class="gray">← Pictures</span>
+            </div>
+            <div class="slide-number">19 / 20</div>
+        </div>
+
+        <!-- Slide 20: Thank You -->
+        <div class="slide">
+            <img src="images/juqe.png" alt="JUKE Logo" class="logo">
+            <h1>Thank You!</h1>
+            <p>Now you know how <span class="highlight-pink">JUKE</span> works! 🎉</p>
+            <div class="feature-grid" style="margin-top: 2rem; grid-template-columns: repeat(3, 1fr);">
+                <div class="feature-card">
+                    <i class="fab fa-html5" style="color: #e34c26;"></i>
+                    <h4>HTML</h4>
+                    <p>Structure</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fab fa-css3-alt" style="color: #264de4;"></i>
+                    <h4>CSS</h4>
+                    <p>Style</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fab fa-js-square" style="color: #f7df1e;"></i>
+                    <h4>JavaScript</h4>
+                    <p>Magic</p>
+                </div>
+            </div>
+            <p style="margin-top: 2rem; font-size: 1.5rem;">Questions? 🙋</p>
+            <div class="slide-number">20 / 20</div>
+        </div>
+
+    </div>
+
+    <div class="nav-controls">
+        <button class="nav-btn" id="prevBtn" disabled>
+            <i class="fas fa-arrow-left"></i> Previous
+        </button>
+        <button class="nav-btn" id="nextBtn">
+            Next <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                if (i === index) {
+                    slide.classList.add('active');
+                }
+            });
+
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === slides.length - 1;
+
+            // Update progress bar
+            const progress = ((index + 1) / slides.length) * 100;
+            progressBar.style.width = progress + '%';
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        nextBtn.addEventListener('click', nextSlide);
+        prevBtn.addEventListener('click', prevSlide);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Initialize
+        showSlide(0);
+    </script>
+</body>
+</html>
