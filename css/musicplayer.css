@@ -187,9 +187,15 @@ MUSIC PLAYER - Enhanced Modern Design
     justify-content: center;
 }
 
-.music-player .like-btn i {
+.music-player .like-btn i.far {
     font-size: 1.45rem;
     color: white;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.music-player .like-btn i.fas {
+    font-size: 1.45rem;
+    color: #F72193;
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
