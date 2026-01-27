@@ -181,6 +181,11 @@ function showPanel(panelName) {
             btn.tabIndex = -1;
         }
     });
+
+    // Load content for the panel
+    if (panelName === 'history') {
+        renderHistory();
+    }
 }
 
 async function openPlaylist(playlist) {
@@ -970,7 +975,7 @@ async function loadLists() {
 
     
     bindListsNavigatorUi();
-    showPanel('liked'); // Show liked tracks by default
+    showPanel('history'); // Show history by default
 
     // Check which panel is currently active
     const activePanel = document.querySelector('.lists-panel.active');
