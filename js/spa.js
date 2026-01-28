@@ -42,6 +42,8 @@
                 return { templateId: 'tpl-koleqtion', file: 'html/koleqtion.html', selector: 'main' };
             case '#/lists':
                 return { templateId: 'tpl-lists', file: 'html/lists.html', selector: '.lists-shell' };
+            case '#/queue':
+                return { templateId: 'tpl-queue', file: 'html/queue.html', selector: '.queue-container' };
             case '#/upload':
                 return { templateId: 'tpl-upload', file: 'html/upload.html', selector: '.upload-container' };
             case '#/login':

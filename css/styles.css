@@ -1004,3 +1004,272 @@ margin-left: 120px;
         font-size: 0.8rem;
     }
 }
+
+/* Queue Styles */
+.queue-main {
+    background: var(--bg-primary);
+    min-height: 100vh;
+    padding: 0;
+}
+
+.queue-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.queue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-secondary);
+    margin-bottom: 1rem;
+}
+
+.queue-title {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.queue-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.queue-close-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.queue-content {
+    padding: 0 1rem 1rem;
+}
+
+.queue-section {
+    margin-bottom: 2rem;
+}
+
+.queue-section-title {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-secondary);
+}
+
+.current-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--juke-pink-30);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 2rem 0;
+}
+
+.current-section .queue-section-title {
+    color: var(--juke-pink);
+    border-bottom-color: var(--juke-pink-30);
+}
+
+.queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.queue-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.queue-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-primary);
+    transform: translateY(-1px);
+}
+
+.queue-item-cover {
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: var(--bg-secondary);
+}
+
+.queue-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.queue-item-title {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0 0 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.queue-item-artist {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.queue-item-duration {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.current-track {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-card);
+    border: 2px solid var(--juke-pink);
+    border-radius: 8px;
+}
+
+.current-track-cover {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--bg-secondary);
+}
+
+.current-track-info {
+    flex: 1;
+}
+
+.current-track-title {
+    color: var(--juke-pink);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.current-track-artist {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.current-track-playing {
+    color: var(--juke-pink);
+    font-size: 0.8rem;
+    margin: 0.25rem 0 0 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.current-track-playing::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--juke-pink);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.empty-queue {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Mobile responsive queue styles */
+@media (max-width: 768px) {
+    .queue-container {
+        padding: 0.5rem;
+    }
+    
+    .queue-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .queue-title {
+        font-size: 1.25rem;
+    }
+    
+    .queue-content {
+        padding: 0 0.5rem 1rem;
+    }
+    
+    .queue-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .queue-section-title {
+        font-size: 1rem;
+    }
+    
+    .current-section {
+        padding: 0.75rem;
+        margin: 1.5rem 0;
+    }
+    
+    .queue-item {
+        padding: 0.5rem;
+    }
+    
+    .queue-item-cover {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .queue-item-title {
+        font-size: 0.85rem;
+    }
+    
+    .queue-item-artist {
+        font-size: 0.75rem;
+    }
+    
+    .current-track {
+        padding: 0.75rem;
+    }
+    
+    .current-track-cover {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .current-track-title {
+        font-size: 0.9rem;
+    }
+    
+    .current-track-artist {
+        font-size: 0.8rem;
+    }
+}
