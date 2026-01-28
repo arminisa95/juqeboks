@@ -30,6 +30,7 @@
     <script src="js/lists.js" defer></script>
     <script src="js/uploadPage.js" defer></script>
     <script src="js/spa.js" defer></script>
+    <script src="js/showtime.js" defer></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -521,10 +522,10 @@
 
                 <div class="profile-section" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
                     <h3 style="color: #00ffd0; margin-bottom: 1rem; font-size: 1.1rem;">Legal & Support</h3>
-                    <a href="JUKE-SHOWTIME.html" target="_blank" class="profile-btn legal" style="display: inline-flex; align-items: center; text-decoration: none; margin-bottom: 0.5rem;">
+                    <button type="button" id="showtimeBtn" class="profile-btn legal" style="display: inline-flex; align-items: center; text-decoration: none; margin-bottom: 0.5rem;">
                         <i class="fas fa-tv" style="margin-right: 0.5rem;"></i>
                         _showtime
-                    </a>
+                    </button>
                     <button type="button" id="deleteProfileBtn" class="profile-btn danger" style="display: inline-flex; align-items: center; text-decoration: none; margin-bottom: 0.5rem;">
                         <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>
                         Delete Profile
@@ -634,5 +635,42 @@
     </div>
 
     <div class="music-player"></div>
+
+    <!-- Showtime Options Modal -->
+    <div id="showtimeModal" class="showtime-modal" style="display: none;">
+        <div class="showtime-modal-content">
+            <div class="showtime-modal-header">
+                <h3>Choose Showtime Option</h3>
+                <button type="button" id="showtimeCloseBtn" class="showtime-close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="showtime-modal-body">
+                <div class="showtime-options">
+                    <button type="button" id="openShowtimeBtn" class="showtime-option-btn">
+                        <i class="fas fa-tv"></i>
+                        <div>
+                            <h4>JUQE Showtime</h4>
+                            <p>Open the JUQE presentation slides</p>
+                        </div>
+                    </button>
+                    <button type="button" id="openRegFlowBtn" class="showtime-option-btn">
+                        <i class="fas fa-user-plus"></i>
+                        <div>
+                            <h4>User Registration Flow</h4>
+                            <p>View the user registration process</p>
+                        </div>
+                    </button>
+                    <button type="button" id="openUpdateBodyBtn" class="showtime-option-btn">
+                        <i class="fas fa-code"></i>
+                        <div>
+                            <h4>updateBodyPadding Function</h4>
+                            <p>Learn about this JavaScript function</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
