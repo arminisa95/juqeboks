@@ -863,3 +863,144 @@ margin-left: 120px;
     box-shadow: 0 4px 12px rgba(107, 114, 128, 0.5);
     background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
 }
+
+/* Showtime Modal Styles */
+.showtime-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.showtime-modal-content {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-secondary);
+    border-radius: 12px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.showtime-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-secondary);
+}
+
+.showtime-modal-header h3 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.showtime-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.showtime-close-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.showtime-modal-body {
+    padding: 1.5rem;
+}
+
+.showtime-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.showtime-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-secondary);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.showtime-option-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--juke-pink-30);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(247, 33, 147, 0.1);
+}
+
+.showtime-option-btn i {
+    font-size: 1.5rem;
+    color: var(--juke-pink);
+    flex-shrink: 0;
+}
+
+.showtime-option-btn h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+}
+
+.showtime-option-btn p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Mobile responsive adjustments for showtime modal */
+@media (max-width: 768px) {
+    .showtime-modal {
+        padding: 1rem;
+    }
+    
+    .showtime-modal-content {
+        max-width: 100%;
+        margin: 0 1rem;
+    }
+    
+    .showtime-modal-header,
+    .showtime-modal-body {
+        padding: 1rem;
+    }
+    
+    .showtime-option-btn {
+        padding: 1rem;
+    }
+    
+    .showtime-option-btn i {
+        font-size: 1.25rem;
+    }
+    
+    .showtime-option-btn h4 {
+        font-size: 0.9rem;
+    }
+    
+    .showtime-option-btn p {
+        font-size: 0.8rem;
+    }
+}

@@ -2,15 +2,24 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Get elements
     const showtimeBtn = document.getElementById('showtimeBtn');
+    const mobileShowtimeBtn = document.getElementById('mobileShowtimeBtn');
     const showtimeModal = document.getElementById('showtimeModal');
     const showtimeCloseBtn = document.getElementById('showtimeCloseBtn');
     const openShowtimeBtn = document.getElementById('openShowtimeBtn');
     const openRegFlowBtn = document.getElementById('openRegFlowBtn');
     const openUpdateBodyBtn = document.getElementById('openUpdateBodyBtn');
 
-    // Show modal when _showtime button is clicked
+    // Show modal when _showtime button is clicked (desktop)
     if (showtimeBtn) {
         showtimeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showShowtimeModal();
+        });
+    }
+
+    // Show modal when mobile _showtime button is clicked
+    if (mobileShowtimeBtn) {
+        mobileShowtimeBtn.addEventListener('click', function(e) {
             e.preventDefault();
             showShowtimeModal();
         });
