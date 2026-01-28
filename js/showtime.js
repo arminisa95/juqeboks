@@ -57,6 +57,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Open JUQE Project Presentation
+    const openProjectBtn = document.getElementById('openProjectBtn');
+    if (openProjectBtn) {
+        openProjectBtn.addEventListener('click', function() {
+            window.open('showtime/JUKE-PROJECT-PRESENTATION.html', '_blank');
+            hideShowtimeModal();
+        });
+    }
+
     // Keyboard navigation
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && showtimeModal && showtimeModal.style.display !== 'none') {
