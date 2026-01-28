@@ -42,6 +42,15 @@
   --cyan-15: rgba(0, 255, 208, 0.15);
   --cyan-10: rgba(0, 255, 208, 0.10);
 
+  /* JUKE Brand Colors */
+  --juke-pink: #F72193;
+  --juke-pink-rgb: 247, 33, 147;
+  --juke-pink-15: rgba(247, 33, 147, 0.15);
+  --juke-pink-20: rgba(247, 33, 147, 0.20);
+  --juke-pink-30: rgba(247, 33, 147, 0.30);
+  --juke-pink-40: rgba(247, 33, 147, 0.40);
+  --juke-pink-50: rgba(247, 33, 147, 0.50);
+
   /* Backgrounds */
   --bg-primary: rgb(5, 8, 15);
   --bg-secondary: rgba(0, 0, 0, 0.3);
@@ -86,4 +95,12 @@
   --spacing-xl: 20px;
   --spacing-2xl: 24px;
   --spacing-3xl: 32px;
+
+  /* Common button styles */
+  --btn-padding-sm: 6px 12px;
+  --btn-padding-md: 8px 16px;
+  --btn-padding-lg: 12px 24px;
+  --btn-font-size-sm: 0.75rem;
+  --btn-font-size-md: 0.875rem;
+  --btn-font-size-lg: 1rem;
 }

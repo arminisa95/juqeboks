@@ -182,7 +182,7 @@ a:hover {
     left: 0;
     right: 0;
     background: rgba(16, 10, 86, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--border-tertiary);
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
     z-index: 2000;
     border-radius: 6px;
@@ -654,9 +654,9 @@ margin-left: 120px;
     width: 1px;
     background: linear-gradient(180deg, 
         transparent 0%, 
-        rgba(255, 255, 255, 0.05) 10%, 
-        rgba(255, 255, 255, 0.03) 50%,
-        rgba(255, 255, 255, 0.02) 80%,
+        var(--white-05) 10%, 
+        var(--white-03) 50%,
+        var(--white-02) 80%,
         transparent 100%);
     pointer-events: none;
     z-index: 1;
@@ -683,9 +683,9 @@ margin-left: 120px;
     bottom: 0;
     width: 1px;
     background: linear-gradient(180deg, 
-        rgba(0, 255, 208, 0.2) 0%, 
-        rgba(255, 255, 255, 0.05) 50%,
-        rgba(0, 255, 208, 0.1) 100%);
+        var(--white-05) 0%, 
+        var(--cyan-15) 50%,
+        transparent 100%);
     pointer-events: none;
 }
 
@@ -710,8 +710,8 @@ margin-left: 120px;
     bottom: 0;
     width: 1px;
     background: linear-gradient(180deg, 
-        rgba(255, 255, 255, 0.05) 0%, 
-        rgba(0, 255, 208, 0.15) 50%,
+        var(--white-05) 0%, 
+        var(--cyan-15) 50%,
         transparent 100%);
     pointer-events: none;
 }
@@ -809,7 +809,7 @@ margin-left: 120px;
 }
 
 .profile-btn.secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-card-hover);
 }
 
 .profile-btn.premium {

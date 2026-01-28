@@ -393,9 +393,7 @@ async function openPlaylist(playlist) {
         const playAllBtn = controlsDiv.querySelector('.playlist-play-btn');
         if (playAllBtn && tracks.length > 0) {
             playAllBtn.addEventListener('click', function() {
-                if (typeof window.playTrack === 'function') {
-                    window.playTrack(tracks[0].id);
-                }
+                safePlayTrack(tracks[0].id);
             });
         }
         
@@ -451,9 +449,7 @@ async function openPlaylist(playlist) {
             row.addEventListener('click', function (e) {
                 if (e.target.closest('.lists-track-action')) return;
                 try {
-                    if (typeof window.playTrack === 'function') {
-                        window.playTrack(t.id);
-                    }
+                    safePlayTrack(t.id);
                 } catch (_) {}
             });
             
@@ -469,9 +465,7 @@ async function openPlaylist(playlist) {
                         icon.className = this.classList.contains('liked') ? 'fas fa-heart' : 'far fa-heart';
                     }
                     // Call global like function if available
-                    if (typeof window.likeTrack === 'function') {
-                        window.likeTrack(trackId);
-                    }
+                    safeLikeTrack(trackId);
                 });
             }
 
@@ -491,9 +485,7 @@ async function openPlaylist(playlist) {
                     e.stopPropagation();
                     const trackId = this.getAttribute('data-track-id');
                     try {
-                        if (typeof window.shareTrackById === 'function') {
-                            window.shareTrackById(String(t.id), { title: safeTitle, text: safeArtist });
-                        }
+                        safeShareTrack(String(t.id), { title: safeTitle, text: safeArtist });
                     } catch (_) {
                     }
                 });
@@ -515,11 +507,7 @@ async function openPlaylist(playlist) {
                     e.stopPropagation();
                     const trackId = this.getAttribute('data-track-id');
                     // Call global delete function if available
-                    if (typeof window.deleteTrack === 'function') {
-                        window.deleteTrack(trackId, e);
-                    } else {
-                        alert('Delete functionality coming soon!');
-                    }
+                    safeDeleteTrack(trackId, e);
                 });
             }
 
@@ -901,9 +889,7 @@ function renderTrackCard(t) {
         } catch (_) {
         }
         try {
-            if (typeof window.playTrack === 'function') {
-                window.playTrack(t.id);
-            }
+            safePlayTrack(t.id);
         } catch (_) {
         }
     });
@@ -913,9 +899,7 @@ function renderTrackCard(t) {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             try {
-                if (typeof window.playTrack === 'function') {
-                    window.playTrack(t.id);
-                }
+                safePlayTrack(t.id);
             } catch (_) {
             }
         }
@@ -928,9 +912,7 @@ function renderTrackCard(t) {
             commentBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 try {
-                    if (typeof window.openTrackCommentsModal === 'function') {
-                        window.openTrackCommentsModal(String(t.id), { title: t.title || 'Comments' });
-                    }
+                    safeOpenComments(String(t.id), t.title || 'Comments');
                 } catch (_) {
                 }
             });
@@ -942,9 +924,7 @@ function renderTrackCard(t) {
             shareBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 try {
-                    if (typeof window.shareTrackById === 'function') {
-                        window.shareTrackById(String(t.id), { title: t.title, text: t.artist_name });
-                    }
+                    safeShareTrack(String(t.id), { title: t.title, text: t.artist_name });
                 } catch (_) {
                 }
             });
@@ -1443,18 +1423,14 @@ function renderHistory() {
             
             row.addEventListener('click', function(e) {
                 if (e.target.closest('.history-play-btn')) return;
-                if (typeof window.playTrack === 'function') {
-                    window.playTrack(item.id);
-                }
+                safePlayTrack(item.id);
             });
             
             const playBtn = row.querySelector('.history-play-btn');
             if (playBtn) {
                 playBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    if (typeof window.playTrack === 'function') {
-                        window.playTrack(item.id);
-                    }
+                    safePlayTrack(item.id);
                 });
             }
             
@@ -1553,7 +1529,40 @@ function initHistoryFeature() {
     }
 }
 
-// Export history functions
+// Utility functions for common operations
+function safePlayTrack(trackId) {
+    if (typeof window.playTrack === 'function') {
+        window.playTrack(trackId);
+    }
+}
+
+function safeLikeTrack(trackId) {
+    if (typeof window.likeTrack === 'function') {
+        window.likeTrack(trackId);
+    }
+}
+
+function safeShareTrack(trackId, options) {
+    if (typeof window.shareTrackById === 'function') {
+        window.shareTrackById(trackId, options);
+    }
+}
+
+function safeDeleteTrack(trackId, event) {
+    if (typeof window.deleteTrack === 'function') {
+        window.deleteTrack(trackId, event);
+    } else {
+        alert('Delete functionality coming soon!');
+    }
+}
+
+function safeOpenComments(trackId, title) {
+    if (typeof window.openTrackCommentsModal === 'function') {
+        window.openTrackCommentsModal(trackId, { title });
+    }
+}
+
+// Export functions
 window.JukeHistory = {
     add: addToHistory,
     get: getListeningHistory,

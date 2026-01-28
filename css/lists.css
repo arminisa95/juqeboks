@@ -799,11 +799,11 @@
 
     .lists-tab.active {
         color: #fff;
-        background: rgba(247, 33, 147, 0.15);
+        background: var(--juke-pink-15);
     }
 
     .lists-tab.active i {
-        color: #F72193;
+        color: var(--juke-pink);
         transform: scale(1.1);
     }
 
@@ -815,7 +815,7 @@
         transform: translateX(-50%);
         width: 20px;
         height: 3px;
-        background: #F72193;
+        background: var(--juke-pink);
         border-radius: 3px 3px 0 0;
     }
 
@@ -917,7 +917,7 @@
     .history-date-header {
         font-size: 0.7rem;
         font-weight: 700;
-        color: #F72193;
+        color: var(--juke-pink);
         text-transform: uppercase;
         letter-spacing: 1px;
         padding: 16px 4px 10px;
@@ -997,7 +997,7 @@
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: #F72193;
+        background: var(--juke-pink);
         border: none;
         color: #fff;
         display: flex;
@@ -1006,13 +1006,13 @@
         cursor: pointer;
         flex-shrink: 0;
         font-size: 0.85rem;
-        box-shadow: 0 4px 15px rgba(247, 33, 147, 0.4);
+        box-shadow: 0 4px 15px rgba(var(--juke-pink-rgb), 0.4);
         transition: all 0.2s ease;
     }
 
     .history-play-btn:active {
         transform: scale(0.9);
-        box-shadow: 0 2px 8px rgba(247, 33, 147, 0.6);
+        box-shadow: 0 2px 8px rgba(var(--juke-pink-rgb), 0.6);
     }
 
     /* ===== CARDS GRID (Liked tracks, playlists) ===== */
@@ -1113,7 +1113,7 @@
     .empty-state i {
         font-size: 4rem;
         margin-bottom: 20px;
-        color: rgba(247, 33, 147, 0.3);
+        color: var(--juke-pink-30);
     }
 
     .empty-state p {
@@ -1225,14 +1225,14 @@
         width: 52px;
         height: 52px;
         border-radius: 50%;
-        background: #F72193;
+        background: var(--juke-pink);
         border: none;
         color: #fff;
         font-size: 1.2rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 6px 20px rgba(247, 33, 147, 0.5);
+        box-shadow: 0 6px 20px rgba(var(--juke-pink-rgb), 0.5);
         cursor: pointer;
     }
 
