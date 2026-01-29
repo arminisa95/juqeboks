@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,8 +47,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .slide-number {
@@ -160,9 +168,17 @@
             overflow-x: auto;
         }
 
-        .code-box .pink { color: #F72193; }
-        .code-box .white { color: white; }
-        .code-box .gray { color: rgba(255,255,255,0.5); }
+        .code-box .pink {
+            color: #F72193;
+        }
+
+        .code-box .white {
+            color: white;
+        }
+
+        .code-box .gray {
+            color: rgba(255, 255, 255, 0.5);
+        }
 
         .tech-stack {
             display: flex;
@@ -297,17 +313,19 @@
         }
     </style>
 </head>
+
 <body>
     <div class="progress-bar" id="progressBar"></div>
-    
+
     <div class="presentation" id="presentation">
-        
+
         <!-- Slide 1: Title -->
         <div class="slide active">
-            <img src="../images/juqe.png" alt="JUKE Logo" class="logo">
+            <img src="images/juqe.png" alt="JUKE Logo" class="logo">
             <h1>Welcome to JUQE!</h1>
             <p>A music streaming platform built with love 🤟</p>
-            <p style="font-size: 1.2rem; margin-top: 2rem; color: rgba(255,255,255,0.5);">Use arrow keys or buttons to navigate</p>
+            <p style="font-size: 1.2rem; margin-top: 2rem; color: rgba(255,255,255,0.5);">Use arrow keys or buttons to
+                navigate</p>
             <div class="slide-number">1 / 20</div>
         </div>
 
@@ -315,8 +333,11 @@
         <div class="slide">
             <div class="emoji">🎧</div>
             <h2>What is JUQE?</h2>
-            <p>JUQE is like <span class="highlight-pink">Spotify</span>, just fair, cool and really nice. <br>Make love, not war.</p>
-            <p style="margin-top: 1rem;">It's a website where you can <span class="highlight-turquoise">listen to music</span>, <span class="highlight-pink">upload songs, images, videos</span>, and <span class="highlight-turquoise">share with friends</span>.</p>
+            <p>JUQE is like <span class="highlight-pink">Spotify</span>, just fair, cool and really nice. <br>Make love,
+                not war.</p>
+            <p style="margin-top: 1rem;">It's a website where you can <span class="highlight-turquoise">listen to
+                    music</span>, <span class="highlight-pink">upload songs, images, videos</span>, and <span
+                    class="highlight-turquoise">share with friends</span>.</p>
             <div class="slide-number">2 / 20</div>
         </div>
 
@@ -415,8 +436,10 @@
             <p>HTML tells the browser <span class="highlight-pink">WHAT</span> to show.</p>
             <div class="code-box">
                 <span class="gray">&lt;!-- A play button --&gt;</span><br>
-                <span class="pink">&lt;button</span> <span class="white">class=</span><span class="pink">"play-btn"</span><span class="pink">&gt;</span><br>
-                &nbsp;&nbsp;<span class="pink">&lt;i</span> <span class="white">class=</span><span class="pink">"fas fa-play"</span><span class="pink">&gt;&lt;/i&gt;</span><br>
+                <span class="pink">&lt;button</span> <span class="white">class=</span><span
+                    class="pink">"play-btn"</span><span class="pink">&gt;</span><br>
+                &nbsp;&nbsp;<span class="pink">&lt;i</span> <span class="white">class=</span><span class="pink">"fas
+                    fa-play"</span><span class="pink">&gt;&lt;/i&gt;</span><br>
                 <span class="pink">&lt;/button&gt;</span>
             </div>
             <p style="margin-top: 1rem; font-size: 1.3rem;">This creates a button with a play icon inside!</p>
@@ -428,11 +451,15 @@
             <i class="fas fa-file-code icon-big icon-turquoise"></i>
             <h2>HTML Templates</h2>
             <p>We use <span class="highlight-pink">&lt;template&gt;</span> tags to store page layouts.</p>
-            <p style="margin-top: 1rem;">Think of them like <span class="highlight-turquoise">blueprints</span> - ready to use when needed!</p>
+            <p style="margin-top: 1rem;">Think of them like <span class="highlight-turquoise">blueprints</span> - ready
+                to use when needed!</p>
             <div class="code-box">
-                <span class="pink">&lt;template</span> <span class="white">id=</span><span class="pink">"tpl-feed"</span><span class="pink">&gt;</span><br>
+                <span class="pink">&lt;template</span> <span class="white">id=</span><span
+                    class="pink">"tpl-feed"</span><span class="pink">&gt;</span><br>
                 &nbsp;&nbsp;<span class="gray">&lt;!-- The music feed page lives here --&gt;</span><br>
-                &nbsp;&nbsp;<span class="pink">&lt;section</span> <span class="white">class=</span><span class="pink">"music-feed"</span><span class="pink">&gt;</span>...<span class="pink">&lt;/section&gt;</span><br>
+                &nbsp;&nbsp;<span class="pink">&lt;section</span> <span class="white">class=</span><span
+                    class="pink">"music-feed"</span><span class="pink">&gt;</span>...<span
+                    class="pink">&lt;/section&gt;</span><br>
                 <span class="pink">&lt;/template&gt;</span>
             </div>
             <div class="slide-number">7 / 20</div>
@@ -445,7 +472,8 @@
             <p>CSS tells the browser <span class="highlight-pink">HOW</span> things should look.</p>
             <div class="code-box">
                 <span class="pink">.play-btn</span> {<br>
-                &nbsp;&nbsp;<span class="white">background:</span> <span style="color: #F72193;">#F72193</span>; <span class="gray">/* JUKE pink! */</span><br>
+                &nbsp;&nbsp;<span class="white">background:</span> <span style="color: #F72193;">#F72193</span>; <span
+                    class="gray">/* JUKE pink! */</span><br>
                 &nbsp;&nbsp;<span class="white">border-radius:</span> 50%;<br>
                 &nbsp;&nbsp;<span class="white">color:</span> white;<br>
                 }
@@ -462,7 +490,8 @@
             <div class="code-box">
                 <span class="pink">:root</span> {<br>
                 &nbsp;&nbsp;<span class="white">--juke-pink:</span> <span style="color: #F72193;">#F72193</span>;<br>
-                &nbsp;&nbsp;<span class="white">--juke-turquoise:</span> <span style="color: #00ffd0;">#00ffd0</span>;<br>
+                &nbsp;&nbsp;<span class="white">--juke-turquoise:</span> <span
+                    style="color: #00ffd0;">#00ffd0</span>;<br>
                 &nbsp;&nbsp;<span class="white">--bg-dark:</span> #0a0a0a;<br>
                 }
             </div>
@@ -476,9 +505,11 @@
             <h2>JavaScript - The Brain</h2>
             <p>JavaScript makes things <span class="highlight-pink">happen</span> when you interact!</p>
             <div class="code-box">
-                <span class="pink">playBtn</span>.<span class="white">addEventListener</span>(<span style="color: #98c379;">'click'</span>, () => {<br>
+                <span class="pink">playBtn</span>.<span class="white">addEventListener</span>(<span
+                    style="color: #98c379;">'click'</span>, () => {<br>
                 &nbsp;&nbsp;<span class="gray">// When button clicked...</span><br>
-                &nbsp;&nbsp;<span class="pink">audio</span>.<span class="white">play</span>();  <span class="gray">// Play the music!</span><br>
+                &nbsp;&nbsp;<span class="pink">audio</span>.<span class="white">play</span>(); <span class="gray">//
+                    Play the music!</span><br>
                 });
             </div>
             <p style="margin-top: 1rem; font-size: 1.3rem;">Click → Music plays! 🎵</p>
@@ -492,8 +523,10 @@
             <p>JUKE loads <span class="highlight-pink">one page</span> and swaps content inside!</p>
             <ul class="list-simple">
                 <li><i class="fas fa-check"></i> <span class="highlight-turquoise">#/feed</span> → Shows music feed</li>
-                <li><i class="fas fa-check"></i> <span class="highlight-turquoise">#/login</span> → Shows login form</li>
-                <li><i class="fas fa-check"></i> <span class="highlight-turquoise">#/profile</span> → Shows your profile</li>
+                <li><i class="fas fa-check"></i> <span class="highlight-turquoise">#/login</span> → Shows login form
+                </li>
+                <li><i class="fas fa-check"></i> <span class="highlight-turquoise">#/profile</span> → Shows your profile
+                </li>
             </ul>
             <p style="margin-top: 1rem; font-size: 1.3rem;">No page reloads = super fast! ⚡</p>
             <div class="slide-number">11 / 20</div>
@@ -505,10 +538,11 @@
             <h2>The Music Player</h2>
             <p>The heart of JUKE! It uses the <span class="highlight-turquoise">HTML5 Audio API</span>.</p>
             <div class="code-box">
-                <span class="pink">const</span> audio = <span class="pink">new</span> <span class="white">Audio</span>();<br><br>
+                <span class="pink">const</span> audio = <span class="pink">new</span> <span
+                    class="white">Audio</span>();<br><br>
                 audio.<span class="white">src</span> = <span style="color: #98c379;">"song.mp3"</span>;<br>
-                audio.<span class="white">play</span>();   <span class="gray">// Start playing</span><br>
-                audio.<span class="white">pause</span>();  <span class="gray">// Stop playing</span><br>
+                audio.<span class="white">play</span>(); <span class="gray">// Start playing</span><br>
+                audio.<span class="white">pause</span>(); <span class="gray">// Stop playing</span><br>
                 audio.<span class="white">volume</span> = 0.5; <span class="gray">// Half volume</span>
             </div>
             <div class="slide-number">12 / 20</div>
@@ -530,7 +564,8 @@
                     <p>Pink Heart!</p>
                 </div>
             </div>
-            <p style="margin-top: 1.5rem; font-size: 1.3rem;">We store liked songs in a <span class="highlight-turquoise">Set</span> for fast lookup!</p>
+            <p style="margin-top: 1.5rem; font-size: 1.3rem;">We store liked songs in a <span
+                    class="highlight-turquoise">Set</span> for fast lookup!</p>
             <div class="slide-number">13 / 20</div>
         </div>
 
@@ -540,9 +575,11 @@
             <h2>The Backend Server</h2>
             <p>Node.js + Express handles all the behind-the-scenes work!</p>
             <div class="code-box">
-                <span class="pink">const</span> express = <span class="white">require</span>(<span style="color: #98c379;">'express'</span>);<br>
+                <span class="pink">const</span> express = <span class="white">require</span>(<span
+                    style="color: #98c379;">'express'</span>);<br>
                 <span class="pink">const</span> app = <span class="white">express</span>();<br><br>
-                app.<span class="white">get</span>(<span style="color: #98c379;">'/api/tracks'</span>, (req, res) => {<br>
+                app.<span class="white">get</span>(<span style="color: #98c379;">'/api/tracks'</span>, (req, res) =>
+                {<br>
                 &nbsp;&nbsp;<span class="gray">// Send all songs to the browser</span><br>
                 &nbsp;&nbsp;res.<span class="white">json</span>(tracks);<br>
                 });
@@ -630,10 +667,14 @@
             <h2>API Endpoints</h2>
             <p>The server has <span class="highlight-pink">doors</span> for different actions:</p>
             <ul class="list-simple">
-                <li><i class="fas fa-sign-in-alt"></i> <span class="highlight-turquoise">POST /api/login</span> → Sign in</li>
-                <li><i class="fas fa-music"></i> <span class="highlight-turquoise">GET /api/tracks</span> → Get all songs</li>
-                <li><i class="fas fa-heart"></i> <span class="highlight-turquoise">POST /tracks/:id/like</span> → Like a song</li>
-                <li><i class="fas fa-upload"></i> <span class="highlight-turquoise">POST /api/upload</span> → Upload music</li>
+                <li><i class="fas fa-sign-in-alt"></i> <span class="highlight-turquoise">POST /api/login</span> → Sign
+                    in</li>
+                <li><i class="fas fa-music"></i> <span class="highlight-turquoise">GET /api/tracks</span> → Get all
+                    songs</li>
+                <li><i class="fas fa-heart"></i> <span class="highlight-turquoise">POST /tracks/:id/like</span> → Like a
+                    song</li>
+                <li><i class="fas fa-upload"></i> <span class="highlight-turquoise">POST /api/upload</span> → Upload
+                    music</li>
             </ul>
             <div class="slide-number">18 / 20</div>
         </div>
@@ -658,7 +699,7 @@
 
         <!-- Slide 20: Thank You -->
         <div class="slide">
-            <img src="../images/juqe.png" alt="JUKE Logo" class="logo">
+            <img src="images/juqe.png" alt="JUKE Logo" class="logo">
             <h1>Thank You!</h1>
             <p>Now you know how <span class="highlight-pink">JUKE</span> works! 🎉</p>
             <div class="feature-grid" style="margin-top: 2rem; grid-template-columns: repeat(3, 1fr);">
@@ -676,9 +717,10 @@
                     <i class="fab fa-js-square" style="color: #f7df1e;"></i>
                     <h4>JavaScript</h4>
                     <p>Magic</p>
+                    <p style="margin-top: 2rem; font-size: 1.5rem;">Questions? 🙋</p>
+
                 </div>
             </div>
-            <p style="margin-top: 2rem; font-size: 1.5rem;">Questions? 🙋</p>
             <div class="slide-number">20 / 20</div>
         </div>
 
@@ -777,4 +819,5 @@
         showSlide(0);
     </script>
 </body>
+
 </html>

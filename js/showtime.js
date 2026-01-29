@@ -9,19 +9,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const openRegFlowBtn = document.getElementById('openRegFlowBtn');
     const openUpdateBodyBtn = document.getElementById('openUpdateBodyBtn');
 
-    // Show modal when _showtime button is clicked (desktop)
+    // Open PDF viewer directly when _showtime button is clicked (desktop)
     if (showtimeBtn) {
         showtimeBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            showShowtimeModal();
+            window.open('showtime/pdf-viewer.html', '_blank');
         });
     }
 
-    // Show modal when mobile _showtime button is clicked
+    // Open PDF viewer directly when mobile _showtime button is clicked
     if (mobileShowtimeBtn) {
         mobileShowtimeBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            showShowtimeModal();
+            window.open('showtime/pdf-viewer.html', '_blank');
         });
     }
 
