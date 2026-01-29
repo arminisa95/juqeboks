@@ -19,6 +19,7 @@
             color: white;
             min-height: 100vh;
             overflow: hidden;
+            line-height: 1.6;
         }
 
         .presentation {
@@ -76,25 +77,32 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            text-shadow: 0 0 30px rgba(247, 33, 147, 0.3);
+            font-weight: 700;
         }
 
         h2 {
             font-size: 3rem;
             margin-bottom: 1.5rem;
             color: #F72193;
+            text-shadow: 0 0 20px rgba(247, 33, 147, 0.3);
+            font-weight: 600;
         }
 
         h3 {
             font-size: 2rem;
             margin-bottom: 1rem;
             color: #00ffd0;
+            text-shadow: 0 0 15px rgba(0, 255, 208, 0.3);
+            font-weight: 500;
         }
 
         p {
-            font-size: 1.8rem;
-            line-height: 1.8;
+            font-size: 1.4rem;
+            line-height: 1.7;
             max-width: 900px;
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .emoji {
@@ -130,34 +138,41 @@
         }
 
         .feature-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(247, 33, 147, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(247, 33, 147, 0.4);
             border-radius: 20px;
             padding: 2rem;
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(247, 33, 147, 0.2);
         }
 
         .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 40px rgba(247, 33, 147, 0.3);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 50px rgba(247, 33, 147, 0.4);
+            border-color: #F72193;
+            background: rgba(255, 255, 255, 0.12);
         }
 
         .feature-card i {
-            font-size: 3rem;
+            font-size: 3.5rem;
             color: #F72193;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 10px rgba(247, 33, 147, 0.5));
         }
 
         .feature-card h4 {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             color: #00ffd0;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
         }
 
         .feature-card p {
             font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.85);
             line-height: 1.4;
+            margin: 0;
         }
 
         .tech-stack {
@@ -339,28 +354,37 @@
             color: rgba(255, 255, 255, 0.5);
         }
 
-        .tech-stack {
-            display: flex;
-            gap: 3rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
         .tech-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(0, 255, 208, 0.4);
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 255, 208, 0.15);
         }
 
-        .tech-item i {
-            font-size: 4rem;
+        .tech-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: #00ffd0;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 15px 40px rgba(0, 255, 208, 0.3);
         }
 
-        .tech-item span {
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.7);
+        .tech-item h4 {
+            color: #F72193;
+            margin-bottom: 0.8rem;
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(247, 33, 147, 0.3);
+        }
+
+        .tech-item p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-weight: 500;
         }
 
         .nav-controls {
@@ -381,27 +405,47 @@
             border-radius: 50px;
             cursor: pointer;
             font-size: 1.2rem;
-            transition: all 0.3s;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(247, 33, 147, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .nav-btn:hover {
             background: #F72193;
-            transform: scale(1.05);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 30px rgba(247, 33, 147, 0.5);
         }
 
         .nav-btn:disabled {
-            opacity: 0.3;
+            opacity: 0.4;
             cursor: not-allowed;
+            transform: none;
+        }
+
+        .nav-btn:disabled:hover {
+            background: rgba(247, 33, 147, 0.2);
+            transform: none;
+            box-shadow: 0 4px 20px rgba(247, 33, 147, 0.3);
         }
 
         .progress-bar {
             position: fixed;
             top: 0;
             left: 0;
+            width: 100%;
             height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+
+        .progress-fill {
+            height: 100%;
             background: linear-gradient(90deg, #F72193, #00ffd0);
-            transition: width 0.3s;
-            z-index: 100;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(247, 33, 147, 0.5);
         }
 
         .list-simple {
@@ -474,7 +518,9 @@
 </head>
 
 <body>
-    <div class="progress-bar" id="progressBar"></div>
+    <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
 
     <div class="presentation" id="presentation">
 
@@ -886,7 +932,7 @@ JUKE/<br>
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
         let currentSlide = 0;
 
         // Fullscreen toggle
@@ -925,7 +971,7 @@ JUKE/<br>
 
             // Update progress bar
             const progress = ((index + 1) / slides.length) * 100;
-            progressBar.style.width = progress + '%';
+            progressFill.style.width = progress + '%';
         }
 
         function nextSlide() {
