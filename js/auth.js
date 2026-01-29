@@ -1,4 +1,3 @@
-// JUKE Authentication System
 async function postAuthJson(path, payload, validateOkData) {
     var bases = window.JukeAPIBase.getApiBases();
     var lastErr = null;
@@ -14,7 +13,7 @@ async function postAuthJson(path, payload, validateOkData) {
                 body: JSON.stringify(payload)
             });
 
-            var data = null;
+            var data;
             try {
                 data = await response.json();
             } catch (e) {

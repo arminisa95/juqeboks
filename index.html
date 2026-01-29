@@ -547,41 +547,30 @@
                 </div>
 
                 <div class="queue-content">
-                    <!-- Previous Songs (History) -->
                     <div class="queue-section">
                         <h2 class="queue-section-title">Previously Played</h2>
-                        <div class="queue-list" id="previousSongs">
-                            <!-- History tracks will be loaded here -->
-                        </div>
+                        <div class="queue-list" id="previousSongs"></div>
                     </div>
 
-                    <!-- Current Song -->
                     <div class="queue-section current-section">
                         <h2 class="queue-section-title">Now Playing</h2>
-                        <div class="current-track" id="currentTrack">
-                            <!-- Current track will be displayed here -->
-                        </div>
+                        <div class="current-track" id="currentTrack"></div>
                     </div>
 
-                    <!-- Next Songs -->
                     <div class="queue-section">
                         <h2 class="queue-section-title">Up Next</h2>
-                        <div class="queue-list" id="nextSongs">
-                            <!-- Upcoming tracks will be loaded here -->
-                        </div>
+                        <div class="queue-list" id="nextSongs"></div>
                     </div>
                 </div>
             </div>
         </main>
     </template>
-
     <main id="app"></main>
 
     <a href="#/login" class="floating-button">
         <img src="images/U-pink.png" alt="Juke Logo">
     </a>
 
-    <!-- Mobile Header -->
     <div class="mobile-header">
         <a href="#/feed">
             <img src="images/juqe.png" alt="JUKE" class="mobile-logo">
@@ -591,7 +580,6 @@
         <button class="mobile-user-btn auth-user" style="display:none;" onclick="window.location.hash='#/profile'">_U</button>
     </div>
 
-    <!-- Mobile Mini Player -->
     <div class="mobile-mini-player" id="mobileMiniPlayer">
         <div class="mini-progress" id="miniProgress"></div>
         <div class="mini-content">
@@ -611,7 +599,6 @@
         </div>
     </div>
 
-    <!-- Mobile Bottom Navigation -->
     <nav class="mobile-nav">
         <div class="mobile-nav-items">
             <a href="#/feed" class="mobile-nav-item" data-nav="feed">
@@ -641,7 +628,6 @@
         </div>
     </nav>
 
-    <!-- Fullscreen Player -->
     <div class="fullscreen-player" id="fullscreenPlayer">
         <div class="fs-header">
             <button class="fs-close" id="fsClose"><i class="fas fa-chevron-down"></i></button>
@@ -680,7 +666,6 @@
 
     <div class="music-player"></div>
 
-    <!-- Showtime Options Modal -->
     <div id="showtimeModal" class="showtime-modal" style="display: none;">
         <div class="showtime-modal-content">
             <div class="showtime-modal-header">
@@ -702,21 +687,21 @@
                         <i class="fas fa-user-plus"></i>
                         <div>
                             <h4>User Registration Flow</h4>
-                            <p>View the user registration process</p>
+                            <p>View the PDF documentation</p>
                         </div>
                     </button>
                     <button type="button" id="openUpdateBodyBtn" class="showtime-option-btn">
                         <i class="fas fa-code"></i>
                         <div>
                             <h4>updateBodyPadding Function</h4>
-                            <p>Learn about this JavaScript function</p>
+                            <p>View the PDF documentation</p>
                         </div>
                     </button>
                     <button type="button" id="openProjectBtn" class="showtime-option-btn">
                         <i class="fas fa-project-diagram"></i>
                         <div>
-                            <h4>JUQE Project Presentation</h4>
-                            <p>View the complete project documentation</p>
+                            <h4>PDF Documentation Viewer</h4>
+                            <p>View all technical documentation</p>
                         </div>
                     </button>
                 </div>

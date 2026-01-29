@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUKE Showtime - PDF Viewer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #F72193, #00ffd0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(45deg, #F72193, #00ffd0);
+            border-color: transparent;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .pdf-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .pdf-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .pdf-preview {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #F72193 0%, #00ffd0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pdf-preview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .pdf-icon {
+            font-size: 4rem;
+            color: white;
+            z-index: 1;
+        }
+
+        .pdf-info {
+            padding: 2rem;
+        }
+
+        .pdf-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #00ffd0;
+        }
+
+        .pdf-description {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .pdf-meta {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .pdf-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pdf-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #F72193, #00ffd0);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(247, 33, 147, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+        }
+
+        .intro-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .intro-title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #F72193, #00ffd0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .intro-description {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            position: relative;
+            width: 90%;
+            height: 90%;
+            max-width: 1200px;
+            margin: 5% auto;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ffd0;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            width: 100%;
+            height: calc(100% - 80px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pdf-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .pdf-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .intro-title {
+                font-size: 2rem;
+            }
+
+            .modal-content {
+                width: 95%;
+                height: 95%;
+                margin: 2.5% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">JUKE Showtime</div>
+            <nav class="nav-buttons">
+                <a href="#registration" class="nav-btn" onclick="showSection('registration')">
+                    <i class="fas fa-user-plus"></i>
+                    User Registration
+                </a>
+                <a href="#bodypadding" class="nav-btn" onclick="showSection('bodypadding')">
+                    <i class="fas fa-code"></i>
+                    Body Padding
+                </a>
+                <a href="#presentation" class="nav-btn" onclick="window.open('JUKE-SHOWTIME.html', '_blank')">
+                    <i class="fas fa-presentation"></i>
+                    Full Presentation
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="intro-section">
+            <h1 class="intro-title">JUKE Technical Documentation</h1>
+            <p class="intro-description">
+                Explore the technical details behind JUKE's user registration flow and the elegant body padding function that ensures optimal layout across all devices.
+            </p>
+        </div>
+
+        <div class="pdf-grid">
+            <div class="pdf-card" id="registration-card">
+                <div class="pdf-preview">
+                    <i class="fas fa-user-plus pdf-icon"></i>
+                </div>
+                <div class="pdf-info">
+                    <h2 class="pdf-title">User Registration Flow</h2>
+                    <p class="pdf-description">
+                        Complete documentation of JUKE's user registration system, including frontend validation, API integration, and database schema design.
+                    </p>
+                    <div class="pdf-meta">
+                        <div class="pdf-meta-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>PDF Document</span>
+                        </div>
+                        <div class="pdf-meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>5 min read</span>
+                        </div>
+                    </div>
+                    <div class="pdf-actions">
+                        <button class="btn" onclick="openPDF('Juke User Registration Doc.pdf')">
+                            <i class="fas fa-eye"></i>
+                            View PDF
+                        </button>
+                        <button class="btn btn-secondary" onclick="downloadPDF('Juke User Registration Doc.pdf')">
+                            <i class="fas fa-download"></i>
+                            Download
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pdf-card" id="bodypadding-card">
+                <div class="pdf-preview">
+                    <i class="fas fa-code pdf-icon"></i>
+                </div>
+                <div class="pdf-info">
+                    <h2 class="pdf-title">updateBodyPadding Function</h2>
+                    <p class="pdf-description">
+                        Detailed explanation of the body padding function that dynamically adjusts layout spacing for the music player, ensuring perfect responsive design.
+                    </p>
+                    <div class="pdf-meta">
+                        <div class="pdf-meta-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>PDF Document</span>
+                        </div>
+                        <div class="pdf-meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>3 min read</span>
+                        </div>
+                    </div>
+                    <div class="pdf-actions">
+                        <button class="btn" onclick="openPDF('Update Body Padding Doc.pdf')">
+                            <i class="fas fa-eye"></i>
+                            View PDF
+                        </button>
+                        <button class="btn btn-secondary" onclick="downloadPDF('Update Body Padding Doc.pdf')">
+                            <i class="fas fa-download"></i>
+                            Download
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pdfModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">PDF Viewer</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <iframe id="pdfFrame" class="pdf-frame" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openPDF(filename) {
+            const modal = document.getElementById('pdfModal');
+            const frame = document.getElementById('pdfFrame');
+            const title = document.getElementById('modalTitle');
+            
+            frame.src = filename;
+            
+            if (filename.includes('Registration')) {
+                title.textContent = 'User Registration Flow';
+            } else {
+                title.textContent = 'updateBodyPadding Function';
+            }
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('pdfModal');
+            const frame = document.getElementById('pdfFrame');
+            
+            modal.style.display = 'none';
+            frame.src = '';
+            document.body.style.overflow = 'auto';
+        }
+
+        function downloadPDF(filename) {
+            const link = document.createElement('a');
+            link.href = filename;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showSection(section) {
+            const cards = document.querySelectorAll('.pdf-card');
+            const buttons = document.querySelectorAll('.nav-btn');
+            
+            cards.forEach(card => card.style.display = 'none');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (section === 'registration') {
+                document.getElementById('registration-card').style.display = 'block';
+                buttons[0].classList.add('active');
+            } else if (section === 'bodypadding') {
+                document.getElementById('bodypadding-card').style.display = 'block';
+                buttons[1].classList.add('active');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('pdfModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Initialize
+        showSection('registration');
+    </script>
+</body>
+</html>

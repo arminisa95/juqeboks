@@ -6,11 +6,9 @@ function isTokenExpired() {
         const payload = JSON.parse(atob(token.split('.')[1]));
         const currentTime = Date.now() / 1000;
         
-        // Check if token expires in the next 5 minutes (300 seconds)
         return payload.exp < (currentTime + 300);
     } catch (error) {
-        console.error('Error checking token expiration:', error);
-        return true; // Assume expired if we can't parse
+        return true;
     }
 }
 
@@ -63,7 +61,6 @@ async function apiFetchJson(path, options, validateOkData) {
             }
 
             if (res.status === 401 || res.status === 403) {
-                // Token is invalid or expired - clear it and redirect to login
                 localStorage.removeItem('juke_token');
                 localStorage.removeItem('juke_user');
                 
@@ -1562,7 +1559,6 @@ function safeOpenComments(trackId, title) {
     }
 }
 
-// Export functions
 window.JukeHistory = {
     add: addToHistory,
     get: getListeningHistory,
@@ -1578,7 +1574,6 @@ window.JukeLists = {
 
 window.createPlaylist = createPlaylist;
 
-// Global click handler as fallback
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addPlaylistBtn') {
         e.preventDefault();

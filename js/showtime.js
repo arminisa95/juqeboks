@@ -49,28 +49,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Open User Registration Flow
+    // Open User Registration Flow PDF
     if (openRegFlowBtn) {
         openRegFlowBtn.addEventListener('click', function() {
-            // Open register page in new tab
-            window.open('#/register', '_blank');
+            window.open('showtime/pdf-viewer.html#registration', '_blank');
             hideShowtimeModal();
         });
     }
 
-    // Open UpdateBodyPadding explanation
+    // Open UpdateBodyPadding PDF
     if (openUpdateBodyBtn) {
         openUpdateBodyBtn.addEventListener('click', function() {
-            window.open('showtime/updateBodyPadding-EXPLAINED.md', '_blank');
+            window.open('showtime/pdf-viewer.html#bodypadding', '_blank');
             hideShowtimeModal();
         });
     }
 
-    // Open JUQE Project Presentation
+    // Open JUQE Project Presentation PDF Viewer
     const openProjectBtn = document.getElementById('openProjectBtn');
     if (openProjectBtn) {
         openProjectBtn.addEventListener('click', function() {
-            window.open('showtime/JUKE-PROJECT-PRESENTATION.html', '_blank');
+            window.open('showtime/pdf-viewer.html', '_blank');
             hideShowtimeModal();
         });
     }

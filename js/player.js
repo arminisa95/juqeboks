@@ -776,20 +776,20 @@
     }
 
     async function fetchTrack(trackId) {
-        var token = null;
+        var token;
         try {
             token = localStorage.getItem('juke_token');
         } catch (_) {
             token = null;
         }
 
-        var bases = [];
+        var bases;
         try {
             bases = window.JukeAPIBase.getApiBases();
         } catch (_) {
             bases = ['https://juke-api.onrender.com/api'];
         }
-        // de-dupe
+        
         bases = bases.filter(function (v, i, a) {
             return !!v && a.indexOf(v) === i;
         });
@@ -798,8 +798,7 @@
         for (var i = 0; i < bases.length; i++) {
             var base = bases[i];
             try {
-                var headers = {};
-                if (token) headers.Authorization = 'Bearer ' + token;
+                var headers = token ? { Authorization: 'Bearer ' + token } : {};
                 var res = await fetch(base + '/tracks/' + encodeURIComponent(trackId), {
                     headers: headers
                 });

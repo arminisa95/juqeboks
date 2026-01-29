@@ -1,9 +1,5 @@
-/*LISTS - Modern Clean Design
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*/
+/* LISTS */
 
-/* Main Layout - Remove Container Structure */
 .lists-shell {
     display: block;
     padding: 20px;
@@ -12,7 +8,6 @@
     height: auto;
 }
 
-/* Lists Layout - Floating Content */
 .lists {
     display: block;
     height: auto;
