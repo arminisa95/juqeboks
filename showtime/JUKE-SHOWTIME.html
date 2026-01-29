@@ -395,6 +395,14 @@
             display: flex;
             gap: 1rem;
             z-index: 100;
+            opacity: 1;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .nav-controls.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+            pointer-events: none;
         }
 
         .nav-btn {
@@ -1002,7 +1010,50 @@ JUKE/<br>
         const nextBtn = document.getElementById('nextBtn');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         const progressFill = document.getElementById('progressFill');
+        const navControls = document.querySelector('.nav-controls');
         let currentSlide = 0;
+        let hideTimeout;
+
+        // Auto-hide navigation functionality
+        function showNav() {
+            navControls.classList.remove('hidden');
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(() => {
+                navControls.classList.add('hidden');
+            }, 3000); // Hide after 3 seconds of inactivity
+        }
+
+        function hideNav() {
+            navControls.classList.add('hidden');
+        }
+
+        // Show navigation on mouse movement
+        document.addEventListener('mousemove', showNav);
+        document.addEventListener('touchstart', showNav); // For mobile devices
+
+        // Show navigation when hovering over nav controls
+        navControls.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+            navControls.classList.remove('hidden');
+        });
+
+        navControls.addEventListener('mouseleave', () => {
+            hideTimeout = setTimeout(() => {
+                navControls.classList.add('hidden');
+            }, 1000); // Hide after 1 second when mouse leaves
+        });
+
+        // Show navigation on keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                showNav();
+            }
+        });
+
+        // Initially hide navigation after 3 seconds
+        hideTimeout = setTimeout(() => {
+            navControls.classList.add('hidden');
+        }, 3000);
 
         // Fullscreen toggle
         function toggleFullscreen() {
