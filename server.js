@@ -2032,44 +2032,48 @@ app.post('/reset-admin-password', async (req, res) => {
         console.error('Password reset error:', error);
         res.status(500).json({ error: error.message });
     }
-});
+}); // Added closing bracket here
 
 // Complete database setup endpoint (temporary - remove after use)
 app.post('/complete-database-setup', async (req, res) => {
     try {
-        // Create missing tables
+        // Create missing tables (drop and recreate)
         const createMissingTablesSQL = `
-        CREATE TABLE IF NOT EXISTS artists (
+        DROP TABLE IF EXISTS credit_transactions CASCADE;
+        DROP TABLE IF EXISTS upload_credits CASCADE;
+        DROP TABLE IF EXISTS albums CASCADE;
+        DROP TABLE IF EXISTS artists CASCADE;
+        
+        CREATE TABLE artists (
             id SERIAL PRIMARY KEY,
-            name VARCHAR(255) UNIQUE NOT NULL,
+            name VARCHAR(255) NOT NULL,
             bio TEXT,
             verified BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        CREATE TABLE IF NOT EXISTS albums (
+        CREATE TABLE albums (
             id SERIAL PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
-            artist_id INTEGER REFERENCES artists(id),
+            artist_id INTEGER,
             release_date DATE,
             cover_image_url VARCHAR(500),
             genre VARCHAR(100),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(title, artist_id)
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        CREATE TABLE IF NOT EXISTS upload_credits (
+        CREATE TABLE upload_credits (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) UNIQUE,
+            user_id INTEGER,
             credits INTEGER DEFAULT 5,
             last_reset DATE DEFAULT CURRENT_DATE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        CREATE TABLE IF NOT EXISTS credit_transactions (
+        CREATE TABLE credit_transactions (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id),
-            track_id INTEGER REFERENCES tracks(id),
+            user_id INTEGER,
+            track_id INTEGER,
             credits_spent INTEGER DEFAULT 1,
             transaction_type VARCHAR(50) DEFAULT 'upload',
             description TEXT,
