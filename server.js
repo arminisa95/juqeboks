@@ -2026,92 +2026,9 @@ app.post('/reset-admin-password', async (req, res) => {
         res.json({ 
             success: true, 
             message: 'Admin password reset successfully!',
-            login: { username: 'admin', password: 'admin123' }
         });
     } catch (error) {
         console.error('Password reset error:', error);
-        res.status(500).json({ error: error.message });
-    }
-
-                if (cover) {
-                    const coverObj = await uploadFileToS3(s3, cover, 'tracks/covers');
-                    coverUrl = coverObj.url;
-                    metadata.cover_key = coverObj.key;
-                }
-            name VARCHAR(255) NOT NULL,
-            bio TEXT,
-            verified BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`);
-        
-        await db.query(`
-        CREATE TABLE albums (
-            id SERIAL PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            artist_id INTEGER,
-            release_date DATE,
-            cover_image_url VARCHAR(500),
-            genre VARCHAR(100),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`);
-        
-        await db.query(`
-        CREATE TABLE upload_credits (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER,
-            credits INTEGER DEFAULT 5,
-            last_reset DATE DEFAULT CURRENT_DATE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`);
-        
-        await db.query(`
-        CREATE TABLE credit_transactions (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER,
-            track_id INTEGER,
-            credits_spent INTEGER DEFAULT 1,
-            transaction_type VARCHAR(50) DEFAULT 'upload',
-            description TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`);
-        
-        // Update tracks table
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS artist_id INTEGER');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album_id INTEGER');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS uploader_id INTEGER');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500)');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS metadata JSONB');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS release_date DATE');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT TRUE');
-        
-        // Insert sample data
-        await db.query("INSERT INTO artists (name, bio, verified) VALUES ('Artist 1', 'Sample artist 1', false)");
-        await db.query("INSERT INTO artists (name, bio, verified) VALUES ('Artist 2', 'Sample artist 2', false)");
-        await db.query("INSERT INTO artists (name, bio, verified) VALUES ('Artist 3', 'Sample artist 3', false)");
-        
-        await db.query("INSERT INTO albums (title, artist_id, release_date, genre) VALUES ('Album 1', 1, '2024-01-01', 'Pop')");
-        await db.query("INSERT INTO albums (title, artist_id, release_date, genre) VALUES ('Album 2', 2, '2024-02-01', 'Rock')");
-        await db.query("INSERT INTO albums (title, artist_id, release_date, genre) VALUES ('Album 3', 3, '2024-03-01', 'Electronic')");
-        
-        // Update tracks
-        await db.query("UPDATE tracks SET artist_id = 1, album_id = 1, uploader_id = 1, audio_url = '/uploads/sample1.mp3', cover_image_url = '/uploads/cover1.jpg', is_available = true WHERE title = 'Sample Song 1'");
-        await db.query("UPDATE tracks SET artist_id = 2, album_id = 2, uploader_id = 1, audio_url = '/uploads/sample2.mp3', cover_image_url = '/uploads/cover2.jpg', is_available = true WHERE title = 'Sample Song 2'");
-        await db.query("UPDATE tracks SET artist_id = 3, album_id = 3, uploader_id = 1, audio_url = '/uploads/sample3.mp3', cover_image_url = '/uploads/cover3.jpg', is_available = true WHERE title = 'Sample Song 3'");
-        
-        // Create upload credits
-        await db.query("INSERT INTO upload_credits (user_id, credits) SELECT id, 5 FROM users");
-        
-        res.json({ 
-            success: true, 
-            message: 'Simple database setup finished!',
-            tables: ['users', 'tracks', 'playlists', 'playlist_tracks', 'likes', 'artists', 'albums', 'upload_credits', 'credit_transactions']
-        });
-        
-    } catch (error) {
-        console.error('Simple setup error:', error);
         res.status(500).json({ error: error.message });
     }
 });
