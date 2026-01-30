@@ -11,9 +11,14 @@ const config = {
     ssl: process.env.DB_HOST === 'localhost' ? false : (process.env.DB_SSL === 'false' ? false : {
         rejectUnauthorized: false
     }),
-    max: 20, // Maximum number of connections in the pool
-    idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-    connectionTimeoutMillis: 2000 // How long to wait when connecting a new client
+    max: 10, // Reduziert für Free Tier
+    idleTimeoutMillis: 10000, // Kürzer für Free Tier
+    connectionTimeoutMillis: 10000, // Längerer Timeout für Free Tier
+    acquireTimeoutMillis: 60000, // Längerer Acquire Timeout
+    createTimeoutMillis: 30000, // Längerer Create Timeout
+    destroyTimeoutMillis: 5000, // Längerer Destroy Timeout
+    reapIntervalMillis: 1000, // Häufigeres Reaping
+    createRetryIntervalMillis: 200 // Retry bei Connection Issues
 };
 
 // Create connection pool

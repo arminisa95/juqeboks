@@ -1821,6 +1821,23 @@ async function checkUploadCredits(req, res, next) {
         next();
     } catch (error) {
         console.error('Upload credits check error:', error);
+        
+        // Retry logic for connection timeouts
+        if (error.message && (error.message.includes('timeout') || error.message.includes('terminated'))) {
+            console.log('Retrying database connection...');
+            try {
+                const user = await db.get('SELECT subscription_tier FROM users WHERE id = $1', [req.user.id]);
+                if (user && user.subscription_tier !== 'free') {
+                    return next();
+                }
+                // Allow upload on connection issues for free users
+                console.log('Allowing upload due to connection issues');
+                return next();
+            } catch (retryError) {
+                console.error('Retry failed:', retryError);
+            }
+        }
+        
         // If upload_credits table doesn't exist, create it and allow upload
         if (error.message && error.message.includes('upload_credits')) {
             try {
@@ -1839,6 +1856,7 @@ async function checkUploadCredits(req, res, next) {
                 console.error('Failed to create upload_credits table:', createError);
             }
         }
+        
         res.status(500).json({ error: 'Internal server error' });
     }
 }
