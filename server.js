@@ -2308,6 +2308,55 @@ app.post('/complete-database-setup', async (req, res) => {
     }
 });
 
+// Fix tracks table endpoint
+app.post('/fix-tracks-table', async (req, res) => {
+    try {
+        console.log('Dropping and recreating tracks table...');
+        
+        // Drop tracks table
+        await db.query('DROP TABLE IF EXISTS tracks CASCADE');
+        
+        // Recreate tracks table with all columns
+        await db.query(`
+        CREATE TABLE tracks (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(200) NOT NULL,
+            uploader_id INTEGER,
+            artist_id INTEGER,
+            album_id INTEGER,
+            album VARCHAR(200) DEFAULT 'Single',
+            cover_image_url VARCHAR(500),
+            video_url VARCHAR(500),
+            file_path VARCHAR(500),
+            file_size BIGINT,
+            duration_seconds INTEGER DEFAULT 0,
+            bitrate INTEGER,
+            sample_rate INTEGER,
+            track_number INTEGER,
+            genre VARCHAR(100),
+            lyrics TEXT,
+            metadata JSONB,
+            play_count INTEGER DEFAULT 0,
+            like_count INTEGER DEFAULT 0,
+            is_explicit BOOLEAN DEFAULT false,
+            is_available BOOLEAN DEFAULT true,
+            release_date DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        console.log('Tracks table recreated successfully');
+        
+        res.json({ 
+            success: true, 
+            message: 'Tracks table recreated successfully with all columns' 
+        });
+    } catch (error) {
+        console.error('Error fixing tracks table:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Keep-alive endpoint for Render PostgreSQL
 app.get('/keep-alive', async (req, res) => {
     try {
