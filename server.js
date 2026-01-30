@@ -2322,5 +2322,6 @@ server.on('error', (error) => {
 process.on('SIGINT', async () => {
     console.log(' Shutting down server...');
     console.log('🛑 Shutting down server...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
     process.exit(0);
 });
