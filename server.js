@@ -2101,23 +2101,23 @@ app.post('/complete-database-setup', async (req, res) => {
         
         await db.query(createMissingTablesSQL);
         
-        // Insert sample data
+        // Insert sample data (simplified without conflicts)
         await db.query(`
         INSERT INTO artists (name, bio, verified)
-        VALUES 
-            ('Artist 1', 'Sample artist 1', false),
-            ('Artist 2', 'Sample artist 2', false),
-            ('Artist 3', 'Sample artist 3', false)
-        ON CONFLICT (name) DO UPDATE SET bio = EXCLUDED.bio, verified = EXCLUDED.verified
+        SELECT 'Artist 1', 'Sample artist 1', false WHERE NOT EXISTS (SELECT 1 FROM artists WHERE name = 'Artist 1');
+        INSERT INTO artists (name, bio, verified)
+        SELECT 'Artist 2', 'Sample artist 2', false WHERE NOT EXISTS (SELECT 1 FROM artists WHERE name = 'Artist 2');
+        INSERT INTO artists (name, bio, verified)
+        SELECT 'Artist 3', 'Sample artist 3', false WHERE NOT EXISTS (SELECT 1 FROM artists WHERE name = 'Artist 3');
         `);
         
         await db.query(`
         INSERT INTO albums (title, artist_id, release_date, genre)
-        VALUES 
-            ('Album 1', 1, '2024-01-01', 'Pop'),
-            ('Album 2', 2, '2024-02-01', 'Rock'),
-            ('Album 3', 3, '2024-03-01', 'Electronic')
-        ON CONFLICT DO NOTHING
+        SELECT 'Album 1', 1, '2024-01-01', 'Pop' WHERE NOT EXISTS (SELECT 1 FROM albums WHERE title = 'Album 1' AND artist_id = 1);
+        INSERT INTO albums (title, artist_id, release_date, genre)
+        SELECT 'Album 2', 2, '2024-02-01', 'Rock' WHERE NOT EXISTS (SELECT 1 FROM albums WHERE title = 'Album 2' AND artist_id = 2);
+        INSERT INTO albums (title, artist_id, release_date, genre)
+        SELECT 'Album 3', 3, '2024-03-01', 'Electronic' WHERE NOT EXISTS (SELECT 1 FROM albums WHERE title = 'Album 3' AND artist_id = 3);
         `);
         
         // Update existing tracks with artist and album references
@@ -2130,7 +2130,7 @@ app.post('/complete-database-setup', async (req, res) => {
             audio_url = '/uploads/sample1.mp3',
             cover_image_url = '/uploads/cover1.jpg',
             is_available = true
-        WHERE title = 'Sample Song 1'
+        WHERE title = 'Sample Song 1' AND artist_id IS NULL
         `);
         
         await db.query(`
@@ -2142,7 +2142,7 @@ app.post('/complete-database-setup', async (req, res) => {
             audio_url = '/uploads/sample2.mp3',
             cover_image_url = '/uploads/cover2.jpg',
             is_available = true
-        WHERE title = 'Sample Song 2'
+        WHERE title = 'Sample Song 2' AND artist_id IS NULL
         `);
         
         await db.query(`
@@ -2154,14 +2154,13 @@ app.post('/complete-database-setup', async (req, res) => {
             audio_url = '/uploads/sample3.mp3',
             cover_image_url = '/uploads/cover3.jpg',
             is_available = true
-        WHERE title = 'Sample Song 3'
+        WHERE title = 'Sample Song 3' AND artist_id IS NULL
         `);
         
         // Create upload credits for users
         await db.query(`
         INSERT INTO upload_credits (user_id, credits)
-        SELECT id, 5 FROM users
-        ON CONFLICT (user_id) DO NOTHING
+        SELECT id, 5 FROM users WHERE NOT EXISTS (SELECT 1 FROM upload_credits WHERE user_id = users.id)
         `);
         
         res.json({ 
