@@ -1788,7 +1788,7 @@ app.get('/api/search', async (req, res) => {
 // Upload Credits Check Middleware
 async function checkUploadCredits(req, res, next) {
     try {
-        const user = await db.get('SELECT subscription_tier FROM users WHERE id = ?', [req.user.id]);
+        const user = await db.get('SELECT subscription_tier FROM users WHERE id = $1', [req.user.id]);
         
         // If user doesn't exist, return error
         if (!user) {
@@ -1801,11 +1801,11 @@ async function checkUploadCredits(req, res, next) {
         }
 
         // Check free user credits
-        const credits = await db.get('SELECT credits FROM upload_credits WHERE user_id = ?', [req.user.id]);
+        const credits = await db.get('SELECT credits FROM upload_credits WHERE user_id = $1', [req.user.id]);
         
         // If no credits record exists, create one with 5 credits
         if (!credits) {
-            await db.query('INSERT INTO upload_credits (user_id, credits) VALUES (?, 5)', [req.user.id]);
+            await db.query('INSERT INTO upload_credits (user_id, credits) VALUES ($1, 5)', [req.user.id]);
             return next();
         }
         
@@ -1833,7 +1833,7 @@ async function checkUploadCredits(req, res, next) {
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )`);
                 // Create credits for this user
-                await db.query('INSERT INTO upload_credits (user_id, credits) VALUES (?, 5)', [req.user.id]);
+                await db.query('INSERT INTO upload_credits (user_id, credits) VALUES ($1, 5)', [req.user.id]);
                 return next();
             } catch (createError) {
                 console.error('Failed to create upload_credits table:', createError);
@@ -1846,7 +1846,6 @@ async function checkUploadCredits(req, res, next) {
 app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }, { name: 'videoFile', maxCount: 1 }]), async (req, res) => {
     try {
         const { title, artist: artistRaw, genre } = req.body;
-
         const rawAlbum = (req.body && typeof req.body.album === 'string') ? req.body.album : '';
         const albumTitle = (rawAlbum || '').trim() || 'Single';
         const file = req.files && req.files.audioFile ? req.files.audioFile[0] : null;
@@ -1964,9 +1963,9 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
         });
 
         // Consume upload credit for free users
-        const user = await db.get('SELECT subscription_tier FROM users WHERE id = ?', [userId]);
+        const user = await db.get('SELECT subscription_tier FROM users WHERE id = $1', [userId]);
         if (user.subscription_tier === 'free') {
-            await db.run('UPDATE upload_credits SET credits = credits - 1 WHERE user_id = ?', [userId]);
+            await db.query('UPDATE upload_credits SET credits = credits - 1 WHERE user_id = $1', [userId]);
             
             // Log credit transaction
             await db.insert('credit_transactions', {
