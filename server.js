@@ -2012,18 +2012,30 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Initialize Monetization Service
-const monetizationService = new MonetizationService();
+// Keep-alive endpoint for Render PostgreSQL
+app.get('/keep-alive', async (req, res) => {
+    try {
+        await db.query('SELECT 1');
+        res.json({ 
+            status: 'Database is alive', 
+            timestamp: new Date().toISOString(),
+            service: 'JUKE Database Keep-Alive'
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            status: 'Database error', 
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
 
-// Add Monetization Routes
-app.use('/api/monetization', monetizationRoutes);
-
-// Initialize database and start server
-initializeDatabase().then(async () => {
-    await ensureAdminUser();
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(` JUKE Music API Server running on port ${PORT}`);
-        console.log(` API Base URL: http://localhost:${PORT}/api`);
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        service: 'JUKE Web Service',
+        timestamp: new Date().toISOString()
     });
 });
 
