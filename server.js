@@ -2236,6 +2236,8 @@ app.post('/complete-database-setup', async (req, res) => {
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS release_date DATE');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT TRUE');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS genre VARCHAR(100)');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album VARCHAR(255)');
         
         // Insert sample data
         await db.query("INSERT INTO artists (name, bio, verified) VALUES ('Artist 1', 'Sample artist 1', false)");
