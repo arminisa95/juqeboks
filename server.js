@@ -1790,6 +1790,11 @@ async function checkUploadCredits(req, res, next) {
     try {
         const user = await db.get('SELECT subscription_tier FROM users WHERE id = ?', [req.user.id]);
         
+        // If user doesn't exist, return error
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
         // Premium+ users have unlimited uploads
         if (user.subscription_tier !== 'free') {
             return next();
@@ -1798,7 +1803,13 @@ async function checkUploadCredits(req, res, next) {
         // Check free user credits
         const credits = await db.get('SELECT credits FROM upload_credits WHERE user_id = ?', [req.user.id]);
         
-        if (!credits || credits.credits <= 0) {
+        // If no credits record exists, create one with 5 credits
+        if (!credits) {
+            await db.query('INSERT INTO upload_credits (user_id, credits) VALUES (?, 5)', [req.user.id]);
+            return next();
+        }
+        
+        if (credits.credits <= 0) {
             return res.status(402).json({ 
                 success: false, 
                 error: 'No upload credits remaining. Upgrade to Premium for unlimited uploads.',
@@ -1810,6 +1821,24 @@ async function checkUploadCredits(req, res, next) {
         next();
     } catch (error) {
         console.error('Upload credits check error:', error);
+        // If upload_credits table doesn't exist, create it and allow upload
+        if (error.message && error.message.includes('upload_credits')) {
+            try {
+                await db.query(`
+                CREATE TABLE IF NOT EXISTS upload_credits (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER,
+                    credits INTEGER DEFAULT 5,
+                    last_reset DATE DEFAULT CURRENT_DATE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )`);
+                // Create credits for this user
+                await db.query('INSERT INTO upload_credits (user_id, credits) VALUES (?, 5)', [req.user.id]);
+                return next();
+            } catch (createError) {
+                console.error('Failed to create upload_credits table:', createError);
+            }
+        }
         res.status(500).json({ error: 'Internal server error' });
     }
 }
