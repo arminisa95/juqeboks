@@ -2134,6 +2134,7 @@ app.post('/complete-database-setup', async (req, res) => {
         await db.query('DROP TABLE IF EXISTS likes CASCADE');
         await db.query('DROP TABLE IF EXISTS albums CASCADE');
         await db.query('DROP TABLE IF EXISTS artists CASCADE');
+        await db.query('DROP TABLE IF EXISTS tracks CASCADE');
         
         // Create artists table
         await db.query(`
@@ -2155,6 +2156,35 @@ app.post('/complete-database-setup', async (req, res) => {
             cover_image_url VARCHAR(500),
             genre VARCHAR(100),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        // Create tracks table
+        await db.query(`
+        CREATE TABLE tracks (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(200) NOT NULL,
+            uploader_id INTEGER,
+            artist_id INTEGER,
+            album_id INTEGER,
+            album VARCHAR(200) DEFAULT 'Single',
+            cover_image_url VARCHAR(500),
+            video_url VARCHAR(500),
+            file_path VARCHAR(500),
+            file_size BIGINT,
+            duration_seconds INTEGER DEFAULT 0,
+            bitrate INTEGER,
+            sample_rate INTEGER,
+            track_number INTEGER,
+            genre VARCHAR(100),
+            lyrics TEXT,
+            metadata JSONB,
+            play_count INTEGER DEFAULT 0,
+            like_count INTEGER DEFAULT 0,
+            is_explicit BOOLEAN DEFAULT false,
+            is_available BOOLEAN DEFAULT true,
+            release_date DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
         
         // Create playlists table
