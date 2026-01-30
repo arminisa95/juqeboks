@@ -2032,21 +2032,12 @@ app.post('/reset-admin-password', async (req, res) => {
         console.error('Password reset error:', error);
         res.status(500).json({ error: error.message });
     }
-}); // Added closing bracket here
 
-// Simple database setup endpoint (temporary - remove after use)
-app.post('/simple-database-setup', async (req, res) => {
-    try {
-        // Drop and recreate tables
-        await db.query('DROP TABLE IF EXISTS credit_transactions CASCADE');
-        await db.query('DROP TABLE IF EXISTS upload_credits CASCADE');
-        await db.query('DROP TABLE IF EXISTS albums CASCADE');
-        await db.query('DROP TABLE IF EXISTS artists CASCADE');
-        
-        // Create tables
-        await db.query(`
-        CREATE TABLE artists (
-            id SERIAL PRIMARY KEY,
+                if (cover) {
+                    const coverObj = await uploadFileToS3(s3, cover, 'tracks/covers');
+                    coverUrl = coverObj.url;
+                    metadata.cover_key = coverObj.key;
+                }
             name VARCHAR(255) NOT NULL,
             bio TEXT,
             verified BOOLEAN DEFAULT FALSE,
@@ -2128,21 +2119,28 @@ app.post('/simple-database-setup', async (req, res) => {
 // Complete database setup endpoint (temporary - remove after use)
 app.post('/complete-database-setup', async (req, res) => {
     try {
-        // Create missing tables (drop and recreate)
-        const createMissingTablesSQL = `
-        DROP TABLE IF EXISTS credit_transactions CASCADE;
-        DROP TABLE IF EXISTS upload_credits CASCADE;
-        DROP TABLE IF EXISTS albums CASCADE;
-        DROP TABLE IF EXISTS artists CASCADE;
+        // Drop and recreate all tables
+        await db.query('DROP TABLE IF EXISTS credit_transactions CASCADE');
+        await db.query('DROP TABLE IF EXISTS upload_credits CASCADE');
+        await db.query('DROP TABLE IF EXISTS user_favorites CASCADE');
+        await db.query('DROP TABLE IF EXISTS playlist_tracks CASCADE');
+        await db.query('DROP TABLE IF EXISTS playlists CASCADE');
+        await db.query('DROP TABLE IF EXISTS likes CASCADE');
+        await db.query('DROP TABLE IF EXISTS albums CASCADE');
+        await db.query('DROP TABLE IF EXISTS artists CASCADE');
         
+        // Create artists table
+        await db.query(`
         CREATE TABLE artists (
             id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             bio TEXT,
             verified BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
+        )`);
+        
+        // Create albums table
+        await db.query(`
         CREATE TABLE albums (
             id SERIAL PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
@@ -2151,16 +2149,63 @@ app.post('/complete-database-setup', async (req, res) => {
             cover_image_url VARCHAR(500),
             genre VARCHAR(100),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
+        )`);
+        
+        // Create playlists table
+        await db.query(`
+        CREATE TABLE playlists (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            user_id INTEGER REFERENCES users(id),
+            is_public BOOLEAN DEFAULT FALSE,
+            cover_image_url VARCHAR(500),
+            track_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        // Create playlist_tracks table
+        await db.query(`
+        CREATE TABLE playlist_tracks (
+            id SERIAL PRIMARY KEY,
+            playlist_id INTEGER REFERENCES playlists(id),
+            track_id INTEGER REFERENCES tracks(id),
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(playlist_id, track_id)
+        )`);
+        
+        // Create likes table
+        await db.query(`
+        CREATE TABLE likes (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            track_id INTEGER REFERENCES tracks(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, track_id)
+        )`);
+        
+        // Create user_favorites table
+        await db.query(`
+        CREATE TABLE user_favorites (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            track_id INTEGER REFERENCES tracks(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, track_id)
+        )`);
+        
+        // Create upload_credits table
+        await db.query(`
         CREATE TABLE upload_credits (
             id SERIAL PRIMARY KEY,
             user_id INTEGER,
             credits INTEGER DEFAULT 5,
             last_reset DATE DEFAULT CURRENT_DATE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
+        )`);
+        
+        // Create credit_transactions table
+        await db.query(`
         CREATE TABLE credit_transactions (
             id SERIAL PRIMARY KEY,
             user_id INTEGER,
@@ -2169,99 +2214,41 @@ app.post('/complete-database-setup', async (req, res) => {
             transaction_type VARCHAR(50) DEFAULT 'upload',
             description TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        -- Update tracks table to match expected structure
-        ALTER TABLE tracks 
-        ADD COLUMN IF NOT EXISTS artist_id INTEGER,
-        ADD COLUMN IF NOT EXISTS album_id INTEGER,
-        ADD COLUMN IF NOT EXISTS uploader_id INTEGER,
-        ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500),
-        ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500),
-        ADD COLUMN IF NOT EXISTS video_url VARCHAR(500),
-        ADD COLUMN IF NOT EXISTS metadata JSONB,
-        ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS release_date DATE,
-        ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT TRUE;
-
-        -- Create indexes
-        CREATE INDEX IF NOT EXISTS idx_artists_name ON artists(name);
-        CREATE INDEX IF NOT EXISTS idx_albums_artist_id ON albums(artist_id);
-        CREATE INDEX IF NOT EXISTS idx_albums_title ON albums(title);
-        CREATE INDEX IF NOT EXISTS idx_tracks_artist_id ON tracks(artist_id);
-        CREATE INDEX IF NOT EXISTS idx_tracks_album_id ON tracks(album_id);
-        CREATE INDEX IF NOT EXISTS idx_tracks_uploader_id ON tracks(uploader_id);
-        CREATE INDEX IF NOT EXISTS idx_tracks_created_at ON tracks(created_at);
-        `;
+        )`);
         
-        await db.query(createMissingTablesSQL);
+        // Update tracks table
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS artist_id INTEGER');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album_id INTEGER');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS uploader_id INTEGER');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500)');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS metadata JSONB');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS release_date DATE');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT TRUE');
         
-        // Insert sample data (simplified without conflicts)
-        await db.query(`
-        INSERT INTO artists (name, bio, verified)
-        SELECT 'Artist 1', 'Sample artist 1', false WHERE NOT EXISTS (SELECT 1 FROM artists WHERE name = 'Artist 1');
-        INSERT INTO artists (name, bio, verified)
-        SELECT 'Artist 2', 'Sample artist 2', false WHERE NOT EXISTS (SELECT 1 FROM artists WHERE name = 'Artist 2');
-        INSERT INTO artists (name, bio, verified)
-        SELECT 'Artist 3', 'Sample artist 3', false WHERE NOT EXISTS (SELECT 1 FROM artists WHERE name = 'Artist 3');
-        `);
+        // Insert sample data
+        await db.query("INSERT INTO artists (name, bio, verified) VALUES ('Artist 1', 'Sample artist 1', false)");
+        await db.query("INSERT INTO artists (name, bio, verified) VALUES ('Artist 2', 'Sample artist 2', false)");
+        await db.query("INSERT INTO artists (name, bio, verified) VALUES ('Artist 3', 'Sample artist 3', false)");
         
-        await db.query(`
-        INSERT INTO albums (title, artist_id, release_date, genre)
-        SELECT 'Album 1', 1, '2024-01-01', 'Pop' WHERE NOT EXISTS (SELECT 1 FROM albums WHERE title = 'Album 1' AND artist_id = 1);
-        INSERT INTO albums (title, artist_id, release_date, genre)
-        SELECT 'Album 2', 2, '2024-02-01', 'Rock' WHERE NOT EXISTS (SELECT 1 FROM albums WHERE title = 'Album 2' AND artist_id = 2);
-        INSERT INTO albums (title, artist_id, release_date, genre)
-        SELECT 'Album 3', 3, '2024-03-01', 'Electronic' WHERE NOT EXISTS (SELECT 1 FROM albums WHERE title = 'Album 3' AND artist_id = 3);
-        `);
+        await db.query("INSERT INTO albums (title, artist_id, release_date, genre) VALUES ('Album 1', 1, '2024-01-01', 'Pop')");
+        await db.query("INSERT INTO albums (title, artist_id, release_date, genre) VALUES ('Album 2', 2, '2024-02-01', 'Rock')");
+        await db.query("INSERT INTO albums (title, artist_id, release_date, genre) VALUES ('Album 3', 3, '2024-03-01', 'Electronic')");
         
-        // Update existing tracks with artist and album references
-        await db.query(`
-        UPDATE tracks 
-        SET 
-            artist_id = 1,
-            album_id = 1,
-            uploader_id = 1,
-            audio_url = '/uploads/sample1.mp3',
-            cover_image_url = '/uploads/cover1.jpg',
-            is_available = true
-        WHERE title = 'Sample Song 1' AND artist_id IS NULL
-        `);
+        // Update tracks
+        await db.query("UPDATE tracks SET artist_id = 1, album_id = 1, uploader_id = 1, audio_url = '/uploads/sample1.mp3', cover_image_url = '/uploads/cover1.jpg', is_available = true WHERE title = 'Sample Song 1'");
+        await db.query("UPDATE tracks SET artist_id = 2, album_id = 2, uploader_id = 1, audio_url = '/uploads/sample2.mp3', cover_image_url = '/uploads/cover2.jpg', is_available = true WHERE title = 'Sample Song 2'");
+        await db.query("UPDATE tracks SET artist_id = 3, album_id = 3, uploader_id = 1, audio_url = '/uploads/sample3.mp3', cover_image_url = '/uploads/cover3.jpg', is_available = true WHERE title = 'Sample Song 3'");
         
-        await db.query(`
-        UPDATE tracks 
-        SET 
-            artist_id = 2,
-            album_id = 2,
-            uploader_id = 1,
-            audio_url = '/uploads/sample2.mp3',
-            cover_image_url = '/uploads/cover2.jpg',
-            is_available = true
-        WHERE title = 'Sample Song 2' AND artist_id IS NULL
-        `);
-        
-        await db.query(`
-        UPDATE tracks 
-        SET 
-            artist_id = 3,
-            album_id = 3,
-            uploader_id = 1,
-            audio_url = '/uploads/sample3.mp3',
-            cover_image_url = '/uploads/cover3.jpg',
-            is_available = true
-        WHERE title = 'Sample Song 3' AND artist_id IS NULL
-        `);
-        
-        // Create upload credits for users
-        await db.query(`
-        INSERT INTO upload_credits (user_id, credits)
-        SELECT id, 5 FROM users WHERE NOT EXISTS (SELECT 1 FROM upload_credits WHERE user_id = users.id)
-        `);
+        // Create upload credits
+        await db.query("INSERT INTO upload_credits (user_id, credits) SELECT id, 5 FROM users");
         
         res.json({ 
             success: true, 
             message: 'Complete database setup finished!',
-            tables: ['users', 'tracks', 'playlists', 'playlist_tracks', 'likes', 'artists', 'albums', 'upload_credits', 'credit_transactions']
+            tables: ['users', 'tracks', 'playlists', 'playlist_tracks', 'likes', 'user_favorites', 'artists', 'albums', 'upload_credits', 'credit_transactions']
         });
         
     } catch (error) {
