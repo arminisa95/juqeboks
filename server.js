@@ -2058,6 +2058,27 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// Quick fix for subscription_tier column
+app.post('/fix-subscription-tier', async (req, res) => {
+    try {
+        console.log('Adding subscription_tier column to users table...');
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(20) DEFAULT \'free\'');
+        console.log('subscription_tier column added successfully');
+        
+        // Update existing users to have 'free' tier
+        await db.query('UPDATE users SET subscription_tier = \'free\' WHERE subscription_tier IS NULL');
+        console.log('Existing users updated with free tier');
+        
+        res.json({ 
+            success: true, 
+            message: 'subscription_tier column added successfully' 
+        });
+    } catch (error) {
+        console.error('Error adding subscription_tier column:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Admin password reset endpoint (temporary - remove after use)
 app.post('/reset-admin-password', async (req, res) => {
     try {
