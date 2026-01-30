@@ -2060,7 +2060,7 @@ app.post('/complete-database-setup', async (req, res) => {
 
         CREATE TABLE IF NOT EXISTS upload_credits (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id),
+            user_id INTEGER REFERENCES users(id) UNIQUE,
             credits INTEGER DEFAULT 5,
             last_reset DATE DEFAULT CURRENT_DATE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
