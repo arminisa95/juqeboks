@@ -1781,6 +1781,11 @@ app.get('/api/search', async (req, res) => {
         res.json(results);
     } catch (error) {
         console.error('Search error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Upload Credits Check Middleware
 async function checkUploadCredits(req, res, next) {
     try {
         let user;
