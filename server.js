@@ -2238,6 +2238,16 @@ app.post('/complete-database-setup', async (req, res) => {
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT TRUE');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS genre VARCHAR(100)');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album VARCHAR(255)');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS file_size BIGINT');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS bitrate INTEGER');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS sample_rate INTEGER');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS track_number INTEGER');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS lyrics TEXT');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS play_count INTEGER DEFAULT 0');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS like_count INTEGER DEFAULT 0');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS is_explicit BOOLEAN DEFAULT false');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
         
         // Insert sample data
         await db.query("INSERT INTO artists (name, bio, verified) VALUES ('Artist 1', 'Sample artist 1', false)");
