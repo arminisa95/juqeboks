@@ -2034,6 +2034,147 @@ app.post('/reset-admin-password', async (req, res) => {
     }
 });
 
+// Complete database setup endpoint (temporary - remove after use)
+app.post('/complete-database-setup', async (req, res) => {
+    try {
+        // Create missing tables
+        const createMissingTablesSQL = `
+        CREATE TABLE IF NOT EXISTS artists (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) UNIQUE NOT NULL,
+            bio TEXT,
+            verified BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS albums (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            artist_id INTEGER REFERENCES artists(id),
+            release_date DATE,
+            cover_image_url VARCHAR(500),
+            genre VARCHAR(100),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS upload_credits (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            credits INTEGER DEFAULT 5,
+            last_reset DATE DEFAULT CURRENT_DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS credit_transactions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            track_id INTEGER REFERENCES tracks(id),
+            credits_spent INTEGER DEFAULT 1,
+            transaction_type VARCHAR(50) DEFAULT 'upload',
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- Update tracks table to match expected structure
+        ALTER TABLE tracks 
+        ADD COLUMN IF NOT EXISTS artist_id INTEGER,
+        ADD COLUMN IF NOT EXISTS album_id INTEGER,
+        ADD COLUMN IF NOT EXISTS uploader_id INTEGER,
+        ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500),
+        ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500),
+        ADD COLUMN IF NOT EXISTS video_url VARCHAR(500),
+        ADD COLUMN IF NOT EXISTS metadata JSONB,
+        ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS release_date DATE,
+        ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT TRUE;
+
+        -- Create indexes
+        CREATE INDEX IF NOT EXISTS idx_artists_name ON artists(name);
+        CREATE INDEX IF NOT EXISTS idx_albums_artist_id ON albums(artist_id);
+        CREATE INDEX IF NOT EXISTS idx_albums_title ON albums(title);
+        CREATE INDEX IF NOT EXISTS idx_tracks_artist_id ON tracks(artist_id);
+        CREATE INDEX IF NOT EXISTS idx_tracks_album_id ON tracks(album_id);
+        CREATE INDEX IF NOT EXISTS idx_tracks_uploader_id ON tracks(uploader_id);
+        CREATE INDEX IF NOT EXISTS idx_tracks_created_at ON tracks(created_at);
+        `;
+        
+        await db.query(createMissingTablesSQL);
+        
+        // Insert sample data
+        await db.query(`
+        INSERT INTO artists (name, bio, verified)
+        VALUES 
+            ('Artist 1', 'Sample artist 1', false),
+            ('Artist 2', 'Sample artist 2', false),
+            ('Artist 3', 'Sample artist 3', false)
+        ON CONFLICT (name) DO NOTHING
+        `);
+        
+        await db.query(`
+        INSERT INTO albums (title, artist_id, release_date, genre)
+        VALUES 
+            ('Album 1', 1, '2024-01-01', 'Pop'),
+            ('Album 2', 2, '2024-02-01', 'Rock'),
+            ('Album 3', 3, '2024-03-01', 'Electronic')
+        ON CONFLICT (title, artist_id) DO NOTHING
+        `);
+        
+        // Update existing tracks with artist and album references
+        await db.query(`
+        UPDATE tracks 
+        SET 
+            artist_id = 1,
+            album_id = 1,
+            uploader_id = 1,
+            audio_url = '/uploads/sample1.mp3',
+            cover_image_url = '/uploads/cover1.jpg',
+            is_available = true
+        WHERE title = 'Sample Song 1'
+        `);
+        
+        await db.query(`
+        UPDATE tracks 
+        SET 
+            artist_id = 2,
+            album_id = 2,
+            uploader_id = 1,
+            audio_url = '/uploads/sample2.mp3',
+            cover_image_url = '/uploads/cover2.jpg',
+            is_available = true
+        WHERE title = 'Sample Song 2'
+        `);
+        
+        await db.query(`
+        UPDATE tracks 
+        SET 
+            artist_id = 3,
+            album_id = 3,
+            uploader_id = 1,
+            audio_url = '/uploads/sample3.mp3',
+            cover_image_url = '/uploads/cover3.jpg',
+            is_available = true
+        WHERE title = 'Sample Song 3'
+        `);
+        
+        // Create upload credits for users
+        await db.query(`
+        INSERT INTO upload_credits (user_id, credits)
+        SELECT id, 5 FROM users
+        ON CONFLICT (user_id) DO NOTHING
+        `);
+        
+        res.json({ 
+            success: true, 
+            message: 'Complete database setup finished!',
+            tables: ['users', 'tracks', 'playlists', 'playlist_tracks', 'likes', 'artists', 'albums', 'upload_credits', 'credit_transactions']
+        });
+        
+    } catch (error) {
+        console.error('Complete setup error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Keep-alive endpoint for Render PostgreSQL
 app.get('/keep-alive', async (req, res) => {
     try {
