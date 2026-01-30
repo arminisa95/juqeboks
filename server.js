@@ -2179,6 +2179,9 @@ app.post('/complete-database-setup', async (req, res) => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
         
+        // Update users table to add subscription_tier column
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(20) DEFAULT \'free\'');
+        
         // Update tracks table
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS artist_id INTEGER');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album_id INTEGER');
