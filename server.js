@@ -2012,6 +2012,104 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// Database setup endpoint (temporary - remove after use)
+app.post('/setup-database', async (req, res) => {
+    try {
+        // Create tables
+        const createTablesSQL = `
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(50) UNIQUE NOT NULL,
+            email VARCHAR(100) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            first_name VARCHAR(50),
+            last_name VARCHAR(50),
+            is_admin BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS tracks (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            artist VARCHAR(255) NOT NULL,
+            album VARCHAR(255),
+            duration INTEGER,
+            file_url VARCHAR(500),
+            cover_url VARCHAR(500),
+            uploaded_by INTEGER REFERENCES users(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS playlists (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            user_id INTEGER REFERENCES users(id),
+            is_public BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS playlist_tracks (
+            id SERIAL PRIMARY KEY,
+            playlist_id INTEGER REFERENCES playlists(id),
+            track_id INTEGER REFERENCES tracks(id),
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(playlist_id, track_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS likes (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            track_id INTEGER REFERENCES tracks(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, track_id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_tracks_artist ON tracks(artist);
+        CREATE INDEX IF NOT EXISTS idx_tracks_uploaded_by ON tracks(uploaded_by);
+        CREATE INDEX IF NOT EXISTS idx_playlists_user_id ON playlists(user_id);
+        CREATE INDEX IF NOT EXISTS idx_likes_user_id ON likes(user_id);
+        CREATE INDEX IF NOT EXISTS idx_likes_track_id ON likes(track_id);
+        `;
+        
+        await db.query(createTablesSQL);
+        
+        // Insert admin user
+        await db.query(`
+        INSERT INTO users (username, email, password_hash, first_name, last_name, is_admin)
+        VALUES (
+            'admin',
+            'admin@juke.local',
+            '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ',
+            'Admin',
+            'User',
+            TRUE
+        ) ON CONFLICT (username) DO NOTHING
+        `);
+        
+        // Insert sample tracks
+        await db.query(`
+        INSERT INTO tracks (title, artist, album, duration, uploaded_by)
+        VALUES 
+            ('Sample Song 1', 'Artist 1', 'Album 1', 180, 1),
+            ('Sample Song 2', 'Artist 2', 'Album 2', 240, 1),
+            ('Sample Song 3', 'Artist 3', 'Album 3', 200, 1)
+        ON CONFLICT DO NOTHING
+        `);
+        
+        res.json({ 
+            success: true, 
+            message: 'Database setup completed!',
+            login: { username: 'admin', password: 'admin123' }
+        });
+        
+    } catch (error) {
+        console.error('Setup error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Keep-alive endpoint for Render PostgreSQL
 app.get('/keep-alive', async (req, res) => {
     try {
@@ -2037,6 +2135,36 @@ app.get('/health', (req, res) => {
         service: 'JUKE Web Service',
         timestamp: new Date().toISOString()
     });
+});
+
+// Start server with error handling
+const server = app.listen(PORT, () => {
+    console.log(`🚀 JUKE Server running on port ${PORT}`);
+    console.log(`📱 Health check: http://localhost:${PORT}/health`);
+    console.log(`🔗 Keep-alive: http://localhost:${PORT}/keep-alive`);
+    console.log(`⚙️  Database setup: http://localhost:${PORT}/setup-database`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
+    
+    const bind = typeof PORT === 'string' ? 'Pipe ' + PORT : 'Port ' + PORT;
+    
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
 });
 
 // Graceful shutdown
