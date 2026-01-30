@@ -2012,6 +2012,28 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// Admin password reset endpoint (temporary - remove after use)
+app.post('/reset-admin-password', async (req, res) => {
+    try {
+        const bcrypt = require('bcryptjs');
+        const hashedPassword = '$2b$10$ikNRGDbpARH31ryaTVCjD.IF.xZODMr9m6NhLcul1aZ/5LhTZh7CW';
+        
+        await db.query(
+            'UPDATE users SET password_hash = $1 WHERE username = $2',
+            [hashedPassword, 'admin']
+        );
+        
+        res.json({ 
+            success: true, 
+            message: 'Admin password reset successfully!',
+            login: { username: 'admin', password: 'admin123' }
+        });
+    } catch (error) {
+        console.error('Password reset error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Keep-alive endpoint for Render PostgreSQL
 app.get('/keep-alive', async (req, res) => {
     try {
