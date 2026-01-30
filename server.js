@@ -2054,7 +2054,8 @@ app.post('/complete-database-setup', async (req, res) => {
             release_date DATE,
             cover_image_url VARCHAR(500),
             genre VARCHAR(100),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(title, artist_id)
         );
 
         CREATE TABLE IF NOT EXISTS upload_credits (
