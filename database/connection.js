@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 // Database configuration
 const config = {
     user: process.env.DB_USER || 'juke_user',
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST ? (process.env.DB_HOST.includes('.oregon-postgres.render.com') ? process.env.DB_HOST : `${process.env.DB_HOST}.oregon-postgres.render.com`) : 'localhost',
     database: process.env.DB_NAME || 'juke_db_s8gk',
     password: process.env.DB_PASSWORD || 'your_password_here',
     port: process.env.DB_PORT || 5432,
