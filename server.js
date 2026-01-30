@@ -2107,7 +2107,7 @@ app.post('/complete-database-setup', async (req, res) => {
             ('Artist 1', 'Sample artist 1', false),
             ('Artist 2', 'Sample artist 2', false),
             ('Artist 3', 'Sample artist 3', false)
-        ON CONFLICT (name) DO NOTHING
+        ON CONFLICT (name) DO UPDATE SET bio = EXCLUDED.bio, verified = EXCLUDED.verified
         `);
         
         await db.query(`
@@ -2116,7 +2116,7 @@ app.post('/complete-database-setup', async (req, res) => {
             ('Album 1', 1, '2024-01-01', 'Pop'),
             ('Album 2', 2, '2024-02-01', 'Rock'),
             ('Album 3', 3, '2024-03-01', 'Electronic')
-        ON CONFLICT (title, artist_id) DO NOTHING
+        ON CONFLICT DO NOTHING
         `);
         
         // Update existing tracks with artist and album references
