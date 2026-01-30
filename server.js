@@ -2262,6 +2262,7 @@ app.post('/complete-database-setup', async (req, res) => {
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500)');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS file_path VARCHAR(500)');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS metadata JSONB');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT 0');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS release_date DATE');
