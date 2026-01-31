@@ -1383,48 +1383,93 @@ app.get('/api/artists/:id', async (req, res) => {
             albums,
             tracks
         });
-
     } catch (error) {
         console.error('Get artist error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Get all tracks
+// Get all tracks - optimiert mit Pagination und Total Count
 app.get('/api/tracks', async (req, res) => {
     try {
-        const { limit = 20, offset = 0, genre } = req.query;
+        const { limit = 20, offset = 0, genre, sort = 'popular' } = req.query;
 
+        // Validierung und Limits
+        const limitNum = Math.max(1, Math.min(parseInt(limit, 10) || 20, 100));
+        const offsetNum = Math.max(0, parseInt(offset, 10) || 0);
+
+        // Basis-Query mit optimierten JOINs
         let query = `
-            SELECT t.*,
-                   a.name as artist_name,
-                   al.title as album_title,
-                   al.cover_image_url as album_cover_image_url,
+            SELECT t.id, t.title, t.genre, t.duration_seconds, t.play_count, t.like_count,
+                   t.cover_image_url, t.audio_url, t.file_path, t.created_at, t.uploader_id,
+                   a.name as artist_name, a.id as artist_id,
+                   al.title as album_title, al.cover_image_url as album_cover_image_url,
                    u.username as uploader_username
             FROM tracks t
-            JOIN artists a ON t.artist_id = a.id
+            LEFT JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
             LEFT JOIN users u ON t.uploader_id = u.id
+            WHERE COALESCE(t.is_available, true) = true
         `;
 
         const params = [];
+        let paramIndex = 1;
 
-        if (genre) {
-            query += ' WHERE t.genre = $1';
-            params.push(genre);
+        // Genre Filter
+        if (genre && genre.trim()) {
+            query += ` AND LOWER(t.genre) = LOWER($${paramIndex})`;
+            params.push(genre.trim());
+            paramIndex++;
         }
 
-        query += ' ORDER BY t.play_count DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
-        params.push(limit, offset);
+        // Sortierung
+        const sortOptions = {
+            'popular': 'ORDER BY t.play_count DESC, t.created_at DESC',
+            'newest': 'ORDER BY t.created_at DESC',
+            'oldest': 'ORDER BY t.created_at ASC',
+            'likes': 'ORDER BY t.like_count DESC, t.created_at DESC',
+            'title': 'ORDER BY t.title ASC'
+        };
+        query += ` ${sortOptions[sort] || sortOptions['popular']}`;
+
+        // Pagination
+        query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        params.push(limitNum, offsetNum);
 
         const tracks = await db.getAll(query, params);
-        const normalized = tracks.map((t) => {
+
+        // Total Count für Pagination (nur wenn offset = 0)
+        let totalCount = null;
+        if (offsetNum === 0) {
+            let countQuery = `SELECT COUNT(*) as total FROM tracks t WHERE COALESCE(t.is_available, true) = true`;
+            const countParams = [];
+            if (genre && genre.trim()) {
+                countQuery += ` AND LOWER(t.genre) = LOWER($1)`;
+                countParams.push(genre.trim());
+            }
+            const countResult = await db.get(countQuery, countParams);
+            totalCount = parseInt(countResult?.total || 0, 10);
+        }
+
+        // Normalisierung
+        const normalized = (tracks || []).map((t) => {
             const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
             const coverUrl = t.cover_image_url || t.album_cover_image_url || null;
             const { file_path, album_cover_image_url, ...rest } = t;
             return { ...rest, audio_url: audioUrl, cover_image_url: coverUrl };
         });
-        res.json(normalized);
+
+        // Strukturierte Response mit Pagination-Info
+        res.json({
+            tracks: normalized,
+            pagination: {
+                limit: limitNum,
+                offset: offsetNum,
+                count: normalized.length,
+                total: totalCount,
+                hasMore: normalized.length === limitNum
+            }
+        });
 
     } catch (error) {
         console.error('Get tracks error:', error);
@@ -1447,7 +1492,7 @@ app.get('/api/tracks/new', async (req, res) => {
                    al.cover_image_url as album_cover_image_url,
                    u.username as uploader_username
             FROM tracks t
-            JOIN artists a ON t.artist_id = a.id
+            LEFT JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
             LEFT JOIN users u ON t.uploader_id = u.id
             WHERE COALESCE(t.is_available, true) = true
@@ -2033,20 +2078,60 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
         const isAdmin = !!(req.user && req.user.is_admin);
         const { id: trackId } = req.params;
 
-        const track = await db.get(
-            'SELECT id, uploader_id, file_path, cover_image_url, video_url, metadata FROM tracks WHERE id = $1',
-            [trackId]
-        );
+        // Bessere Validierung
+        if (!trackId || isNaN(Number(trackId))) {
+            return res.status(400).json({ error: 'Invalid track ID' });
+        }
+
+        // Track mit allen Relationen abrufen
+        const track = await db.get(`
+            SELECT t.*, u.username as uploader_username 
+            FROM tracks t 
+            LEFT JOIN users u ON t.uploader_id = u.id 
+            WHERE t.id = $1
+        `, [trackId]);
 
         if (!track) {
             return res.status(404).json({ error: 'Track not found' });
         }
 
+        // Bessere Berechtigungsprüfung
         if (!isAdmin && (!track.uploader_id || String(track.uploader_id) !== String(userId))) {
-            return res.status(403).json({ error: 'Not allowed' });
+            return res.status(403).json({ 
+                error: 'Not allowed',
+                details: 'You can only delete your own tracks'
+            });
         }
 
-        await db.query('DELETE FROM tracks WHERE id = $1', [trackId]);
+        // Kaskaden-Löschung mit Transaktion
+        await db.query('BEGIN');
+
+        try {
+            // 1. Aus Playlists entfernen
+            await db.query('DELETE FROM playlist_tracks WHERE track_id = $1', [trackId]);
+            
+            // 2. Aus Favoriten entfernen
+            await db.query('DELETE FROM user_favorites WHERE track_id = $1', [trackId]);
+            
+            // 3. Likes entfernen
+            await db.query('DELETE FROM likes WHERE track_id = $1', [trackId]);
+            
+            // 4. Kommentare entfernen (falls vorhanden)
+            try {
+                await db.query('DELETE FROM track_comments WHERE track_id = $1', [trackId]);
+            } catch (_) {
+                // Tabelle existiert nicht, ignorieren
+            }
+            
+            // 5. Track selbst löschen
+            await db.query('DELETE FROM tracks WHERE id = $1', [trackId]);
+            
+            await db.query('COMMIT');
+            
+        } catch (error) {
+            await db.query('ROLLBACK');
+            throw error;
+        }
 
         try {
             const meta = track && track.metadata ? track.metadata : null;
@@ -2073,10 +2158,38 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
             }
         });
 
-        res.json({ success: true });
+        // Success Response mit Track-Info
+        res.json({ 
+            success: true, 
+            message: 'Track deleted successfully',
+            track: {
+                id: track.id,
+                title: track.title,
+                uploader: track.uploader_username
+            }
+        });
     } catch (error) {
         console.error('Delete track error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        
+        // Bessere Fehlerbehandlung
+        if (error.message.includes('foreign key constraint')) {
+            return res.status(500).json({ 
+                error: 'Database constraint error',
+                details: 'Failed to delete track due to database constraints'
+            });
+        }
+        
+        if (error.message.includes('timeout') || error.message.includes('connection')) {
+            return res.status(503).json({ 
+                error: 'Database error',
+                details: 'Service temporarily unavailable'
+            });
+        }
+        
+        res.status(500).json({ 
+            error: 'Internal server error',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
@@ -2089,6 +2202,7 @@ app.post('/fix-subscription-tier', async (req, res) => {
         
         // Update existing users to have 'free' tier
         await db.query('UPDATE users SET subscription_tier = \'free\' WHERE subscription_tier IS NULL');
+        
         console.log('Existing users updated with free tier');
         
         res.json({ 

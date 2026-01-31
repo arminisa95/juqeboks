@@ -2761,20 +2761,105 @@ async function deleteTrack(trackId, evt) {
         return;
     }
 
-    const ok = window.confirm('Delete this track?');
-    if (!ok) return;
+    // 🎯 Bessere Bestätigung mit Track-Info
+    const trackElement = document.querySelector(`[data-track-id="${trackId}"]`);
+    const trackTitle = trackElement ? trackElement.querySelector('.track-title')?.textContent : 'this track';
+    
+    const confirmed = window.confirm(`Are you sure you want to delete "${trackTitle}"?\n\nThis action cannot be undone and will permanently remove the track from all playlists and favorites.`);
+    if (!confirmed) return;
+
+    // 🎯 Loading State hinzufügen
+    const deleteBtn = document.querySelector(`.delete-btn[data-track-id="${trackId}"]`);
+    const originalContent = deleteBtn ? deleteBtn.innerHTML : '';
+    
+    if (deleteBtn) {
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        deleteBtn.disabled = true;
+    }
 
     try {
-        await fetchJson(`${window.JukeAPIBase.getApiBase()}/tracks/${encodeURIComponent(trackId)}`, {
+        const response = await fetchJson(`${window.JukeAPIBase.getApiBase()}/tracks/${encodeURIComponent(trackId)}`, {
             method: 'DELETE',
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
-        await loadTracks();
+
+        // 🎯 Optimiertes Update statt volles Reload
+        if (trackElement) {
+            trackElement.style.transition = 'opacity 0.3s, transform 0.3s';
+            trackElement.style.opacity = '0';
+            trackElement.style.transform = 'scale(0.9)';
+            
+            setTimeout(() => {
+                trackElement.remove();
+                // 🎯 Update track count
+                updateTrackCount();
+            }, 300);
+        } else {
+            await loadTracks();
+        }
+
+        // 🎯 Success Notification
+        showNotification(`"${trackTitle}" deleted successfully`, 'success');
+
     } catch (e) {
         console.error('Deleting track failed:', e);
-        alert('Delete failed. Please try again.');
+        
+        // 🎯 Bessere Fehlermeldung
+        let errorMessage = 'Delete failed. Please try again.';
+        if (e.message.includes('404')) {
+            errorMessage = 'Track not found or already deleted.';
+        } else if (e.message.includes('403')) {
+            errorMessage = 'You don\'t have permission to delete this track.';
+        } else if (e.message.includes('network')) {
+            errorMessage = 'Network error. Please check your connection.';
+        }
+        
+        showNotification(errorMessage, 'error');
+        
+        // 🎯 Button-Status wiederherstellen
+        if (deleteBtn) {
+            deleteBtn.innerHTML = originalContent;
+            deleteBtn.disabled = false;
+        }
+    }
+}
+
+// 🎯 Neue Helper-Funktionen
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+function updateTrackCount() {
+    const grid = document.querySelector('.music-grid');
+    if (grid) {
+        const count = grid.children.length;
+        const title = document.querySelector('.feed-title');
+        if (title) {
+            title.textContent = `Feed ${count > 0 ? `(${count})` : ''}`;
+        }
     }
 }
 
