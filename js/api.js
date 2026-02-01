@@ -976,14 +976,18 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                     dir = null;
                 }
                 var idx = getActiveIndex();
+                console.log('Nav button clicked:', dir, 'idx:', idx, 'tracksArr length:', tracksArr ? tracksArr.length : 0);
                 if (dir === 'prev' && idx > 0) {
+                    console.log('Going to prev track:', idx - 1);
                     setActiveTrack(tracksArr[idx - 1], { play: true });
                     return;
                 }
                 if (dir === 'next' && idx >= 0 && idx < (tracksArr.length - 1)) {
+                    console.log('Going to next track:', idx + 1);
                     setActiveTrack(tracksArr[idx + 1], { play: true });
                     return;
                 }
+                return;
             }
 
             var commentToggle = null;
