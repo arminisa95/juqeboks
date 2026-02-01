@@ -2171,6 +2171,7 @@ async function renderStoriesBar() {
         storiesBar.innerHTML = '';
 
         // "Your story" bubble first (upload shortcut)
+        var myUserId = null;
         try {
             var cu = null;
             try {
@@ -2179,12 +2180,37 @@ async function renderStoriesBar() {
                 cu = null;
             }
             var myUsername = (cu && cu.username) ? String(cu.username) : '';
-            var myAvatar = (cu && cu.avatar_url) ? String(cu.avatar_url) : null;
+            myUserId = (cu && cu.id) ? String(cu.id) : null;
+            
+            // Try to get avatar from user's own uploads first, then fall back to profile avatar
+            var myAvatar = null;
+            var myTracks = [];
+            
+            // Check if current user has uploads in the uploaderArr
+            if (myUserId) {
+                var myUploaderData = uploaderArr.find(function(u) {
+                    return u && String(u.id) === myUserId;
+                });
+                if (myUploaderData) {
+                    myAvatar = myUploaderData.avatar || null;
+                    myTracks = myUploaderData.tracks || [];
+                }
+            }
+            
+            // Fall back to profile avatar_url if no upload avatar found
+            if (!myAvatar && cu && cu.avatar_url) {
+                myAvatar = String(cu.avatar_url);
+            }
+            // Also try avatarUrl (camelCase from JWT)
+            if (!myAvatar && cu && cu.avatarUrl) {
+                myAvatar = String(cu.avatarUrl);
+            }
+            
             if (myUsername) {
                 const your = document.createElement('div');
                 your.className = 'story-item your-story-item';
                 your.innerHTML = `
-                    <div class="story-avatar your-story">
+                    <div class="story-avatar your-story ${myTracks.length > 0 ? 'has-uploads' : ''}">
                         <img src="${resolveAssetUrl(myAvatar, resolveLocalAssetUrl('images/juke.png'))}" alt="${myUsername}">
                         <div class="story-plus-badge">+</div>
                     </div>
@@ -2192,10 +2218,15 @@ async function renderStoriesBar() {
                 `;
                 your.addEventListener('click', function () {
                     try {
-                        if (isSpaMode()) {
-                            window.location.hash = '#/upload';
+                        // If user has tracks, show them in media viewer, otherwise go to upload
+                        if (myTracks.length > 0) {
+                            openTrackMediaViewer(myTracks, myTracks[0].id);
                         } else {
-                            window.location.href = 'upload.html';
+                            if (isSpaMode()) {
+                                window.location.hash = '#/upload';
+                            } else {
+                                window.location.href = 'upload.html';
+                            }
                         }
                     } catch (_) {
                     }
@@ -2205,7 +2236,13 @@ async function renderStoriesBar() {
         } catch (_) {
         }
 
-        uploaderArr.forEach(function (u) {
+        // Filter out current user from uploaderArr to avoid duplicate
+        var filteredUploaders = uploaderArr.filter(function(u) {
+            if (!myUserId) return true;
+            return u && String(u.id) !== myUserId;
+        });
+
+        filteredUploaders.forEach(function (u) {
             const item = document.createElement('div');
             item.className = 'story-item';
             item.innerHTML = `
