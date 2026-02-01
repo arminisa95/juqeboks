@@ -328,8 +328,10 @@ function setupProfilePage() {
                     if (avatarEl) {
                         avatarEl.value = result.avatar_url || '';
                     }
+                    avatarPreview.dataset.newAvatar = 'false';
                 } catch (error) {
-                    showMessage(messageEl, 'Failed to upload avatar. Please try again.', 'error');
+                    console.error('Avatar upload error:', error);
+                    showMessage(messageEl, 'Failed to upload avatar: ' + (error.message || 'Please try again.'), 'error');
                     return;
                 }
             }
