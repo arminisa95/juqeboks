@@ -368,6 +368,17 @@ const isUuid = (value) => {
     return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 };
 
+// Check if value is a valid ID (UUID or numeric)
+const isValidId = (value) => {
+    if (!value) return false;
+    const str = String(value);
+    // Check if it's a UUID
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)) return true;
+    // Check if it's a positive integer
+    if (/^\d+$/.test(str) && parseInt(str, 10) > 0) return true;
+    return false;
+};
+
 // ==================== AUTHENTICATION ENDPOINTS ====================
 
 // Register new user
@@ -1672,7 +1683,7 @@ app.get('/api/tracks/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
-        if (!isUuid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ error: 'Invalid track ID' });
         }
 
