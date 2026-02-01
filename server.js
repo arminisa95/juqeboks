@@ -2448,6 +2448,30 @@ app.post('/complete-database-setup', async (req, res) => {
         // Create upload credits
         await db.query("INSERT INTO upload_credits (user_id, credits) SELECT id, 5 FROM users");
         
+        // 🎯 Database Indexes für bessere Performance
+        console.log('Creating database indexes...');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_tracks_artist_id ON tracks(artist_id)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_tracks_album_id ON tracks(album_id)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_tracks_uploader_id ON tracks(uploader_id)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_tracks_created_at ON tracks(created_at DESC)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_tracks_play_count ON tracks(play_count DESC)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_tracks_is_available ON tracks(is_available)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_tracks_genre ON tracks(genre)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_tracks_title_search ON tracks USING gin(to_tsvector(\'english\', title))');
+        
+        await db.query('CREATE INDEX IF NOT EXISTS idx_artists_name ON artists(name)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_albums_artist_id ON albums(artist_id)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_albums_title ON albums(title)');
+        
+        await db.query('CREATE INDEX IF NOT EXISTS idx_playlist_tracks_playlist_id ON playlist_tracks(playlist_id)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_playlist_tracks_track_id ON playlist_tracks(track_id)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_user_favorites_user_id ON user_favorites(user_id)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_user_favorites_track_id ON user_favorites(track_id)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_likes_user_id ON likes(user_id)');
+        await db.query('CREATE INDEX IF NOT EXISTS idx_likes_track_id ON likes(track_id)');
+        
+        console.log('Database indexes created successfully');
+        
         res.json({ 
             success: true, 
             message: 'Complete database setup finished!',
