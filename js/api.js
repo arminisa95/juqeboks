@@ -2179,12 +2179,13 @@ async function renderStoriesBar() {
                 cu = null;
             }
             var myUsername = (cu && cu.username) ? String(cu.username) : '';
+            var myAvatar = (cu && cu.avatar_url) ? String(cu.avatar_url) : null;
             if (myUsername) {
                 const your = document.createElement('div');
-                your.className = 'story-item';
+                your.className = 'story-item your-story-item';
                 your.innerHTML = `
                     <div class="story-avatar your-story">
-                        <img src="${resolveAssetUrl(null, resolveLocalAssetUrl('images/juke.png'))}" alt="${myUsername}">
+                        <img src="${resolveAssetUrl(myAvatar, resolveLocalAssetUrl('images/juke.png'))}" alt="${myUsername}">
                         <div class="story-plus-badge">+</div>
                     </div>
                     <div class="story-username">Your story</div>
