@@ -1776,54 +1776,91 @@ app.delete('/api/tracks/:trackId/comments/:commentId', authenticateToken, async 
     }
 });
 
-// Search for music
+// Search for music - optimiert mit besserer Performance
 app.get('/api/search', async (req, res) => {
     try {
         const { q, type = 'all', limit = 20 } = req.query;
 
-        if (!q) {
+        if (!q || !q.trim()) {
             return res.status(400).json({ error: 'Search query is required' });
         }
 
-        const searchTerm = `%${q}%`;
+        // Validierung und Limits
+        const limitNum = Math.max(1, Math.min(parseInt(limit, 10) || 20, 50));
+        const searchTerm = `%${q.trim()}%`;
         const results = {};
 
+        // Parallele Queries für bessere Performance
+        const promises = [];
+
         if (type === 'all' || type === 'tracks') {
-            results.tracks = await db.getAll(`
-                SELECT t.id, t.title, t.duration_seconds,
-                       a.name as artist_name, al.title as album_title, al.cover_image_url
-                FROM tracks t
-                JOIN artists a ON t.artist_id = a.id
-                LEFT JOIN albums al ON t.album_id = al.id
-                WHERE t.title ILIKE $1 OR a.name ILIKE $1
-                ORDER BY t.play_count DESC
-                LIMIT $2
-            `, [searchTerm, limit]);
+            promises.push(
+                db.getAll(`
+                    SELECT t.id, t.title, t.duration_seconds, t.genre, t.play_count,
+                           t.cover_image_url, t.audio_url, t.file_path,
+                           a.name as artist_name, a.id as artist_id,
+                           al.title as album_title, al.cover_image_url as album_cover_image_url
+                    FROM tracks t
+                    LEFT JOIN artists a ON t.artist_id = a.id
+                    LEFT JOIN albums al ON t.album_id = al.id
+                    WHERE COALESCE(t.is_available, true) = true
+                      AND (t.title ILIKE $1 OR a.name ILIKE $1 OR t.genre ILIKE $1)
+                    ORDER BY 
+                        CASE WHEN t.title ILIKE $1 THEN 0 ELSE 1 END,
+                        t.play_count DESC
+                    LIMIT $2
+                `, [searchTerm, limitNum]).then(tracks => {
+                    results.tracks = (tracks || []).map(t => {
+                        const audioUrl = t.audio_url || (t.file_path ? `/uploads/${require('path').basename(t.file_path)}` : null);
+                        const coverUrl = t.cover_image_url || t.album_cover_image_url || null;
+                        const { file_path, album_cover_image_url, ...rest } = t;
+                        return { ...rest, audio_url: audioUrl, cover_image_url: coverUrl };
+                    });
+                })
+            );
         }
 
         if (type === 'all' || type === 'artists') {
-            results.artists = await db.getAll(`
-                SELECT id, name, image_url, verified
-                FROM artists
-                WHERE name ILIKE $1
-                ORDER BY verified DESC, name
-                LIMIT $2
-            `, [searchTerm, limit]);
+            promises.push(
+                db.getAll(`
+                    SELECT id, name, image_url, bio, verified
+                    FROM artists
+                    WHERE name ILIKE $1
+                    ORDER BY verified DESC, name
+                    LIMIT $2
+                `, [searchTerm, limitNum]).then(artists => {
+                    results.artists = artists || [];
+                })
+            );
         }
 
         if (type === 'all' || type === 'albums') {
-            results.albums = await db.getAll(`
-                SELECT al.id, al.title, al.release_date, al.cover_image_url,
-                       a.name as artist_name
-                FROM albums al
-                JOIN artists a ON al.artist_id = a.id
-                WHERE al.title ILIKE $1 OR a.name ILIKE $1
-                ORDER BY al.release_date DESC
-                LIMIT $2
-            `, [searchTerm, limit]);
+            promises.push(
+                db.getAll(`
+                    SELECT al.id, al.title, al.release_date, al.cover_image_url, al.genre,
+                           a.name as artist_name, a.id as artist_id
+                    FROM albums al
+                    LEFT JOIN artists a ON al.artist_id = a.id
+                    WHERE al.title ILIKE $1 OR a.name ILIKE $1
+                    ORDER BY al.release_date DESC
+                    LIMIT $2
+                `, [searchTerm, limitNum]).then(albums => {
+                    results.albums = albums || [];
+                })
+            );
         }
 
-        res.json(results);
+        // Warte auf alle parallelen Queries
+        await Promise.all(promises);
+
+        // Response mit Metadaten
+        res.json({
+            query: q.trim(),
+            ...results,
+            meta: {
+                total: (results.tracks?.length || 0) + (results.artists?.length || 0) + (results.albums?.length || 0)
+            }
+        });
     } catch (error) {
         console.error('Search error:', error);
         res.status(500).json({ error: 'Internal server error' });

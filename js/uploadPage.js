@@ -192,7 +192,7 @@
 
             var token = localStorage.getItem('juke_token');
             if (!token) {
-                alert('Please log in first.');
+                showUploadNotification('Please log in first.', 'error');
                 window.location.hash = '#/login';
                 return;
             }
@@ -201,7 +201,7 @@
             var files = fileInput.files;
 
             if (!files || files.length === 0) {
-                alert('Please select at least one file to upload');
+                showUploadNotification('Please select at least one file to upload', 'error');
                 return;
             }
 
@@ -236,17 +236,45 @@
                 }
             }
 
-            formData.append('title', titleEl ? titleEl.value : '');
+            // Validierung
+            var titleVal = titleEl ? titleEl.value.trim() : '';
+            if (!titleVal) {
+                showUploadNotification('Please enter a track title', 'error');
+                titleEl && titleEl.focus();
+                return;
+            }
+
+            formData.append('title', titleVal);
             formData.append('artist', artistVal);
             formData.append('album', albumEl ? albumEl.value : '');
             formData.append('genre', genreEl ? genreEl.value : '');
 
             var submitBtn = uploadForm.querySelector('button[type="submit"]');
             var originalText = submitBtn ? submitBtn.textContent : '';
+            
+            // 🎯 Progress Container erstellen
+            var progressContainer = document.getElementById('uploadProgress');
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.id = 'uploadProgress';
+                progressContainer.style.cssText = 'margin: 1rem 0; display: none;';
+                progressContainer.innerHTML = `
+                    <div style="background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; height: 8px;">
+                        <div id="uploadProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00ffd0, #00b894); transition: width 0.3s ease;"></div>
+                    </div>
+                    <div id="uploadProgressText" style="text-align: center; margin-top: 0.5rem; color: #aaa; font-size: 0.9rem;">Preparing upload...</div>
+                `;
+                submitBtn.parentNode.insertBefore(progressContainer, submitBtn);
+            }
+            
+            var progressBar = document.getElementById('uploadProgressBar');
+            var progressText = document.getElementById('uploadProgressText');
+            
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Uploading...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
             }
+            progressContainer.style.display = 'block';
 
             var storedBase = null;
             try {
@@ -264,56 +292,123 @@
 
             function tryUpload(baseIndex) {
                 if (baseIndex >= bases.length) {
-                    alert('Upload failed. Please try again.');
+                    showUploadNotification('Upload failed. Please check your connection and try again.', 'error');
                     return Promise.resolve();
                 }
 
                 var apiBase = bases[baseIndex];
-                return fetch(apiBase + '/upload', {
-                    method: 'POST',
-                    headers: {
-                        Authorization: 'Bearer ' + token
-                    },
-                    body: formData
-                }).then(function (res) {
-                    if (!res.ok) {
-                        if (res.status === 401 || res.status === 403 || res.status === 404) {
-                            return tryUpload(baseIndex + 1);
-                        }
-                    }
-
-                    return safeJson(res).then(function (data) {
-                        if (res.ok && data && data.success) {
-                            try {
-                                localStorage.setItem('juke_api_base', apiBase);
-                            } catch (_) {
+                
+                // 🎯 XMLHttpRequest für Progress Tracking
+                return new Promise(function(resolve) {
+                    var xhr = new XMLHttpRequest();
+                    
+                    xhr.upload.addEventListener('progress', function(e) {
+                        if (e.lengthComputable) {
+                            var percent = Math.round((e.loaded / e.total) * 100);
+                            if (progressBar) progressBar.style.width = percent + '%';
+                            if (progressText) {
+                                var loaded = (e.loaded / 1024 / 1024).toFixed(1);
+                                var total = (e.total / 1024 / 1024).toFixed(1);
+                                progressText.textContent = 'Uploading: ' + percent + '% (' + loaded + ' / ' + total + ' MB)';
                             }
-                            alert('Upload successful! Track ID: ' + data.track.id);
-                            uploadForm.reset();
-                            fileInfo.textContent = 'No files selected';
-                            if (coverInfo) coverInfo.textContent = 'No cover selected';
-                            if (videoInfo) videoInfo.textContent = 'No video selected';
-                            return;
                         }
-
-                        var msg = (data && data.error) ? data.error : ('Request failed: ' + res.status);
-                        if (res.status === 401 || res.status === 403 || res.status === 404) {
-                            return tryUpload(baseIndex + 1);
-                        }
-                        alert('Upload failed: ' + msg);
                     });
-                }).catch(function () {
-                    return tryUpload(baseIndex + 1);
+                    
+                    xhr.addEventListener('load', function() {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                var data = JSON.parse(xhr.responseText);
+                                if (data && data.success) {
+                                    try {
+                                        localStorage.setItem('juke_api_base', apiBase);
+                                    } catch (_) {}
+                                    
+                                    if (progressBar) progressBar.style.width = '100%';
+                                    if (progressText) progressText.textContent = 'Upload complete!';
+                                    
+                                    showUploadNotification('Track "' + titleVal + '" uploaded successfully!', 'success');
+                                    
+                                    // Form zurücksetzen nach kurzer Verzögerung
+                                    setTimeout(function() {
+                                        uploadForm.reset();
+                                        fileInfo.textContent = 'No files selected';
+                                        if (coverInfo) coverInfo.textContent = 'No cover selected';
+                                        if (videoInfo) videoInfo.textContent = 'No video selected';
+                                        progressContainer.style.display = 'none';
+                                        if (progressBar) progressBar.style.width = '0%';
+                                        
+                                        // Redirect zum Feed
+                                        window.location.hash = '#/feed';
+                                    }, 1500);
+                                    
+                                    resolve();
+                                    return;
+                                }
+                                
+                                var msg = (data && data.error) ? data.error : 'Upload failed';
+                                showUploadNotification(msg, 'error');
+                                resolve();
+                            } catch (_) {
+                                tryUpload(baseIndex + 1).then(resolve);
+                            }
+                        } else if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
+                            tryUpload(baseIndex + 1).then(resolve);
+                        } else {
+                            try {
+                                var errData = JSON.parse(xhr.responseText);
+                                showUploadNotification(errData.error || 'Upload failed', 'error');
+                            } catch (_) {
+                                showUploadNotification('Upload failed: ' + xhr.status, 'error');
+                            }
+                            resolve();
+                        }
+                    });
+                    
+                    xhr.addEventListener('error', function() {
+                        tryUpload(baseIndex + 1).then(resolve);
+                    });
+                    
+                    xhr.addEventListener('timeout', function() {
+                        showUploadNotification('Upload timed out. Please try again.', 'error');
+                        resolve();
+                    });
+                    
+                    xhr.open('POST', apiBase + '/upload');
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                    xhr.timeout = 300000; // 5 Minuten Timeout
+                    xhr.send(formData);
                 });
             }
 
             tryUpload(0).finally(function () {
                 if (submitBtn) {
                     submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
+                    submitBtn.innerHTML = originalText;
                 }
             });
         });
+        
+        // 🎯 Notification Helper
+        function showUploadNotification(message, type) {
+            var existing = document.getElementById('uploadNotification');
+            if (existing) existing.remove();
+            
+            var notification = document.createElement('div');
+            notification.id = 'uploadNotification';
+            notification.textContent = message;
+            notification.style.cssText = 
+                'position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; ' +
+                'color: white; font-weight: 500; z-index: 10000; animation: slideIn 0.3s ease; ' +
+                'background: ' + (type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6') + ';';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(function() {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s ease';
+                setTimeout(function() { notification.remove(); }, 300);
+            }, 4000);
+        }
     }
 
     window.JukeUpload = {
