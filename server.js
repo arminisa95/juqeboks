@@ -1720,7 +1720,7 @@ app.post('/api/tracks/:id/like', authenticateToken, async (req, res) => {
         const userId = req.user.id;
         const { id: trackId } = req.params;
 
-        if (!isUuid(trackId)) {
+        if (!isValidId(trackId)) {
             return res.status(400).json({ error: 'Invalid track ID' });
         }
 
@@ -1771,7 +1771,7 @@ app.get('/api/tracks/:id/comments', authenticateToken, async (req, res) => {
     try {
         const { id: trackId } = req.params;
 
-        if (!isUuid(trackId)) {
+        if (!isValidId(trackId)) {
             return res.status(400).json({ error: 'Invalid track ID' });
         }
 
@@ -1804,7 +1804,7 @@ app.post('/api/tracks/:id/comments', authenticateToken, async (req, res) => {
         const body = (req && req.body && typeof req.body === 'object') ? req.body : {};
         const text = (typeof body.body === 'string') ? body.body.trim() : '';
 
-        if (!isUuid(trackId)) {
+        if (!isValidId(trackId)) {
             return res.status(400).json({ error: 'Invalid track ID' });
         }
         if (!text) {
@@ -1838,7 +1838,7 @@ app.delete('/api/tracks/:trackId/comments/:commentId', authenticateToken, async 
         const isAdmin = !!(req.user && req.user.is_admin);
         const { trackId, commentId } = req.params;
 
-        if (!isUuid(trackId) || !isUuid(commentId)) {
+        if (!isValidId(trackId) || !isValidId(commentId)) {
             return res.status(400).json({ error: 'Invalid ID' });
         }
 
