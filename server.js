@@ -663,6 +663,82 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
     }
 });
 
+
+// Avatar upload endpoint
+app.post('/api/users/avatar', authenticateToken, upload.single('avatar'), async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ error: 'No avatar file provided' });
+        }
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return res.status(400).json({ error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.' });
+        }
+
+        let avatarUrl = `/uploads/${path.basename(file.path)}`;
+
+        // Upload to S3 if configured
+        const s3 = getS3Client();
+        if (s3) {
+            try {
+                const avatarObj = await uploadFileToS3(s3, file, 'avatars');
+                avatarUrl = avatarObj.url;
+
+                // Delete local file after S3 upload
+                if (file.path && fs.existsSync(file.path)) {
+                    fs.unlinkSync(file.path);
+                }
+            } catch (s3Error) {
+                console.error('S3 upload error:', s3Error);
+                // Fall back to local storage
+            }
+        }
+
+        // Update user's avatar_url in database
+        await db.query(
+            'UPDATE users SET avatar_url = $1 WHERE id = $2',
+            [avatarUrl, userId]
+        );
+
+        // Get updated user
+        const user = await db.get(
+            'SELECT id, username, email, first_name, last_name, avatar_url, bio FROM users WHERE id = $1',
+            [userId]
+        );
+
+        res.json({
+            success: true,
+            avatar_url: avatarUrl,
+            user: user
+        });
+    } catch (error) {
+        console.error('Avatar upload error:', error);
+        res.status(500).json({ error: 'Failed to upload avatar' });
+    }
+});
+
+// Get user avatar
+app.get('/api/users/avatar', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await db.get('SELECT avatar_url FROM users WHERE id = $1', [userId]);
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ avatar_url: user.avatar_url });
+    } catch (error) {
+        console.error('Get avatar error:', error);
+        res.status(500).json({ error: 'Failed to get avatar' });
+    }
+});
+
 app.put('/api/users/profile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
