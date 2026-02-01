@@ -819,9 +819,11 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
 
                 var mediaEl = '';
                 if (videoUrl) {
-                    mediaEl = '<video src="' + String(videoUrl).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" playsinline muted autoplay loop controls></video>';
+                    mediaEl = '<button type="button" class="juke-media-content-close" data-juke-content-close="1" aria-label="Close media"><i class="fas fa-times"></i></button>' +
+                              '<video src="' + String(videoUrl).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" playsinline muted autoplay loop controls></video>';
                 } else {
-                    mediaEl = '<img src="' + String(cover).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" alt="">';
+                    mediaEl = '<button type="button" class="juke-media-content-close" data-juke-content-close="1" aria-label="Close media"><i class="fas fa-times"></i></button>' +
+                              '<img src="' + String(cover).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" alt="">';
                 }
 
                 var liked = false;
@@ -933,6 +935,24 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
             try {
                 if (target.getAttribute && target.getAttribute('data-juke-media-close') === '1') {
                     close();
+                    return;
+                }
+            } catch (_) {
+            }
+
+            // Handle content-only close (closes media viewer but keeps audio playing)
+            try {
+                var contentCloseBtn = target.closest ? target.closest('[data-juke-content-close]') : null;
+                if (contentCloseBtn || (target.getAttribute && target.getAttribute('data-juke-content-close') === '1')) {
+                    // Close the media viewer without stopping audio
+                    try {
+                        root.classList.remove('open');
+                        setTimeout(function() {
+                            if (root && root.parentNode) {
+                                root.parentNode.removeChild(root);
+                            }
+                        }, 300);
+                    } catch (_) {}
                     return;
                 }
             } catch (_) {
@@ -2247,7 +2267,7 @@ async function loadFeedStream(reset) {
         feedState.trackIds = [];
         feedState.queueTracks = [];
         feedState.sharedTrackPlayed = false;
-        grid.innerHTML = '';
+        grid.innerHTML = '<div class="feed-loading" style="text-align:center;padding:2rem;color:#aaa;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
         renderStoriesBar();
     }
 
@@ -2256,18 +2276,29 @@ async function loadFeedStream(reset) {
     }
     feedState.loading = true;
 
-    try {
-        await loadLikedTrackIds();
-    } catch (_) {
-    }
+    // Load liked tracks in background (don't block feed)
+    loadLikedTrackIds().catch(function() {});
 
     try {
-        const tracks = await apiFetchJson('/tracks/new?limit=' + feedState.limit + '&offset=' + feedState.offset, {}, function (d) {
-            return Array.isArray(d);
+        // Use optimized /tracks endpoint with pagination
+        const response = await apiFetchJson('/tracks?limit=' + feedState.limit + '&offset=' + feedState.offset + '&sort=newest', {}, function (d) {
+            return d && (Array.isArray(d.tracks) || Array.isArray(d));
         });
+
+        // Handle both old array format and new paginated format
+        const tracks = Array.isArray(response) ? response : (response && response.tracks ? response.tracks : []);
+
+        // Remove loading indicator on first load
+        if (reset) {
+            var loadingEl = grid.querySelector('.feed-loading');
+            if (loadingEl) loadingEl.remove();
+        }
 
         if (!Array.isArray(tracks) || tracks.length === 0) {
             feedState.done = true;
+            if (reset && feedState.trackIds.length === 0) {
+                grid.innerHTML = '<div style="text-align:center;padding:2rem;color:#aaa;">No tracks yet. Be the first to upload!</div>';
+            }
             return;
         }
 
@@ -2284,6 +2315,11 @@ async function loadFeedStream(reset) {
             } catch (_) {
             }
         });
+
+        // Check if we've loaded all tracks
+        if (response && response.pagination && !response.pagination.hasMore) {
+            feedState.done = true;
+        }
 
         // Update contextual queue for prev/next
         try {
