@@ -1630,7 +1630,7 @@ min-width: 0;
     border: 1px solid rgba(255,255,255,0.2);
     color: white;
     cursor: pointer;
-    display: none;
+    display: none !important;
     align-items: center;
     justify-content: center;
     z-index: 100;
@@ -1649,13 +1649,13 @@ min-width: 0;
     font-size: 1rem;
 }
 
-@media (max-width: 768px) {
+@media (hover: none) and (pointer: coarse) {
     .juke-media-content-close {
         width: 48px;
         height: 48px;
         top: 8px;
         right: 8px;
-        display: flex;
+        display: flex !important;
     }
     
     .juke-media-content-close i {
