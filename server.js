@@ -231,7 +231,7 @@ async function initializeDatabase() {
 
             CREATE TABLE IF NOT EXISTS track_comments (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+                track_id TEXT NOT NULL,
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 body TEXT NOT NULL,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -291,6 +291,41 @@ async function initializeDatabase() {
                 END IF;
             END $$;
         `);
+
+        await db.query(`
+            DO $$
+            DECLARE r record;
+            BEGIN
+                IF to_regclass('public.track_comments') IS NULL THEN
+                    RETURN;
+                END IF;
+
+                -- Drop only the FK that references tracks (keep user FK intact)
+                FOR r IN (
+                    SELECT c.conname
+                    FROM pg_constraint c
+                    WHERE c.conrelid = 'track_comments'::regclass
+                      AND c.contype = 'f'
+                      AND c.confrelid = 'tracks'::regclass
+                ) LOOP
+                    EXECUTE format('ALTER TABLE track_comments DROP CONSTRAINT IF EXISTS %I', r.conname);
+                END LOOP;
+
+                IF EXISTS (
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                      AND table_name = 'track_comments'
+                      AND column_name = 'track_id'
+                      AND data_type <> 'text'
+                ) THEN
+                    ALTER TABLE track_comments
+                    ALTER COLUMN track_id TYPE TEXT
+                    USING track_id::text;
+                END IF;
+            END $$;
+        `);
+
         console.log('Database schema initialized');
 
     } catch (error) {
@@ -1724,35 +1759,35 @@ app.post('/api/tracks/:id/like', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Invalid track ID' });
         }
 
-        const track = await db.get('SELECT id FROM tracks WHERE id = $1', [trackId]);
+        const track = await db.get('SELECT id FROM tracks WHERE id::text = $1::text', [trackId]);
         if (!track) {
             return res.status(404).json({ error: 'Track not found' });
         }
 
         const existing = await db.get(
-            'SELECT id FROM user_favorites WHERE user_id = $1 AND track_id = $2',
+            'SELECT id FROM user_favorites WHERE user_id = $1 AND track_id::text = $2::text',
             [userId, trackId]
         );
 
         if (existing) {
             await db.query(
-                'DELETE FROM user_favorites WHERE user_id = $1 AND track_id = $2',
+                'DELETE FROM user_favorites WHERE user_id = $1 AND track_id::text = $2::text',
                 [userId, trackId]
             );
         } else {
             await db.query(
-                'INSERT INTO user_favorites (user_id, track_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                'INSERT INTO user_favorites (user_id, track_id) VALUES ($1, $2::text) ON CONFLICT DO NOTHING',
                 [userId, trackId]
             );
         }
 
         const likeCountRow = await db.get(
-            'SELECT COUNT(*)::int as count FROM user_favorites WHERE track_id = $1',
+            'SELECT COUNT(*)::int as count FROM user_favorites WHERE track_id::text = $1::text',
             [trackId]
         );
 
         try {
-            await db.query('UPDATE tracks SET like_count = $2 WHERE id = $1', [trackId, likeCountRow ? (likeCountRow.count || 0) : 0]);
+            await db.query('UPDATE tracks SET like_count = $2 WHERE id::text = $1::text', [trackId, likeCountRow ? (likeCountRow.count || 0) : 0]);
         } catch (_) {
         }
 
@@ -1775,7 +1810,7 @@ app.get('/api/tracks/:id/comments', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Invalid track ID' });
         }
 
-        const track = await db.get('SELECT id FROM tracks WHERE id = $1', [trackId]);
+        const track = await db.get('SELECT id FROM tracks WHERE id::text = $1::text', [trackId]);
         if (!track) {
             return res.status(404).json({ error: 'Track not found' });
         }
@@ -1785,7 +1820,7 @@ app.get('/api/tracks/:id/comments', authenticateToken, async (req, res) => {
                    u.username as username
             FROM track_comments tc
             LEFT JOIN users u ON tc.user_id = u.id
-            WHERE tc.track_id = $1
+            WHERE tc.track_id::text = $1::text
             ORDER BY tc.created_at DESC
             LIMIT 100
         `, [trackId]);
@@ -1811,7 +1846,7 @@ app.post('/api/tracks/:id/comments', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Comment is required' });
         }
 
-        const track = await db.get('SELECT id FROM tracks WHERE id = $1', [trackId]);
+        const track = await db.get('SELECT id FROM tracks WHERE id::text = $1::text', [trackId]);
         if (!track) {
             return res.status(404).json({ error: 'Track not found' });
         }
@@ -1843,7 +1878,7 @@ app.delete('/api/tracks/:trackId/comments/:commentId', authenticateToken, async 
         }
 
         const comment = await db.get(
-            'SELECT id, user_id, track_id FROM track_comments WHERE id = $1 AND track_id = $2',
+            'SELECT id, user_id, track_id FROM track_comments WHERE id = $1 AND track_id::text = $2::text',
             [commentId, trackId]
         );
 
@@ -2141,7 +2176,7 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
             }
 
             try {
-                if (file && file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
+                if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
             } catch (_) {
             }
             try {
@@ -2212,7 +2247,7 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
             SELECT t.*, u.username as uploader_username 
             FROM tracks t 
             LEFT JOIN users u ON t.uploader_id = u.id 
-            WHERE t.id = $1
+            WHERE t.id::text = $1::text
         `, [trackId]);
 
         if (!track) {
@@ -2232,23 +2267,23 @@ app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
 
         try {
             // 1. Aus Playlists entfernen
-            await db.query('DELETE FROM playlist_tracks WHERE track_id = $1', [trackId]);
+            await db.query('DELETE FROM playlist_tracks WHERE track_id::text = $1::text', [trackId]);
             
             // 2. Aus Favoriten entfernen
-            await db.query('DELETE FROM user_favorites WHERE track_id = $1', [trackId]);
+            await db.query('DELETE FROM user_favorites WHERE track_id::text = $1::text', [trackId]);
             
             // 3. Likes entfernen
-            await db.query('DELETE FROM likes WHERE track_id = $1', [trackId]);
+            await db.query('DELETE FROM likes WHERE track_id::text = $1::text', [trackId]);
             
             // 4. Kommentare entfernen (falls vorhanden)
             try {
-                await db.query('DELETE FROM track_comments WHERE track_id = $1', [trackId]);
+                await db.query('DELETE FROM track_comments WHERE track_id::text = $1::text', [trackId]);
             } catch (_) {
                 // Tabelle existiert nicht, ignorieren
             }
             
             // 5. Track selbst löschen
-            await db.query('DELETE FROM tracks WHERE id = $1', [trackId]);
+            await db.query('DELETE FROM tracks WHERE id::text = $1::text', [trackId]);
             
             await db.query('COMMIT');
             
