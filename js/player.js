@@ -1072,6 +1072,13 @@
             queueTracks = [];
         }
         try {
+            // Keep prev/next navigation in sync with the current queue
+            if (Array.isArray(queueTracks) && queueTracks.length) {
+                setGlobalTrackList(queueTracks.map(function (t) { return t && t.id != null ? String(t.id) : null; }).filter(Boolean));
+            }
+        } catch (_) {
+        }
+        try {
             updateQueueUi();
         } catch (_) {
         }
