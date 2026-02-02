@@ -265,7 +265,7 @@
             state.trackId = track.id != null ? track.id : state.trackId;
             state.title = track.title || 'Unknown Title';
             state.artist = (track.artist_name || track.uploader_username) ? String(track.artist_name || track.uploader_username) : 'Unknown Artist';
-            state.coverUrl = resolveAssetUrl(track.cover_image_url) || getImageUrl('images/juke.png');
+            state.coverUrl = resolveAssetUrl(track.cover_image_url) || getImageUrl('images/juqe.png');
             state.audioUrl = audioUrl;
             state.videoUrl = track.video_url ? resolveAssetUrl(track.video_url) : null;
             state.currentTime = 0;
@@ -402,7 +402,7 @@
                 </div>
                 <div class="now-playing">
                     <div class="track-info">
-                        <img src="${getImageUrl('images/juke.png')}" alt="Now Playing" class="now-playing-cover">
+                        <img src="${getImageUrl('images/juqe.png')}" alt="Now Playing" class="now-playing-cover">
                         <div class="track-details">
                             <h4 class="now-playing-title">Not Playing</h4>
                             <p class="now-playing-artist">-</p>
@@ -536,7 +536,7 @@
             if (artistEl) artistEl.textContent = state.artist || '-';
 
             if (coverEl) {
-                var cover = state.coverUrl || getImageUrl('images/juke.png');
+                var cover = state.coverUrl || getImageUrl('images/juqe.png');
                 coverEl.src = cover;
             }
 
@@ -833,7 +833,7 @@
                 state.artist = track.artist_name || state.artist || 'Unknown Artist';
             }
             if (!state.coverUrl) {
-                state.coverUrl = resolveAssetUrl(track.cover_image_url) || state.coverUrl || getImageUrl('images/juke.png');
+                state.coverUrl = resolveAssetUrl(track.cover_image_url) || state.coverUrl || getImageUrl('images/juqe.png');
             }
             if (!state.audioUrl && track.audio_url) {
                 state.audioUrl = resolveAssetUrl(track.audio_url) || null;
@@ -866,7 +866,7 @@
         state.trackId = track.id;
         state.title = track.title || 'Unknown Title';
         state.artist = track.artist_name || 'Unknown Artist';
-        state.coverUrl = resolveAssetUrl(track.cover_image_url) || getImageUrl('images/juke.png');
+        state.coverUrl = resolveAssetUrl(track.cover_image_url) || getImageUrl('images/juqe.png');
         state.audioUrl = audioUrl;
         state.videoUrl = track.video_url ? resolveAssetUrl(track.video_url) : null;
         state.currentTime = 0;
@@ -1109,7 +1109,7 @@
                 var active = (state.trackId != null && String(state.trackId) === idStr) ? ' active' : '';
                 var safeTitle = t && t.title ? String(t.title) : 'Untitled';
                 var safeArtist = (t && (t.artist_name || t.uploader_username)) ? String(t.artist_name || t.uploader_username) : '';
-                var cover = resolveAssetUrl(t.cover_image_url) || getImageUrl('images/juke.png');
+                var cover = resolveAssetUrl(t.cover_image_url) || getImageUrl('images/juqe.png');
                 html += '' +
                     '<div class="juke-queue-item' + active + '" role="button" tabindex="0" data-queue-track-id="' + idStr + '">' +
                     '  <img class="juke-queue-cover" src="' + String(cover).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" alt="">' +
@@ -1309,7 +1309,7 @@
         }
 
         // Update mini player
-        if (miniCover) miniCover.src = state.coverUrl || getImageUrl('images/juke.png');
+        if (miniCover) miniCover.src = state.coverUrl || getImageUrl('images/juqe.png');
         if (miniTitle) miniTitle.textContent = state.title || 'Not Playing';
         if (miniArtist) miniArtist.textContent = state.artist || '-';
 
@@ -1335,7 +1335,7 @@
         }
 
         // Update fullscreen player
-        if (fsCover) fsCover.src = state.coverUrl || getImageUrl('images/juke.png');
+        if (fsCover) fsCover.src = state.coverUrl || getImageUrl('images/juqe.png');
         if (fsTitle) fsTitle.textContent = state.title || 'Not Playing';
         if (fsArtist) fsArtist.textContent = state.artist || '-';
         if (fsCurrentTime) fsCurrentTime.textContent = formatTime(audio.currentTime || 0);

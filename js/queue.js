@@ -69,7 +69,7 @@ function createQueueItem(track, type) {
     
     const coverUrl = track.cover_image_url ? 
         (track.cover_image_url.startsWith('http') ? track.cover_image_url : `../uploads/${track.cover_image_url}`) :
-        '../images/juke.png';
+        '../images/juqe.png';
     
     const duration = track.duration ? formatDuration(track.duration) : '';
     
@@ -96,7 +96,7 @@ function createCurrentTrackElement(playerState) {
     const div = document.createElement('div');
     div.className = 'current-track';
     
-    const coverUrl = playerState.coverUrl || '../images/juke.png';
+    const coverUrl = playerState.coverUrl || '../images/juqe.png';
     
     div.innerHTML = `
         <img src="${coverUrl}" alt="${playerState.title || 'Track'}" class="current-track-cover">

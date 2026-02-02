@@ -253,7 +253,7 @@ function setupProfilePage() {
         avatarPreview.addEventListener('click', () => avatarFileInput.click());
         if (uploadBtn) uploadBtn.addEventListener('click', () => avatarFileInput.click());
         if (removeBtn) removeBtn.addEventListener('click', () => {
-            avatarPreviewImg.src = 'images/juke.png';
+            avatarPreviewImg.src = 'images/juqe.png';
             avatarPreview.classList.remove('has-image');
             avatarEl.value = '';
             avatarFileInput.value = '';

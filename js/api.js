@@ -811,7 +811,7 @@ function openTrackMediaViewer(tracksArr, startTrackId) {
                 var hasPrev = !!(idx > 0);
                 var hasNext = !!(idx >= 0 && Array.isArray(tracksArr) && idx < (tracksArr.length - 1));
 
-                var cover = resolveAssetUrl(trackObj.cover_image_url, resolveLocalAssetUrl('images/juke.png'));
+                var cover = resolveAssetUrl(trackObj.cover_image_url, resolveLocalAssetUrl('images/juqe.png'));
                 var safeTitle = trackObj && trackObj.title ? String(trackObj.title) : 'Untitled';
                 var safeArtist = (trackObj && (trackObj.artist_name || trackObj.uploader_username)) ? String(trackObj.artist_name || trackObj.uploader_username) : '';
                 var dateTxt = formatTrackDateShort(trackObj);
@@ -1570,7 +1570,7 @@ async function renderStoriesBar() {
                 function buildListHtml(tracksArr) {
                     var listHtml = '';
                     (tracksArr || []).slice(0, 20).forEach(function (t) {
-                        var cover = resolveAssetUrl(t.cover_image_url, resolveLocalAssetUrl('images/juke.png'));
+                        var cover = resolveAssetUrl(t.cover_image_url, resolveLocalAssetUrl('images/juqe.png'));
                         var safeTitle = t && t.title ? String(t.title) : 'Untitled';
                         var safeArtist = (t && (t.artist_name || t.uploader_username)) ? String(t.artist_name || t.uploader_username) : '';
                         var dateTxt = formatTrackDateShort(t);
@@ -1697,7 +1697,7 @@ async function renderStoriesBar() {
                             commentsWereOpen = false;
                         }
 
-                        var cover = resolveAssetUrl(track.cover_image_url, resolveLocalAssetUrl('images/juke.png'));
+                        var cover = resolveAssetUrl(track.cover_image_url, resolveLocalAssetUrl('images/juqe.png'));
                         var safeTitle = track && track.title ? String(track.title) : 'Untitled';
                         var safeArtist = (track && (track.artist_name || track.uploader_username)) ? String(track.artist_name || track.uploader_username) : '';
                         var dateTxt = formatTrackDateShort(track);
@@ -2204,7 +2204,7 @@ async function renderStoriesBar() {
                 your.className = 'story-item your-story-item';
                 your.innerHTML = `
                     <div class="story-avatar your-story ${myTracks.length > 0 ? 'has-uploads' : ''}">
-                        <img src="${resolveAssetUrl(myAvatar, resolveLocalAssetUrl('images/juke.png'))}" alt="${myUsername}">
+                        <img src="${resolveAssetUrl(myAvatar, resolveLocalAssetUrl('images/juqe.png'))}" alt="${myUsername}">
                         <div class="story-plus-badge">+</div>
                     </div>
                     <div class="story-username">Your story</div>
@@ -2240,7 +2240,7 @@ async function renderStoriesBar() {
             item.className = 'story-item';
             item.innerHTML = `
                 <div class="story-avatar ${u.hasNew ? '' : 'no-story'}">
-                    <img src="${resolveAssetUrl(u.avatar, resolveLocalAssetUrl('images/juke.png'))}" alt="${u.username}">
+                    <img src="${resolveAssetUrl(u.avatar, resolveLocalAssetUrl('images/juqe.png'))}" alt="${u.username}">
                 </div>
                 <div class="story-username">${u.username}</div>
             `;
@@ -2501,7 +2501,7 @@ function createFeedPostCard(track) {
     const card = document.createElement('div');
     card.className = 'music-card';
 
-    const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
+    const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juqe.png');
     const artistName = track.artist_name || track.uploader_username || 'Unknown Artist';
     const uploaderName = track.uploader_username || '';
     const uploaderId = track.uploader_id || '';
@@ -2744,7 +2744,7 @@ function createCollectionTrackCard(track) {
     const card = document.createElement('div');
     card.className = 'track-card';
 
-    const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juke.png');
+    const coverUrl = resolveAssetUrl(track.cover_image_url, '../images/juqe.png');
     const artistName = track.artist_name || track.uploader_username || 'Unknown Artist';
     const isLiked = likedTrackIds.has(String(track.id));
     const currentUserId = getCurrentUserId();
@@ -3210,7 +3210,7 @@ function setupGlobalSearch() {
 
         results.style.display = '';
         results.innerHTML = tracks.slice(0, 10).map(function (t) {
-            var coverFallback = isSpaMode() ? 'images/juke.png' : '../images/juke.png';
+            var coverFallback = isSpaMode() ? 'images/juqe.png' : '../images/juqe.png';
             var cover = resolveAssetUrl(t.cover_image_url, coverFallback);
             var title = (t && t.title) ? String(t.title) : 'Unknown';
             var artist = (t && t.artist_name) ? String(t.artist_name) : '';
@@ -3317,7 +3317,7 @@ function setupMobileSearch() {
 
         r.style.display = '';
         r.innerHTML = tracks.slice(0, 10).map(function (t) {
-            var cover = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
+            var cover = resolveAssetUrl(t.cover_image_url, 'images/juqe.png');
             var title = (t && t.title) ? String(t.title) : 'Unknown';
             var artist = (t && t.artist_name) ? String(t.artist_name) : '';
             return (
@@ -3416,7 +3416,7 @@ async function loadDisqoFeatured() {
         }
         
         const track = tracks[0];
-        const coverUrl = resolveAssetUrl(track.cover_image_url, 'images/juke.png');
+        const coverUrl = resolveAssetUrl(track.cover_image_url, 'images/juqe.png');
         
         const dateTxt = formatTrackDateShort(track);
         featured.innerHTML = `
@@ -3487,7 +3487,7 @@ async function loadDisqoRecommendations() {
         }
         
         row.innerHTML = tracks.map(t => {
-            const coverUrl = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
+            const coverUrl = resolveAssetUrl(t.cover_image_url, 'images/juqe.png');
             const dateTxt = formatTrackDateShort(t);
             return `
                 <div class="recommendation-card" data-track-id="${t.id}">
@@ -3550,7 +3550,7 @@ async function loadDisqoNewReleases() {
         }
         
         grid.innerHTML = tracks.map(t => {
-            const coverUrl = resolveAssetUrl(t.cover_image_url, 'images/juke.png');
+            const coverUrl = resolveAssetUrl(t.cover_image_url, 'images/juqe.png');
             const dateTxt = formatTrackDateShort(t);
             return `
                 <div class="album-card" data-track-id="${t.id}">
@@ -3671,7 +3671,7 @@ function renderKoleqtionPlaylists(playlists, grid) {
     }
     
     grid.innerHTML = playlists.map(p => {
-        const coverUrl = p.cover_url || 'images/juke.png';
+        const coverUrl = p.cover_url || 'images/juqe.png';
         return `
             <div class="music-card" style="cursor:pointer" data-playlist-id="${p.id}">
                 <div class="post-header">

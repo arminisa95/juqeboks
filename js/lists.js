@@ -414,7 +414,7 @@ async function openPlaylist(playlist) {
             const safeTitle = (t && t.title) ? String(t.title) : 'Untitled';
             const safeArtist = (t && t.artist_name) ? String(t.artist_name) : '';
             const pos = idx + 1;
-            const coverUrl = (t.cover_image_url) ? t.cover_image_url : 'images/juke.png';
+            const coverUrl = (t.cover_image_url) ? t.cover_image_url : 'images/juqe.png';
             let dateTxt = '';
             try {
                 if (window.JukeUi && typeof window.JukeUi.formatTrackDateShort === 'function') {
@@ -797,7 +797,7 @@ function loadPlaylistContent(playlist) {
 }
 
 function renderPlaylistCard(p) {
-    const coverFallback = isSpaMode() ? 'images/juke.png' : '../images/juke.png';
+    const coverFallback = isSpaMode() ? 'images/juqe.png' : '../images/juqe.png';
     const coverUrl = resolveAssetUrl(p.cover_image_url, coverFallback);
     const owner = p.owner_username ? `by ${p.owner_username}` : '';
     const isOwner = !p.owner_username || p.owner_username === getCurrentUsername(); // Check if current user owns this playlist
@@ -848,7 +848,7 @@ function renderPlaylistCard(p) {
 }
 
 function renderTrackCard(t) {
-    const coverFallback = isSpaMode() ? 'images/juke.png' : '../images/juke.png';
+    const coverFallback = isSpaMode() ? 'images/juqe.png' : '../images/juqe.png';
     const coverUrl = resolveAssetUrl(t.cover_image_url, coverFallback);
     let dateTxt = '';
     try {
@@ -1345,7 +1345,7 @@ function addToHistory(track) {
         id: track.id,
         title: track.title || 'Unknown',
         artist: track.artist_name || track.artist || 'Unknown Artist',
-        cover: track.cover_image_url || track.cover || 'images/juke.png',
+        cover: track.cover_image_url || track.cover || 'images/juqe.png',
         playedAt: now
     };
     
@@ -1435,7 +1435,7 @@ function renderHistory() {
             const row = document.createElement('div');
             row.className = 'history-item';
             row.innerHTML = `
-                <img class="history-cover" src="${item.cover}" alt="" onerror="this.src='images/juke.png'">
+                <img class="history-cover" src="${item.cover}" alt="" onerror="this.src='images/juqe.png'">
                 <div class="history-info">
                     <div class="history-title">${item.title}</div>
                     <div class="history-artist">${item.artist}</div>
