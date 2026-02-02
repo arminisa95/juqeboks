@@ -948,6 +948,7 @@ async function loadLists() {
 
     const curatedEl = document.getElementById('curatedPlaylists');
     const likedEl = document.getElementById('likedTracks');
+    const likedPlaylistsEl = document.getElementById('likedPlaylists');
     const randomEl = document.getElementById('randomPlaylists');
 
     
@@ -959,6 +960,7 @@ async function loadLists() {
 
     if (curatedEl) setEmpty(curatedEl, 'Loading...');
     if (likedEl) setEmpty(likedEl, 'Loading...');
+    if (likedPlaylistsEl) setEmpty(likedPlaylistsEl, 'Loading...');
     if (randomEl) setEmpty(randomEl, 'Loading...');
 
     try {
@@ -980,17 +982,38 @@ async function loadLists() {
             }
         }
 
+        if (likedPlaylistsEl) {
+            try {
+                await loadLikedPlaylistsInto(likedPlaylistsEl);
+            } catch (_) {
+            }
+        }
+
         // Load user playlists as separate navigation items
         const navItemsEl = document.querySelector('.lists-nav-items');
         
         if (navItemsEl) {
-            // Keep the existing _liked tracks button
-            const likedTracksBtn = navItemsEl.querySelector('[data-view="liked"]');
-            
-            // Clear existing navigation items except _liked tracks
-            navItemsEl.innerHTML = '';
-            if (likedTracksBtn) {
-                navItemsEl.appendChild(likedTracksBtn);
+            try {
+                Array.from(navItemsEl.querySelectorAll('.lists-nav-item-container')).forEach(function (n) {
+                    try { n.remove(); } catch (_) {}
+                });
+            } catch (_) {
+            }
+
+            try {
+                var contentRoot = document.querySelector('.lists-content');
+                if (contentRoot) {
+                    Array.from(contentRoot.querySelectorAll('.lists-panel[data-panel]')).forEach(function (p) {
+                        try {
+                            var pn = p.getAttribute('data-panel');
+                            if (pn && typeof pn === 'string' && pn.indexOf('playlist-') === 0) {
+                                p.remove();
+                            }
+                        } catch (_) {
+                        }
+                    });
+                }
+            } catch (_) {
             }
             
             // Add each playlist as a separate navigation item
@@ -1062,6 +1085,11 @@ async function loadLists() {
                 `;
                 document.querySelector('.lists-content').appendChild(panel);
             });
+
+            try {
+                bindListsNavigatorUi();
+            } catch (_) {
+            }
         }
     } catch (e) {
         console.error(e);
