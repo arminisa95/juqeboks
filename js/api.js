@@ -1393,12 +1393,10 @@ async function renderStoriesBar() {
                     showCommentsError('Please login to view comments');
                     return;
                 }
-                
-                apiFetchJson('/comments/track/' + encodeURIComponent(String(trackId)), {
-                    headers: { Authorization: 'Bearer ' + token }
-                }).then(function(comments) {
+
+                fetchTrackComments(String(trackId)).then(function (comments) {
                     displayCommentsInModal(comments || []);
-                }).catch(function(err) {
+                }).catch(function (err) {
                     console.error('Failed to load comments:', err);
                     showCommentsError('Failed to load comments');
                 });
@@ -1421,13 +1419,13 @@ async function renderStoriesBar() {
                 var commentsHtml = '';
                 comments.forEach(function(comment) {
                     var safeUsername = (comment.username || 'Anonymous').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    var safeText = (comment.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    var safeText = (comment.body || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     var timeAgo = formatCommentTime(comment.created_at);
                     
                     commentsHtml += '' +
                         '<div class="juke-comments-modal-comment">' +
                         '  <div class="juke-comments-modal-avatar">' +
-                        '    <img src="' + resolveAssetUrl(comment.avatar_url, '../images/default-avatar.png') + '" alt="' + safeUsername + '">' +
+                        '    <img src="' + resolveAssetUrl(comment.avatar_url, resolveLocalAssetUrl('images/default-avatar.png')) + '" alt="' + safeUsername + '">' +
                         '  </div>' +
                         '  <div class="juke-comments-modal-content-wrapper">' +
                         '    <div class="juke-comments-modal-username">' + safeUsername + '</div>' +
@@ -1488,24 +1486,15 @@ async function renderStoriesBar() {
                         
                         sendBtn.disabled = true;
                         sendBtn.textContent = 'Posting...';
-                        
-                        apiFetchJson('/comments', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': 'Bearer ' + token
-                            },
-                            body: JSON.stringify({
-                                track_id: trackId,
-                                text: text
-                            })
-                        }).then(function(newComment) {
+
+                        createTrackComment(String(trackId), text).then(function (newComment) {
+                            if (!newComment) throw new Error('Comment not created');
                             input.value = '';
-                            loadCommentsForTrack(trackId); // Reload comments
-                        }).catch(function(err) {
+                            loadCommentsForTrack(trackId);
+                        }).catch(function (err) {
                             console.error('Failed to post comment:', err);
                             alert('Failed to post comment');
-                        }).finally(function() {
+                        }).finally(function () {
                             sendBtn.disabled = false;
                             sendBtn.textContent = 'Post';
                         });
