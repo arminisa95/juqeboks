@@ -101,12 +101,12 @@ function logout() {
     }
 
     const base = getBasePath();
-    window.location.href = `${base}/html/login.html`;
+    window.location.href = `${base}/views/login.html`;
 }
 
 function getBasePath() {
     const path = window.location.pathname.replace(/\\/g, '/');
-    return path.includes('/html/') ? '..' : '.';
+    return path.includes('/views/') ? '..' : '.';
 }
 
 function setFloatingButtonDestination() {
@@ -120,9 +120,9 @@ function setFloatingButtonDestination() {
 
     const base = getBasePath();
     if (getCurrentUser()) {
-        floatingButton.href = `${base}/html/profile.html`;
+        floatingButton.href = `${base}/views/profile.html`;
     } else {
-        floatingButton.href = `${base}/html/login.html`;
+        floatingButton.href = `${base}/views/login.html`;
     }
 }
 
@@ -135,7 +135,7 @@ function requireAuth() {
     }
 
     const base = getBasePath();
-    window.location.href = `${base}/html/login.html`;
+    window.location.href = `${base}/views/login.html`;
 }
 
 // Login function
@@ -163,7 +163,7 @@ async function login(username, password) {
             } else {
                 // Redirect to feed
                 const base = getBasePath();
-                window.location.href = `${base}/html/user.html`;
+                window.location.href = `${base}/views/user.html`;
             }
             return { success: true };
         } else {
@@ -490,7 +490,7 @@ async function register(username, email, password, firstName, lastName) {
             } else {
                 // Redirect to feed
                 const base = getBasePath();
-                window.location.href = `${base}/html/user.html`;
+                window.location.href = `${base}/views/user.html`;
             }
             return { success: true };
         } else {

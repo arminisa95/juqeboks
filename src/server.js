@@ -92,15 +92,18 @@ app.get('/juke.png', (req, res) => {
     res.redirect(302, '/images/juqe.png');
 });
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, 'uploads');
+// Ensure uploads directory exists (at project root level)
+const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+// Serve uploaded files
 app.use('/uploads', express.static(uploadsDir));
 
-app.use(express.static(__dirname));
+// Serve static frontend files from public/
+const publicDir = path.join(__dirname, '..', 'public');
+app.use(express.static(publicDir));
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -559,7 +562,6 @@ app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
         }
 
         // Verify current password
-        const bcrypt = require('bcrypt');
         const isPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
 
         if (!isPasswordValid) {
@@ -624,7 +626,6 @@ app.post('/api/auth/change-username', authenticateToken, async (req, res) => {
         );
 
         // Generate new token with updated username
-        const jwt = require('jsonwebtoken');
         const newToken = jwt.sign(
             {
                 id: user.id,
@@ -636,7 +637,7 @@ app.post('/api/auth/change-username', authenticateToken, async (req, res) => {
                 bio: user.bio,
                 is_admin: !!(user && user.is_admin)
             },
-            process.env.JWT_SECRET || 'your-secret-key',
+            JWT_SECRET,
             { expiresIn: '7d' }
         );
 
@@ -825,7 +826,6 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
         const user = updatedUser.rows[0];
 
         // Generate new token with updated data
-        const jwt = require('jsonwebtoken');
         const newToken = jwt.sign(
             {
                 id: user.id,
@@ -837,7 +837,7 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
                 bio: user.bio,
                 is_admin: !!(user && user.is_admin)
             },
-            process.env.JWT_SECRET || 'your-secret-key',
+            JWT_SECRET,
             { expiresIn: '7d' }
         );
 

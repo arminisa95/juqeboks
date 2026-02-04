@@ -31,31 +31,31 @@
     function routeToTemplate(route) {
         route = normalizeRoute(route);
         if (parseUserKoleqtionRoute(route)) {
-            return { templateId: 'tpl-koleqtion', file: 'html/koleqtion.html', selector: 'main' };
+            return { templateId: 'tpl-koleqtion', file: 'views/koleqtion.html', selector: 'main' };
         }
         switch (route) {
             case '#/feed':
-                return { templateId: 'tpl-feed', file: 'html/user.html', selector: 'section.music-feed' };
+                return { templateId: 'tpl-feed', file: 'views/user.html', selector: 'section.music-feed' };
             case '#/disqo':
-                return { templateId: 'tpl-disqo', file: 'html/disqo.html', selector: 'section.music-feed' };
+                return { templateId: 'tpl-disqo', file: 'views/disqo.html', selector: 'section.music-feed' };
             case '#/koleqtion':
-                return { templateId: 'tpl-koleqtion', file: 'html/koleqtion.html', selector: 'main' };
+                return { templateId: 'tpl-koleqtion', file: 'views/koleqtion.html', selector: 'main' };
             case '#/lists':
-                return { templateId: 'tpl-lists', file: 'html/lists.html', selector: '.lists-shell' };
+                return { templateId: 'tpl-lists', file: 'views/lists.html', selector: '.lists-shell' };
             case '#/queue':
-                return { templateId: 'tpl-queue', file: 'html/queue.html', selector: '.queue-container' };
+                return { templateId: 'tpl-queue', file: 'views/queue.html', selector: '.queue-container' };
             case '#/upload':
-                return { templateId: 'tpl-upload', file: 'html/upload.html', selector: '.upload-container' };
+                return { templateId: 'tpl-upload', file: 'views/upload.html', selector: '.upload-container' };
             case '#/login':
-                return { templateId: 'tpl-login', file: 'html/login.html', selector: 'main' };
+                return { templateId: 'tpl-login', file: 'views/login.html', selector: 'main' };
             case '#/register':
-                return { templateId: 'tpl-register', file: 'html/register.html', selector: 'main' };
+                return { templateId: 'tpl-register', file: 'views/register.html', selector: 'main' };
             case '#/profile':
-                return { templateId: 'tpl-profile', file: 'html/profile.html', selector: 'main' };
+                return { templateId: 'tpl-profile', file: 'views/profile.html', selector: 'main' };
             case '#/impressum':
-                return { templateId: 'tpl-impressum', file: 'html/impressum.html', selector: 'main' };
+                return { templateId: 'tpl-impressum', file: 'views/impressum.html', selector: 'main' };
             default:
-                return { templateId: 'tpl-feed', file: 'html/user.html', selector: 'section.music-feed' };
+                return { templateId: 'tpl-feed', file: 'views/user.html', selector: 'section.music-feed' };
         }
     }
 
@@ -78,7 +78,7 @@
             if (!href) return;
 
             Object.keys(map).forEach(function (k) {
-                if (href === k || href.endsWith('/' + k) || href.endsWith('html/' + k)) {
+                if (href === k || href.endsWith('/' + k) || href.endsWith('views/' + k)) {
                     a.setAttribute('href', map[k]);
                 }
             });

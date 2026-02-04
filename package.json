@@ -1,18 +1,31 @@
 {
   "name": "juke",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "JUKE - A modern music streaming platform with playlist management, user collections, and social features",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:test": "node src/database/test-connection.js",
+    "db:setup": "node src/database/setup-local-db.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/arminisa95/juqeboks.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "music",
+    "streaming",
+    "playlist",
+    "audio",
+    "jukebox"
+  ],
+  "author": "arminisa95",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/arminisa95/juqeboks/issues"

@@ -1,24 +1,27 @@
 // PostgreSQL Database Connection Configuration
 const { Pool } = require('pg');
 
+const isProduction = process.env.NODE_ENV === 'production';
+const isLocalhost = !process.env.DB_HOST || process.env.DB_HOST === 'localhost';
+
 // Database configuration
 const config = {
     user: process.env.DB_USER || 'juke_user',
     host: process.env.DB_HOST ? (process.env.DB_HOST.includes('.oregon-postgres.render.com') ? process.env.DB_HOST : `${process.env.DB_HOST}.oregon-postgres.render.com`) : 'localhost',
-    database: process.env.DB_NAME || 'juke_db_s8gk',
+    database: process.env.DB_NAME || 'juke_db',
     password: process.env.DB_PASSWORD || 'your_password_here',
-    port: process.env.DB_PORT || 5432,
-    ssl: process.env.DB_HOST === 'localhost' ? false : (process.env.DB_SSL === 'false' ? false : {
+    port: parseInt(process.env.DB_PORT, 10) || 5432,
+    ssl: isLocalhost ? false : (process.env.DB_SSL === 'false' ? false : {
         rejectUnauthorized: false
     }),
-    max: 10, // Reduziert für Free Tier
-    idleTimeoutMillis: 10000, // Kürzer für Free Tier
-    connectionTimeoutMillis: 10000, // Längerer Timeout für Free Tier
-    acquireTimeoutMillis: 60000, // Längerer Acquire Timeout
-    createTimeoutMillis: 30000, // Längerer Create Timeout
-    destroyTimeoutMillis: 5000, // Längerer Destroy Timeout
-    reapIntervalMillis: 1000, // Häufigeres Reaping
-    createRetryIntervalMillis: 200 // Retry bei Connection Issues
+    max: 10,                          // Maximum pool size
+    idleTimeoutMillis: 10000,         // Close idle clients after 10s
+    connectionTimeoutMillis: 10000,   // Connection timeout
+    acquireTimeoutMillis: 60000,      // Acquire timeout
+    createTimeoutMillis: 30000,       // Create timeout
+    destroyTimeoutMillis: 5000,       // Destroy timeout
+    reapIntervalMillis: 1000,         // Reap interval
+    createRetryIntervalMillis: 200    // Retry interval on connection issues
 };
 
 // Create connection pool
@@ -42,10 +45,13 @@ const db = {
         try {
             const res = await pool.query(text, params);
             const duration = Date.now() - start;
-            console.log('Executed query', { text, duration, rows: res.rowCount });
+            // Only log queries in development mode
+            if (!isProduction) {
+                console.log('Executed query', { text: text.substring(0, 100), duration, rows: res.rowCount });
+            }
             return res;
         } catch (error) {
-            console.error('Database query error', { text, error });
+            console.error('Database query error', { text: text.substring(0, 200), error: error.message });
             throw error;
         }
     },

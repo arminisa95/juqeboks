@@ -4,7 +4,7 @@
 
     function getBasePath() {
         var p = (window.location && window.location.pathname) ? window.location.pathname.replace(/\\/g, '/') : '';
-        return p.includes('/html/') ? '..' : '.';
+        return p.includes('/views/') ? '..' : '.';
     }
 
     function getImageUrl(relPathFromRoot) {

@@ -60,7 +60,7 @@ window.isTrackLiked = function (trackId) {
 function resolveLocalAssetUrl(pathFromRoot) {
     try {
         var p = (window.location && window.location.pathname) ? String(window.location.pathname).replace(/\\/g, '/') : '';
-        var base = p.includes('/html/') ? '..' : '.';
+        var base = p.includes('/views/') ? '..' : '.';
         return base + '/' + String(pathFromRoot || '').replace(/^\//, '');
     } catch (_) {
         return pathFromRoot;
@@ -3150,7 +3150,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isSpaMode()) return;
     
     // Check if we're in user.html and redirect to SPA instead of loading
-    if (window.location.pathname.includes('/html/user.html')) {
+    if (window.location.pathname.includes('/views/user.html')) {
         console.log('Detected user.html, redirecting to SPA feed');
         window.location.replace('../index.html#/feed');
         return;
