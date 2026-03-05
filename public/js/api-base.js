@@ -4,7 +4,7 @@
         try {
             if (window.location && window.location.origin) {
                 var host = String(window.location.hostname || '');
-                if (host.endsWith('github.io')) return 'https://juke-api.onrender.com/api';
+                if (host.endsWith('github.io') || host === 'juqeboks.com' || host.endsWith('.juqeboks.com')) return 'https://juke-api.onrender.com/api';
                 return window.location.origin.replace(/\/$/, '') + '/api';
             }
         } catch (_) {

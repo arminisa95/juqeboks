@@ -60,7 +60,7 @@ async function apiFetchJson(path, options, validateOkData) {
                 return data;
             }
 
-            if (res.status === 401 || res.status === 403) {
+            if (res.status === 401) {
                 localStorage.removeItem('juke_token');
                 localStorage.removeItem('juke_user');
                 
@@ -71,6 +71,11 @@ async function apiFetchJson(path, options, validateOkData) {
                 }
                 
                 lastErr = new Error(((data && data.error) ? data.error : ('Session expired - Please login again')) + ' (' + (base + path) + ')');
+                continue;
+            }
+
+            if (res.status === 403) {
+                lastErr = new Error(((data && data.error) ? data.error : ('Not allowed')) + ' (' + (base + path) + ')');
                 continue;
             }
 
