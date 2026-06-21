@@ -537,6 +537,7 @@ async function register(username, email, password, firstName, lastName, accountT
             localStorage.setItem('juke_user', JSON.stringify(data.user));
             localStorage.setItem('juke_pending_email', data.user.email);
             localStorage.setItem('juke_pending_session', data.stripeSessionId || '');
+            localStorage.setItem('juke_pending_checkout_url', data.checkoutUrl || '');
             currentUser = data.user;
 
             if (document.body && document.body.dataset && document.body.dataset.spa) {
@@ -794,7 +795,10 @@ function setupVerifyPending() {
 
     const user = getCurrentUser();
     const pending = localStorage.getItem('juke_pending_email') || (user ? user.email : '');
-    const sessionId = localStorage.getItem('juke_pending_session') || window.location.search.match(/session_id=([^&]*)/);
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSessionId = urlParams.get('session_id');
+    const sessionId = urlSessionId || localStorage.getItem('juke_pending_session') || '';
+    const checkoutUrl = localStorage.getItem('juke_pending_checkout_url') || '';
 
     if (pendingEmail) pendingEmail.textContent = pending || 'your email';
 
@@ -822,6 +826,11 @@ function setupVerifyPending() {
     }
 
     updateSteps();
+
+    if (urlSessionId && sessionId) {
+        localStorage.setItem('juke_pending_session', sessionId);
+        checkPaymentBtn && checkPaymentBtn.click();
+    }
 
     if (verifyForm) {
         verifyForm.addEventListener('submit', async function (e) {
@@ -868,9 +877,9 @@ function setupVerifyPending() {
 
     if (payNowBtn) {
         payNowBtn.addEventListener('click', function () {
-            const storedSession = localStorage.getItem('juke_pending_session');
-            if (storedSession) {
-                window.location.href = 'https://checkout.stripe.com/pay/' + encodeURIComponent(storedSession);
+            const storedUrl = localStorage.getItem('juke_pending_checkout_url');
+            if (storedUrl) {
+                window.location.href = storedUrl;
             } else {
                 alert('No checkout session found. Please log in again.');
             }

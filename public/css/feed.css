@@ -107,17 +107,14 @@
 }
 
 .feed-title {
-    color: #fff;
+    color: var(--white);
     margin-bottom: 0.5rem;
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     font-weight: 700;
     max-width: 680px;
     margin-left: auto;
     margin-right: auto;
-    background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.7) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    letter-spacing: -0.02em;
 }
 
 .music-grid {
@@ -130,22 +127,16 @@
 }
 
 .music-card {
-    background: rgba(45, 45, 55, 0.65);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-subtle);
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
-    box-shadow: var(--shadow-md);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.3s ease;
+    transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .music-card:hover {
+    background: var(--bg-tertiary);
     transform: translateY(-2px);
-    border-color: rgba(220, 220, 220, 0.14);
-    box-shadow: var(--shadow-xl);
 }
 
 .post-header {

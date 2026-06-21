@@ -1,6 +1,6 @@
 /* CSS Custom Properties (Variables) for consistent theming */
 :root {
-  /* Colors */
+  /* Base palette - dreary, muted, Spotify-like */
   --white: rgba(255, 255, 255, 1);
   --white-90: rgba(255, 255, 255, 0.9);
   --white-80: rgba(255, 255, 255, 0.8);
@@ -38,11 +38,12 @@
   --black-25: rgba(0, 0, 0, 0.25);
   --black-20: rgba(0, 0, 0, 0.2);
 
-  --cyan: #00ffd0;
-  --cyan-15: rgba(0, 255, 208, 0.15);
-  --cyan-10: rgba(0, 255, 208, 0.10);
+  /* Primary accent - muted, dreary teal for juqeboks */
+  --cyan: #1db954;
+  --cyan-15: rgba(29, 185, 84, 0.15);
+  --cyan-10: rgba(29, 185, 84, 0.10);
 
-  /* JUKE Brand Colors */
+  /* Secondary accent - reserved for login/actions */
   --juke-pink: #F72193;
   --juke-pink-rgb: 247, 33, 147;
   --juke-pink-15: rgba(247, 33, 147, 0.15);
@@ -52,20 +53,20 @@
   --juke-pink-50: rgba(247, 33, 147, 0.50);
 
   /* Backgrounds */
-  --bg-primary: rgb(5, 8, 15);
-  --bg-secondary: rgba(0, 0, 0, 0.3);
-  --bg-tertiary: rgba(0, 0, 0, 0.2);
-  --bg-quaternary: rgba(0, 0, 0, 0.4);
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #121212;
+  --bg-tertiary: #181818;
+  --bg-quaternary: #242424;
   --bg-overlay: rgba(0, 0, 0, 0.9);
   --bg-modal: rgba(0, 0, 0, 0.95);
   --bg-card: rgba(255, 255, 255, 0.05);
   --bg-card-hover: rgba(255, 255, 255, 0.08);
 
   /* Borders */
-  --border-primary: rgba(255, 255, 255, 0.2);
-  --border-secondary: rgba(255, 255, 255, 0.1);
-  --border-tertiary: rgba(255, 255, 255, 0.18);
-  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-primary: rgba(255, 255, 255, 0.1);
+  --border-secondary: rgba(255, 255, 255, 0.06);
+  --border-tertiary: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.04);
 
   /* Shadows */
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);

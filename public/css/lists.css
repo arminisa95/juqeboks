@@ -1,47 +1,39 @@
 /* LISTS */
 
 .lists-shell {
-    display: block;
-    padding: 20px;
-    max-width: none;
-    margin: 0;
-    height: auto;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    height: calc(100vh - 140px);
 }
 
 .lists {
-    display: block;
-    height: auto;
-    overflow: visible;
+    display: contents;
 }
 
 .lists-nav {
-    width: 280px;
-    float: left;
-    margin-right: 32px;
     background: var(--bg-secondary);
-    border-radius: 4px;
-    padding: 24px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid var(--border-subtle);
     position: sticky;
-    top: 20px;
+    top: 24px;
     height: fit-content;
 }
 
 .lists-content {
-    margin-left: 312px;
-    overflow: visible;
-    display: block;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 24px;
+    border: 1px solid var(--border-subtle);
+    overflow-y: auto;
 }
 
 .lists-panel {
     display: none;
-    background: var(--bg-tertiary);
-    border-radius: 4px;
-    padding: 32px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 32px;
 }
 
 .lists-panel.active {
@@ -78,39 +70,41 @@
 }
 
 .lists-nav-item {
-    padding: 12px 16px;
-    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--white-70);
     font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: left;
     width: 100%;
-    position: relative;
 }
 
 .lists-nav-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    color: var(--white);
+    background: var(--bg-card-hover);
 }
 
 .lists-nav-item.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    color: var(--white);
+    background: var(--bg-card);
 }
 
-.lists-nav-item.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 4px;
-    bottom: 4px;
-    width: 3px;
-    border-radius: 0 3px 3px 0;
-    background: #1db954;
+.lists-nav-item i {
+    width: 20px;
+    text-align: center;
+    color: var(--white-50);
+}
+
+.lists-nav-item.active i,
+.lists-nav-item:hover i {
+    color: var(--white);
 }
 
 .lists-nav-footer {

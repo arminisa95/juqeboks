@@ -82,9 +82,10 @@
     left: 0;
     right: 0;
     height: 56px;
-    background: rgba(18, 18, 18, 0.92);
+    background: rgba(10, 10, 10, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-subtle);
     z-index: 998;
     padding: 0 16px;
     align-items: center;
@@ -97,11 +98,10 @@
 }
 
 .mobile-header .mobile-user-btn {
-    background: none;
+    color: var(--white);
+    background: transparent;
     border: none;
-    color: #F72193;
-    font-size: 0.9rem;
-    font-weight: 700;
+    font-size: 1.2rem;
     cursor: pointer;
     padding: 8px;
 }

@@ -397,10 +397,15 @@ async function initializeDatabase() {
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
 
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100)');
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(100)');
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)');
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT');
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false');
         await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(20) DEFAULT 'premium'");
         await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) DEFAULT 'user'");
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS group_size INTEGER DEFAULT 1');
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false');
         await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_token VARCHAR(255)");
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP WITH TIME ZONE');
         await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_paid BOOLEAN DEFAULT false");
@@ -486,8 +491,50 @@ async function initializeDatabase() {
 
         console.log('Database schema initialized');
 
+        await runMigrations();
+
     } catch (error) {
         console.error('Database initialization error:', error);
+    }
+}
+
+async function runMigrations() {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS migrations (
+                name TEXT PRIMARY KEY,
+                applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        const existing = await db.get(
+            'SELECT applied_at FROM migrations WHERE name = $1',
+            ['mark_existing_users_verified_paid']
+        );
+
+        if (existing) {
+            return;
+        }
+
+        await db.query(`
+            UPDATE users
+            SET email_verified = true,
+                email_verified_at = CURRENT_TIMESTAMP,
+                registration_paid = true
+            WHERE email_verified = false
+              AND email_verified_at IS NULL
+              AND registration_paid = false
+              AND stripe_checkout_session_id IS NULL;
+        `);
+
+        await db.query(
+            'INSERT INTO migrations (name) VALUES ($1)',
+            ['mark_existing_users_verified_paid']
+        );
+
+        console.log('Migration applied: existing users marked as verified and paid');
+    } catch (error) {
+        console.error('Migration error:', error);
     }
 }
 
