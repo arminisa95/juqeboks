@@ -353,7 +353,7 @@
         <main class="auth-main">
             <div class="login-container">
                 <div class="login-header">
-                    <h1 class="login-title">Welcome to Juke</h1>
+                    <h1 class="login-title">Welcome to juqeboks</h1>
                     <button class="login-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close login">
                         <i class="fas fa-times"></i>
                     </button>
@@ -370,7 +370,60 @@
                     <button type="submit" class="login-btn">Log In</button>
                 </form>
                 <div class="signup-link">
-                    Don't have an account? <a href="#/register">Sign up</a>
+                    Don't have an account? <a href="#/welcome">Sign up</a>
+                </div>
+            </div>
+        </main>
+    </template>
+
+    <template id="tpl-welcome">
+        <main class="auth-main">
+            <div class="register-container">
+                <div class="register-header">
+                    <h1 class="register-title">_user registration</h1>
+                    <button class="register-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close welcome">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="welcome-subtitle">Choose your account type to get started</p>
+                <div class="account-type-grid">
+                    <div class="account-type-card" data-type="user">
+                        <div class="account-type-icon">_user</div>
+                        <h3>Listener</h3>
+                        <p class="account-type-price">5€ <span>/ month</span></p>
+                        <ul>
+                            <li>Unlimited listening</li>
+                            <li>Create playlists</li>
+                            <li>Like & comment</li>
+                        </ul>
+                        <button type="button" class="account-type-select">Choose _user</button>
+                    </div>
+                    <div class="account-type-card" data-type="artist">
+                        <div class="account-type-icon">_artist</div>
+                        <h3>Artist</h3>
+                        <p class="account-type-price">10€ <span>one-time</span></p>
+                        <ul>
+                            <li>Upload your music</li>
+                            <li>Artist profile</li>
+                            <li>Analytics dashboard</li>
+                        </ul>
+                        <button type="button" class="account-type-select">Choose _artist</button>
+                    </div>
+                    <div class="account-type-card" data-type="group">
+                        <div class="account-type-icon">_group</div>
+                        <h3>Group</h3>
+                        <p class="account-type-price">15€ <span>/ month</span></p>
+                        <p class="account-type-mini">5 users included</p>
+                        <ul>
+                            <li>All _user features</li>
+                            <li>Up to 5 accounts</li>
+                            <li>Shared billing</li>
+                        </ul>
+                        <button type="button" class="account-type-select">Choose _group</button>
+                    </div>
+                </div>
+                <div class="login-link">
+                    Already have an account? <a href="#/login">Log in</a>
                 </div>
             </div>
         </main>
@@ -381,26 +434,25 @@
             <div class="register-container">
                 <div class="register-header">
                     <h1 class="register-title">Create Account</h1>
-                    <button class="register-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close register">
+                    <button class="register-close-btn" onclick="window.location.hash='#/welcome'" aria-label="Close register">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
 
-                <div class="social-buttons">
-                    <button type="button" class="social-btn google">
-                        <i class="fab fa-google"></i> Continue with Google
-                    </button>
-                    <button type="button" class="social-btn facebook">
-                        <i class="fab fa-facebook-f"></i> Continue with Facebook
-                    </button>
-                    <button type="button" class="social-btn apple">
-                        <i class="fab fa-apple"></i> Continue with Apple
-                    </button>
+                <div class="selected-account-type">
+                    <span id="selectedTypeLabel">_user</span>
+                    <span id="selectedTypePrice">5€ / month</span>
+                    <a href="#/welcome">Change</a>
                 </div>
 
-                <div class="divider">or</div>
-
                 <form id="registerForm">
+                    <input type="hidden" id="accountType" name="accountType" value="user">
+                    <div class="form-group" id="groupSizeField" style="display:none;">
+                        <label for="groupSize">Group size</label>
+                        <select id="groupSize" name="groupSize">
+                            <option value="5" selected>5 users (15€)</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label for="username">Username</label>
                         <input type="text" id="username" name="username" required minlength="3">
@@ -430,11 +482,99 @@
                         <label for="confirm-password">Confirm Password</label>
                         <input type="password" id="confirm-password" name="confirm-password" required>
                     </div>
-                    <button type="submit" class="register-btn">Create Account</button>
+
+                    <div class="form-group payment-methods">
+                        <label>Payment method</label>
+                        <div class="payment-methods-grid">
+                            <label class="payment-method-option">
+                                <input type="radio" name="paymentMethod" value="card" checked>
+                                <span><i class="fas fa-credit-card"></i> Card</span>
+                            </label>
+                            <label class="payment-method-option">
+                                <input type="radio" name="paymentMethod" value="paypal">
+                                <span><i class="fab fa-paypal"></i> PayPal</span>
+                            </label>
+                            <label class="payment-method-option">
+                                <input type="radio" name="paymentMethod" value="apple_pay">
+                                <span><i class="fab fa-apple"></i> Apple Pay</span>
+                            </label>
+                            <label class="payment-method-option">
+                                <input type="radio" name="paymentMethod" value="google_pay">
+                                <span><i class="fab fa-google-pay"></i> Google Pay</span>
+                            </label>
+                            <label class="payment-method-option">
+                                <input type="radio" name="paymentMethod" value="sepa_debit">
+                                <span><i class="fas fa-university"></i> SEPA</span>
+                            </label>
+                            <label class="payment-method-option">
+                                <input type="radio" name="paymentMethod" value="ideal">
+                                <span><i class="fas fa-wallet"></i> iDEAL</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group terms-checkbox">
+                        <label>
+                            <input type="checkbox" id="terms" required>
+                            I agree to the <a href="#/impressum" class="link-turquoise">Terms of Service</a> and authorize the payment.
+                        </label>
+                    </div>
+
+                    <button type="submit" class="register-btn">Continue to payment</button>
                 </form>
 
                 <div class="login-link">
                     Already have an account? <a href="#/login">Log in</a>
+                </div>
+            </div>
+        </main>
+    </template>
+
+    <template id="tpl-verify-pending">
+        <main class="auth-main">
+            <div class="register-container">
+                <div class="register-header">
+                    <h1 class="register-title">Complete registration</h1>
+                    <button class="register-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="pending-steps">
+                    <div class="pending-step" id="step-email">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Verify your email</h3>
+                            <p>We sent a verification link to <strong id="pendingEmail"></strong>.</p>
+                            <form id="verifyCodeForm">
+                                <div class="form-group">
+                                    <label for="verificationCode">Or enter verification code</label>
+                                    <input type="text" id="verificationCode" name="verificationCode" placeholder="Enter code" required>
+                                </div>
+                                <button type="submit" class="verify-btn">Verify email</button>
+                            </form>
+                            <button type="button" id="resendVerificationBtn" class="text-link">Resend email</button>
+                        </div>
+                    </div>
+
+                    <div class="pending-step" id="step-payment">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Complete payment</h3>
+                            <p id="paymentDescription">Secure payment via Stripe.</p>
+                            <button type="button" id="payNowBtn" class="register-btn">Pay now</button>
+                            <button type="button" id="checkPaymentBtn" class="text-link">I already paid</button>
+                        </div>
+                    </div>
+
+                    <div class="pending-step" id="step-done" style="display:none;">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>All done!</h3>
+                            <p>Your account is active.</p>
+                            <button type="button" id="continueToFeedBtn" class="register-btn">Continue to juqeboks</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>

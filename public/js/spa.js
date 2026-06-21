@@ -13,7 +13,7 @@
     }
 
     function isAuthRoute(route) {
-        return route === '#/login' || route === '#/register';
+        return route === '#/login' || route === '#/register' || route === '#/welcome' || route === '#/verify-pending';
     }
 
     function requiresAuth(route) {
@@ -50,6 +50,10 @@
                 return { templateId: 'tpl-login', file: 'views/login.html', selector: 'main' };
             case '#/register':
                 return { templateId: 'tpl-register', file: 'views/register.html', selector: 'main' };
+            case '#/welcome':
+                return { templateId: 'tpl-welcome', file: 'views/register.html', selector: 'main' };
+            case '#/verify-pending':
+                return { templateId: 'tpl-verify-pending', file: 'views/register.html', selector: 'main' };
             case '#/profile':
                 return { templateId: 'tpl-profile', file: 'views/profile.html', selector: 'main' };
             case '#/impressum':
@@ -69,7 +73,7 @@
             'lists.html': '#/lists',
             'upload.html': '#/upload',
             'login.html': '#/login',
-            'register.html': '#/register',
+            'register.html': '#/welcome',
             'profile.html': '#/profile'
         };
 
@@ -90,7 +94,7 @@
             a.classList.remove('active');
         });
 
-        if (route === '#/profile' || route === '#/login' || route === '#/register') {
+        if (route === '#/profile' || route === '#/login' || route === '#/register' || route === '#/welcome' || route === '#/verify-pending') {
             return;
         }
 
@@ -178,6 +182,14 @@
             case '#/register':
                 if (typeof setupRegisterForm === 'function') setupRegisterForm();
                 break;
+
+            case '#/welcome':
+                if (typeof setupWelcomeScreen === 'function') setupWelcomeScreen();
+                break;
+
+            case '#/verify-pending':
+                if (typeof setupVerifyPending === 'function') setupVerifyPending();
+                break;
         }
     }
 
@@ -247,7 +259,10 @@
     window.addEventListener('hashchange', onRouteChange);
     document.addEventListener('DOMContentLoaded', function () {
         if (!window.location.hash) {
-            window.location.hash = '#/feed';
+            var authed = (typeof isLoggedIn === 'function')
+                ? isLoggedIn()
+                : !!localStorage.getItem('juke_token');
+            window.location.hash = authed ? '#/feed' : '#/welcome';
             return;
         }
         onRouteChange();

@@ -97,9 +97,15 @@ JUKE/
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
+- `POST /api/auth/register` - Register new user (with account type, email verification, Stripe checkout)
+- `POST /api/auth/verify-email` - Verify email with token
+- `POST /api/auth/resend-verification` - Resend verification email
 - `POST /api/auth/login` - User login
 - `POST /api/auth/change-password` - Change password
+
+### Payments
+- `POST /api/payments/webhook` - Stripe webhook for payment confirmation
+- `GET /api/payments/checkout-status?session_id=...` - Check Stripe checkout status
 
 ### Users
 - `GET /api/users/profile` - Get current user profile

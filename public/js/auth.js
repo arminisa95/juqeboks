@@ -57,6 +57,57 @@ async function postAuthJson(path, payload, validateOkData) {
     throw lastErr || new Error('Network error');
 }
 
+async function getAuthJson(path, validateOkData) {
+    var bases = window.JukeAPIBase.getApiBases();
+    var lastErr = null;
+    var token = localStorage.getItem('juke_token');
+
+    for (var i = 0; i < bases.length; i++) {
+        var base = bases[i];
+        try {
+            var response = await fetch(base + path, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? 'Bearer ' + token : ''
+                }
+            });
+
+            var data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                var text = '';
+                try { text = await response.text(); } catch (_) {}
+                if (response.status === 404 || response.status === 405) {
+                    lastErr = e;
+                    continue;
+                }
+                data = text ? { error: text } : { error: 'Invalid response' };
+            }
+
+            if (response.ok) {
+                if (typeof validateOkData === 'function' && !validateOkData(data)) {
+                    lastErr = new Error('Invalid response');
+                    continue;
+                }
+                return { ok: true, data: data };
+            }
+
+            if (response.status === 404 || response.status === 405) {
+                lastErr = new Error((data && data.error) ? data.error : ('Request failed: ' + response.status));
+                continue;
+            }
+
+            return { ok: false, data: data };
+        } catch (e) {
+            lastErr = e;
+        }
+    }
+
+    throw lastErr || new Error('Network error');
+}
+
 // Store user session
 let currentUser = null;
 
@@ -154,16 +205,21 @@ async function login(username, password) {
             localStorage.setItem('juke_user', JSON.stringify(data.user));
             currentUser = data.user;
 
+            const needsOnboarding = data.needsEmailVerification || data.needsPayment;
+            const redirectTo = needsOnboarding ? '#/verify-pending' : '#/feed';
+
             if (document.body && document.body.dataset && document.body.dataset.spa) {
                 try {
                     document.dispatchEvent(new Event('auth:changed'));
                 } catch (_) {
                 }
-                window.location.hash = '#/feed';
+                window.location.hash = redirectTo;
             } else {
-                // Redirect to feed
+                // Redirect to feed or verify-pending
                 const base = getBasePath();
-                window.location.href = `${base}/views/user.html`;
+                window.location.href = needsOnboarding
+                    ? `${base}/views/register.html`
+                    : `${base}/views/user.html`;
             }
             return { success: true };
         } else {
@@ -466,11 +522,11 @@ function showMessage(messageEl, message, type) {
 }
 
 // Register function
-async function register(username, email, password, firstName, lastName) {
+async function register(username, email, password, firstName, lastName, accountType, groupSize) {
     try {
         const result = await postAuthJson(
             '/auth/register',
-            { username, email, password, firstName, lastName },
+            { username, email, password, firstName, lastName, accountType, groupSize },
             function (data) { return !!(data && data.token && data.user); }
         );
         const data = result.data;
@@ -479,6 +535,8 @@ async function register(username, email, password, firstName, lastName) {
             // Store token and user data
             localStorage.setItem('juke_token', data.token);
             localStorage.setItem('juke_user', JSON.stringify(data.user));
+            localStorage.setItem('juke_pending_email', data.user.email);
+            localStorage.setItem('juke_pending_session', data.stripeSessionId || '');
             currentUser = data.user;
 
             if (document.body && document.body.dataset && document.body.dataset.spa) {
@@ -486,11 +544,10 @@ async function register(username, email, password, firstName, lastName) {
                     document.dispatchEvent(new Event('auth:changed'));
                 } catch (_) {
                 }
-                window.location.hash = '#/feed';
+                window.location.hash = '#/verify-pending';
             } else {
-                // Redirect to feed
                 const base = getBasePath();
-                window.location.href = `${base}/views/user.html`;
+                window.location.href = `${base}/views/register.html`;
             }
             return { success: true };
         } else {
@@ -630,17 +687,40 @@ function setupRegisterForm() {
     if (form.dataset.bound === 'true') return;
     form.dataset.bound = 'true';
 
+    // Account type from URL
+    const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+    const accountType = params.get('type') || 'user';
+    const accountTypeInput = document.getElementById('accountType');
+    const groupSizeField = document.getElementById('groupSizeField');
+    const selectedLabel = document.getElementById('selectedTypeLabel');
+    const selectedPrice = document.getElementById('selectedTypePrice');
+
+    const labels = {
+        user: { label: '_user', price: '5€ / month' },
+        artist: { label: '_artist', price: '10€ one-time' },
+        group: { label: '_group', price: '15€ / month (5 users)' }
+    };
+    const info = labels[accountType] || labels.user;
+
+    if (accountTypeInput) accountTypeInput.value = accountType;
+    if (selectedLabel) selectedLabel.textContent = info.label;
+    if (selectedPrice) selectedPrice.textContent = info.price;
+    if (groupSizeField) groupSizeField.style.display = accountType === 'group' ? 'block' : 'none';
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const username = document.getElementById('username').value.trim();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirm-password').value;
         const firstName = document.getElementById('firstName').value.trim();
         const lastName = document.getElementById('lastName').value.trim();
+        const accountTypeValue = accountTypeInput ? accountTypeInput.value : 'user';
+        const groupSize = document.getElementById('groupSize') ? document.getElementById('groupSize').value : 5;
+        const terms = document.getElementById('terms');
         const submitBtn = form.querySelector('button[type="submit"]');
-        
+
         // Validate password confirmation
         if (password !== confirmPassword) {
             const errorDiv = document.createElement('div');
@@ -650,20 +730,27 @@ function setupRegisterForm() {
             form.insertBefore(errorDiv, form.firstChild);
             return;
         }
-        
+
+        if (terms && !terms.checked) {
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'registerError';
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = 'Please agree to the terms and authorize the payment.';
+            form.insertBefore(errorDiv, form.firstChild);
+            return;
+        }
+
         // Show loading state
         submitBtn.disabled = true;
         submitBtn.textContent = 'Creating account...';
-        
+
         // Clear previous errors
         const errorDiv = document.getElementById('registerError');
-        if (errorDiv) {
-            errorDiv.remove();
-        }
-        
+        if (errorDiv) errorDiv.remove();
+
         // Attempt registration
-        const result = await register(username, email, password, firstName, lastName);
-        
+        const result = await register(username, email, password, firstName, lastName, accountTypeValue, groupSize);
+
         if (!result.success) {
             // Show error
             const errorDiv = document.createElement('div');
@@ -672,11 +759,156 @@ function setupRegisterForm() {
             errorDiv.textContent = result.error;
             form.insertBefore(errorDiv, form.firstChild);
         }
-        
+
         // Reset button
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Sign Up';
+        submitBtn.textContent = 'Continue to payment';
     });
+}
+
+// Welcome screen account type selection
+function setupWelcomeScreen() {
+    const cards = document.querySelectorAll('.account-type-card');
+    if (!cards.length) return;
+
+    cards.forEach(function (card) {
+        const type = card.dataset.type;
+        card.addEventListener('click', function () {
+            window.location.hash = '#/register?type=' + encodeURIComponent(type);
+        });
+    });
+}
+
+// Verify pending screen
+function setupVerifyPending() {
+    const pendingEmail = document.getElementById('pendingEmail');
+    const verifyForm = document.getElementById('verifyCodeForm');
+    const resendBtn = document.getElementById('resendVerificationBtn');
+    const payNowBtn = document.getElementById('payNowBtn');
+    const checkPaymentBtn = document.getElementById('checkPaymentBtn');
+    const continueBtn = document.getElementById('continueToFeedBtn');
+    const stepEmail = document.getElementById('step-email');
+    const stepPayment = document.getElementById('step-payment');
+    const stepDone = document.getElementById('step-done');
+    const paymentDescription = document.getElementById('paymentDescription');
+
+    const user = getCurrentUser();
+    const pending = localStorage.getItem('juke_pending_email') || (user ? user.email : '');
+    const sessionId = localStorage.getItem('juke_pending_session') || window.location.search.match(/session_id=([^&]*)/);
+
+    if (pendingEmail) pendingEmail.textContent = pending || 'your email';
+
+    function updateSteps() {
+        const currentUser = getCurrentUser();
+        const verified = currentUser && currentUser.emailVerified;
+        const paid = currentUser && currentUser.registrationPaid;
+
+        if (stepEmail) stepEmail.classList.toggle('done', !!verified);
+        if (stepPayment) stepPayment.classList.toggle('done', !!paid);
+
+        if (verified && paid) {
+            if (stepEmail) stepEmail.style.display = 'none';
+            if (stepPayment) stepPayment.style.display = 'none';
+            if (stepDone) stepDone.style.display = 'flex';
+        } else if (verified) {
+            if (stepEmail) stepEmail.style.display = 'none';
+        }
+    }
+
+    if (paymentDescription) {
+        const accountType = user ? user.accountType : 'user';
+        const price = accountType === 'artist' ? '10€' : (accountType === 'group' ? '15€' : '5€');
+        paymentDescription.textContent = `Complete your secure ${price} payment via Stripe.`;
+    }
+
+    updateSteps();
+
+    if (verifyForm) {
+        verifyForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const code = document.getElementById('verificationCode').value.trim();
+            if (!code) return;
+            try {
+                const result = await postAuthJson('/auth/verify-email', { token: code }, function (d) { return !!(d && d.verified); });
+                if (result.ok) {
+                    const u = getCurrentUser();
+                    if (u) {
+                        u.emailVerified = true;
+                        localStorage.setItem('juke_user', JSON.stringify(u));
+                        currentUser = u;
+                    }
+                    updateSteps();
+                } else {
+                    alert(result.data.error || 'Verification failed');
+                }
+            } catch (error) {
+                console.error('Verify error:', error);
+                alert('Verification failed. Please try again.');
+            }
+        });
+    }
+
+    if (resendBtn) {
+        resendBtn.addEventListener('click', async function () {
+            try {
+                const result = await postAuthJson('/auth/resend-verification', {}, function (d) { return !!(d && d.sent); });
+                if (result.ok && result.data.simulated) {
+                    alert('SMTP not configured. Check server logs for verification code.');
+                } else if (result.ok) {
+                    alert('Verification email sent.');
+                } else {
+                    alert(result.data.error || 'Failed to resend.');
+                }
+            } catch (error) {
+                console.error('Resend error:', error);
+                alert('Failed to resend email.');
+            }
+        });
+    }
+
+    if (payNowBtn) {
+        payNowBtn.addEventListener('click', function () {
+            const storedSession = localStorage.getItem('juke_pending_session');
+            if (storedSession) {
+                window.location.href = 'https://checkout.stripe.com/pay/' + encodeURIComponent(storedSession);
+            } else {
+                alert('No checkout session found. Please log in again.');
+            }
+        });
+    }
+
+    if (checkPaymentBtn) {
+        checkPaymentBtn.addEventListener('click', async function () {
+            const storedSession = localStorage.getItem('juke_pending_session');
+            if (!storedSession) {
+                alert('No checkout session found.');
+                return;
+            }
+            try {
+                const result = await getAuthJson('/payments/checkout-status?session_id=' + encodeURIComponent(storedSession), function (d) { return d && typeof d.paid === 'boolean'; });
+                if (result.ok && result.data.paid) {
+                    const u = getCurrentUser();
+                    if (u) {
+                        u.registrationPaid = true;
+                        localStorage.setItem('juke_user', JSON.stringify(u));
+                        currentUser = u;
+                    }
+                    updateSteps();
+                } else {
+                    alert('Payment not confirmed yet. Please complete the payment first.');
+                }
+            } catch (error) {
+                console.error('Payment check error:', error);
+                alert('Could not verify payment.');
+            }
+        });
+    }
+
+    if (continueBtn) {
+        continueBtn.addEventListener('click', function () {
+            window.location.hash = '#/feed';
+        });
+    }
 }
 
 // Delete profile function
@@ -736,5 +968,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
     setupLoginForm();
     setupRegisterForm();
+    setupWelcomeScreen();
+    setupVerifyPending();
     setupProfilePage();
 });

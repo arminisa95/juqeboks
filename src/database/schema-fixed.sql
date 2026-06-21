@@ -22,9 +22,17 @@ CREATE TABLE users (
     last_name VARCHAR(100),
     avatar_url VARCHAR(500),
     bio TEXT,
-    subscription_tier VARCHAR(20) DEFAULT 'free' CHECK (subscription_tier IN ('free', 'premium', 'family')),
+    subscription_tier VARCHAR(20) DEFAULT 'premium' CHECK (subscription_tier IN ('free', 'premium', 'pro')),
+    account_type VARCHAR(20) DEFAULT 'user' CHECK (account_type IN ('user', 'artist', 'group')),
+    group_size INTEGER DEFAULT 1,
     is_active BOOLEAN DEFAULT true,
     email_verified BOOLEAN DEFAULT false,
+    email_verified_token VARCHAR(255),
+    email_verified_at TIMESTAMP WITH TIME ZONE,
+    registration_paid BOOLEAN DEFAULT false,
+    stripe_customer_id VARCHAR(255),
+    stripe_subscription_id VARCHAR(255),
+    stripe_checkout_session_id VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

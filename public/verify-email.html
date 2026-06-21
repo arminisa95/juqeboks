@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a0a;
+            color: #fff;
+            font-family: sans-serif;
+            text-align: center;
+        }
+        .box { max-width: 360px; padding: 24px; }
+        .icon { font-size: 48px; margin-bottom: 16px; }
+        .error { color: #ff6b6b; }
+        .success { color: #00ffd0; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="icon">✉️</div>
+        <h1 id="statusTitle">Verifying email…</h1>
+        <p id="statusText">Please wait.</p>
+    </div>
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var token = params.get('token');
+            var titleEl = document.getElementById('statusTitle');
+            var textEl = document.getElementById('statusText');
+
+            if (!token) {
+                titleEl.textContent = 'Invalid link';
+                textEl.textContent = 'No verification token provided.';
+                textEl.className = 'error';
+                return;
+            }
+
+            var bases = (window.JukeAPIBase && window.JukeAPIBase.getApiBases) ? window.JukeAPIBase.getApiBases() : ['http://localhost:3000/api'];
+            var base = bases[0];
+
+            fetch(base + '/auth/verify-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token })
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.verified) {
+                    titleEl.textContent = 'Email verified!';
+                    textEl.textContent = 'You can now close this tab and continue in juqeboks.';
+                    textEl.className = 'success';
+                    setTimeout(function () {
+                        window.location.replace('index.html#/verify-pending');
+                    }, 2000);
+                } else {
+                    titleEl.textContent = 'Verification failed';
+                    textEl.textContent = data.error || 'The token is invalid or expired.';
+                    textEl.className = 'error';
+                }
+            })
+            .catch(function (err) {
+                titleEl.textContent = 'Error';
+                textEl.textContent = 'Could not verify your email. Please try again.';
+                textEl.className = 'error';
+                console.error(err);
+            });
+        })();
+    </script>
+</body>
+</html>

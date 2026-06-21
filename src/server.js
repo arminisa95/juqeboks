@@ -8,8 +8,10 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const crypto = require('crypto');
 const MonetizationService = require('./monetization/payment-integration');
 const monetizationRoutes = require('./monetization/monetization-api-simple');
+const { sendEmailVerification } = require('./services/email');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +23,18 @@ const S3_ENDPOINT = process.env.S3_ENDPOINT || '';
 const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID || '';
 const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY || '';
 const S3_PUBLIC_BASE_URL = process.env.S3_PUBLIC_BASE_URL || '';
+
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+const STRIPE_USER_PRICE_ID = process.env.STRIPE_USER_PRICE_ID || '';
+const STRIPE_ARTIST_PRICE_ID = process.env.STRIPE_ARTIST_PRICE_ID || '';
+const STRIPE_GROUP_PRICE_ID = process.env.STRIPE_GROUP_PRICE_ID || '';
+const APP_BASE_URL = process.env.APP_BASE_URL || `http://localhost:${PORT}`;
+
+const stripe = STRIPE_SECRET_KEY ? require('stripe')(STRIPE_SECRET_KEY) : null;
+const monetizationService = new MonetizationService();
+const createdPriceIds = { user: null, artist: null, group: null };
 
 function getS3Client() {
     if (!S3_BUCKET || !S3_ENDPOINT || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY) return null;
@@ -74,6 +88,126 @@ async function deleteS3KeyIfAny(key) {
         console.error('S3 delete failed:', e);
     }
 }
+
+// Stripe helpers
+async function getOrCreateStripePrice(accountType, groupSize) {
+    if (!stripe) return null;
+
+    const configuredId =
+        accountType === 'artist' ? STRIPE_ARTIST_PRICE_ID :
+        accountType === 'group' ? STRIPE_GROUP_PRICE_ID :
+        STRIPE_USER_PRICE_ID;
+
+    if (configuredId) return configuredId;
+    if (createdPriceIds[accountType]) return createdPriceIds[accountType];
+
+    const isArtist = accountType === 'artist';
+    const isGroup = accountType === 'group';
+    const unitAmount = isArtist ? 1000 : (isGroup ? 1500 : 500);
+    const name = isArtist ? 'juqeboks Artist Registration' : (isGroup ? 'juqeboks Group (5 Users)' : 'juqeboks User Subscription');
+    const description = isArtist ? 'One-time artist registration fee' : (isGroup ? 'Monthly subscription for 5 users' : 'Monthly user subscription');
+
+    try {
+        const price = await stripe.prices.create({
+            unit_amount: unitAmount,
+            currency: 'eur',
+            product_data: { name, description },
+            recurring: isArtist ? undefined : { interval: 'month' },
+        });
+        createdPriceIds[accountType] = price.id;
+        return price.id;
+    } catch (error) {
+        console.error('Stripe price creation error:', error);
+        return null;
+    }
+}
+
+async function createStripeCustomer(user) {
+    if (!stripe) return null;
+    try {
+        const customer = await stripe.customers.create({
+            email: user.email,
+            name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username,
+            metadata: { user_id: user.id, account_type: user.account_type || 'user' },
+        });
+        return customer.id;
+    } catch (error) {
+        console.error('Stripe customer creation error:', error);
+        return null;
+    }
+}
+
+async function createCheckoutSession(user, priceId, customerId) {
+    if (!stripe || !priceId) return null;
+    try {
+        const isArtist = user.account_type === 'artist';
+        const successUrl = `${APP_BASE_URL}/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`;
+        const cancelUrl = `${APP_BASE_URL}/index.html#/verify-pending`;
+        const session = await stripe.checkout.sessions.create({
+            customer: customerId,
+            line_items: [{ price: priceId, quantity: 1 }],
+            mode: isArtist ? 'payment' : 'subscription',
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+            metadata: {
+                user_id: user.id,
+                account_type: user.account_type || 'user',
+                is_registration: 'true',
+            },
+        });
+        return session;
+    } catch (error) {
+        console.error('Stripe checkout session creation error:', error);
+        return null;
+    }
+}
+
+// Stripe webhook (must use raw body, so it is defined before express.json())
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    if (stripe && STRIPE_WEBHOOK_SECRET && sig) {
+        try {
+            event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
+        } catch (err) {
+            console.error('Stripe webhook signature verification failed:', err.message);
+            return res.status(400).send(`Webhook Error: ${err.message}`);
+        }
+    } else {
+        try {
+            event = JSON.parse(req.body);
+        } catch (err) {
+            return res.status(400).send('Invalid JSON');
+        }
+    }
+
+    if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+        const userId = session.metadata && session.metadata.user_id;
+        const accountType = session.metadata && session.metadata.account_type;
+        const subscriptionId = session.subscription;
+
+        if (userId) {
+            try {
+                await db.query(
+                    'UPDATE users SET registration_paid = true, stripe_subscription_id = $1 WHERE id = $2',
+                    [subscriptionId || null, userId]
+                );
+                if (accountType !== 'artist') {
+                    await db.query(
+                        `INSERT INTO upload_credits (user_id, credits) VALUES ($1, 999) ON CONFLICT (user_id) DO NOTHING`,
+                        [userId]
+                    );
+                }
+            } catch (error) {
+                console.error('Webhook user update error:', error);
+            }
+        }
+    }
+
+    res.json({ received: true });
+});
 
 // Middleware
 app.use(cors());
@@ -264,6 +398,15 @@ async function initializeDatabase() {
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
 
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false');
+        await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(20) DEFAULT 'premium'");
+        await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) DEFAULT 'user'");
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS group_size INTEGER DEFAULT 1');
+        await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_token VARCHAR(255)");
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP WITH TIME ZONE');
+        await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_paid BOOLEAN DEFAULT false");
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)');
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255)');
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_checkout_session_id VARCHAR(255)');
 
         await db.query(`
             DO $$
@@ -368,13 +511,23 @@ async function ensureAdminUser() {
                 password_hash: passwordHash,
                 first_name: 'Admin',
                 last_name: 'User',
-                is_admin: true
+                is_admin: true,
+                account_type: 'user',
+                subscription_tier: 'premium',
+                email_verified: true,
+                email_verified_at: new Date().toISOString(),
+                registration_paid: true,
             });
             return;
         }
 
         await db.query(
-            'UPDATE users SET is_admin = true, password_hash = $2 WHERE id = $1',
+            `UPDATE users SET is_admin = true, password_hash = $2,
+                    account_type = COALESCE(account_type, 'user'),
+                    subscription_tier = COALESCE(subscription_tier, 'premium'),
+                    email_verified = true,
+                    registration_paid = true
+             WHERE id = $1`,
             [existing.id, passwordHash]
         );
     } catch (error) {
@@ -434,8 +587,10 @@ const isValidId = (value) => {
 // Register new user
 app.post('/api/auth/register', async (req, res) => {
     try {
-        const { username, email, password, firstName, lastName } = req.body;
+        const { username, email, password, firstName, lastName, accountType, groupSize } = req.body;
 
+        const normalizedAccountType = ['user', 'artist', 'group'].includes(accountType) ? accountType : 'user';
+        const normalizedGroupSize = normalizedAccountType === 'group' ? (Math.min(Math.max(parseInt(groupSize, 10) || 5, 2), 20)) : 1;
         const isAdmin = String(username || '').trim().toLowerCase() === 'admin' && String(password || '') === 'admin';
 
         // Validate input
@@ -456,6 +611,7 @@ app.post('/api/auth/register', async (req, res) => {
         // Hash password
         const saltRounds = 10;
         const passwordHash = await bcrypt.hash(password, saltRounds);
+        const verificationToken = crypto.randomBytes(32).toString('hex');
 
         // Create user
         const newUser = await db.insert('users', {
@@ -464,27 +620,163 @@ app.post('/api/auth/register', async (req, res) => {
             password_hash: passwordHash,
             first_name: firstName,
             last_name: lastName,
-            is_admin: isAdmin
+            is_admin: isAdmin,
+            account_type: normalizedAccountType,
+            group_size: normalizedGroupSize,
+            subscription_tier: 'premium',
+            email_verified: false,
+            email_verified_token: verificationToken,
+            registration_paid: false,
         });
+
+        // Send verification email
+        const emailResult = await sendEmailVerification(newUser, verificationToken);
+        const emailSent = !!(emailResult && (emailResult.sent || emailResult.simulated));
+
+        // Create Stripe checkout session
+        let checkoutUrl = null;
+        let stripeSessionId = null;
+        if (stripe) {
+            const customerId = await createStripeCustomer(newUser);
+            const priceId = await getOrCreateStripePrice(normalizedAccountType, normalizedGroupSize);
+            const session = await createCheckoutSession(newUser, priceId, customerId);
+            if (session) {
+                checkoutUrl = session.url;
+                stripeSessionId = session.id;
+                await db.query('UPDATE users SET stripe_customer_id = $1, stripe_checkout_session_id = $2 WHERE id = $3', [
+                    customerId,
+                    session.id,
+                    newUser.id,
+                ]);
+            }
+        }
 
         // Generate token
         const token = generateToken(newUser);
 
         res.status(201).json({
-            message: 'User registered successfully',
+            message: 'User registered successfully. Please verify your email and complete payment.',
             user: {
                 id: newUser.id,
                 username: newUser.username,
                 email: newUser.email,
                 firstName: newUser.first_name,
                 lastName: newUser.last_name,
-                isAdmin: !!(newUser.is_admin || isAdmin)
+                accountType: newUser.account_type,
+                groupSize: newUser.group_size,
+                isAdmin: !!(newUser.is_admin || isAdmin),
+                emailVerified: newUser.email_verified,
+                registrationPaid: newUser.registration_paid,
             },
-            token
+            token,
+            needsEmailVerification: true,
+            needsPayment: true,
+            checkoutUrl,
+            stripeSessionId,
+            emailSent,
         });
 
     } catch (error) {
         console.error('Registration error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Verify email
+app.post('/api/auth/verify-email', async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) {
+            return res.status(400).json({ error: 'Verification token is required' });
+        }
+
+        const user = await db.get(
+            'SELECT id, account_type, email_verified FROM users WHERE email_verified_token = $1',
+            [token]
+        );
+
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid or expired verification token' });
+        }
+
+        if (user.email_verified) {
+            return res.json({ verified: true, message: 'Email already verified' });
+        }
+
+        await db.query(
+            'UPDATE users SET email_verified = true, email_verified_token = NULL, email_verified_at = CURRENT_TIMESTAMP WHERE id = $1',
+            [user.id]
+        );
+
+        res.json({ verified: true, accountType: user.account_type });
+    } catch (error) {
+        console.error('Email verification error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Resend verification email
+app.post('/api/auth/resend-verification', authenticateToken, async (req, res) => {
+    try {
+        const user = await db.get(
+            'SELECT id, email, username, first_name, last_name, account_type, email_verified, email_verified_token FROM users WHERE id = $1',
+            [req.user.id]
+        );
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (user.email_verified) {
+            return res.json({ sent: true, message: 'Email already verified' });
+        }
+
+        let token = user.email_verified_token;
+        if (!token) {
+            token = crypto.randomBytes(32).toString('hex');
+            await db.query('UPDATE users SET email_verified_token = $1 WHERE id = $2', [token, user.id]);
+        }
+
+        const emailResult = await sendEmailVerification(user, token);
+        res.json({
+            sent: !!(emailResult && (emailResult.sent || emailResult.simulated)),
+            simulated: !!emailResult.simulated,
+        });
+    } catch (error) {
+        console.error('Resend verification error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Check Stripe checkout status
+app.get('/api/payments/checkout-status', authenticateToken, async (req, res) => {
+    try {
+        const { session_id } = req.query;
+        if (!session_id) {
+            return res.status(400).json({ error: 'session_id is required' });
+        }
+
+        if (!stripe) {
+            return res.json({ paid: true, simulated: true });
+        }
+
+        const session = await stripe.checkout.sessions.retrieve(session_id);
+        const paid = session && session.payment_status === 'paid';
+
+        if (paid && session.metadata && session.metadata.user_id === req.user.id) {
+            await db.query(
+                'UPDATE users SET registration_paid = true, stripe_subscription_id = $1 WHERE id = $2',
+                [session.subscription || null, req.user.id]
+            );
+        }
+
+        res.json({
+            paid: !!paid,
+            payment_status: session ? session.payment_status : 'unknown',
+            account_type: session ? session.metadata.account_type : null,
+        });
+    } catch (error) {
+        console.error('Checkout status error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -500,7 +792,9 @@ app.post('/api/auth/login', async (req, res) => {
 
         // Find user
         const user = await db.get(
-            'SELECT id, username, email, password_hash, first_name, last_name, is_admin FROM users WHERE username = $1 OR email = $1',
+            `SELECT id, username, email, password_hash, first_name, last_name, is_admin,
+                    account_type, group_size, subscription_tier, email_verified, registration_paid
+             FROM users WHERE username = $1 OR email = $1`,
             [username]
         );
 
@@ -517,6 +811,9 @@ app.post('/api/auth/login', async (req, res) => {
 
         // Generate token
         const token = generateToken(user);
+        const needsEmailVerification = !user.email_verified;
+        const needsPayment = !user.registration_paid;
+        const redirectTo = (needsEmailVerification || needsPayment) ? 'verify-pending' : 'feed';
 
         res.json({
             message: 'Login successful',
@@ -526,9 +823,17 @@ app.post('/api/auth/login', async (req, res) => {
                 email: user.email,
                 firstName: user.first_name,
                 lastName: user.last_name,
-                isAdmin: !!user.is_admin
+                accountType: user.account_type,
+                groupSize: user.group_size,
+                subscriptionTier: user.subscription_tier,
+                isAdmin: !!user.is_admin,
+                emailVerified: !!user.email_verified,
+                registrationPaid: !!user.registration_paid,
             },
-            token
+            token,
+            needsEmailVerification,
+            needsPayment,
+            redirectTo,
         });
 
     } catch (error) {
@@ -2006,11 +2311,11 @@ async function checkUploadCredits(req, res, next) {
     try {
         let user;
         try {
-            user = await db.get('SELECT subscription_tier FROM users WHERE id = $1', [req.user.id]);
+            user = await db.get('SELECT subscription_tier, email_verified, registration_paid FROM users WHERE id = $1', [req.user.id]);
         } catch (columnError) {
             if (columnError.message && columnError.message.includes('subscription_tier')) {
                 console.log('subscription_tier column missing, treating user as free tier');
-                user = { subscription_tier: 'free' };
+                user = { subscription_tier: 'free', email_verified: true, registration_paid: true };
             } else {
                 throw columnError;
             }
@@ -2019,6 +2324,22 @@ async function checkUploadCredits(req, res, next) {
         // If user doesn't exist, return error
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (!user.email_verified) {
+            return res.status(403).json({
+                success: false,
+                error: 'Please verify your email address before uploading.',
+                needsEmailVerification: true,
+            });
+        }
+
+        if (!user.registration_paid) {
+            return res.status(402).json({
+                success: false,
+                error: 'Please complete your subscription payment before uploading.',
+                needsPayment: true,
+            });
         }
         
         // Premium+ users have unlimited uploads
