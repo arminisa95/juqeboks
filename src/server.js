@@ -316,6 +316,9 @@ async function initializeDatabase() {
                 is_explicit BOOLEAN DEFAULT false,
                 is_available BOOLEAN DEFAULT true,
                 release_date DATE,
+                terms_confirmed BOOLEAN DEFAULT false,
+                rights_confirmed BOOLEAN DEFAULT false,
+                rights_confirmed_at TIMESTAMP WITH TIME ZONE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
@@ -427,6 +430,9 @@ async function initializeDatabase() {
         await db.query("ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album VARCHAR(200) DEFAULT 'Single'");
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS terms_confirmed BOOLEAN DEFAULT false');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS rights_confirmed BOOLEAN DEFAULT false');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS rights_confirmed_at TIMESTAMP WITH TIME ZONE');
         await db.query('ALTER TABLE artists ADD COLUMN IF NOT EXISTS created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL');
 
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100)');
@@ -2814,6 +2820,16 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
         const video = req.files && req.files.videoFile ? req.files.videoFile[0] : null;
         const userId = req.user.id;
 
+        const termsConfirmed = req.body && (req.body.termsConfirmed === 'true' || req.body.termsConfirmed === true);
+        const rightsConfirmed = req.body && (req.body.rightsConfirmed === 'true' || req.body.rightsConfirmed === true);
+
+        if (!termsConfirmed || !rightsConfirmed) {
+            return res.status(403).json({
+                success: false,
+                error: 'You must accept the Terms of Service and confirm that you own all rights to this track.'
+            });
+        }
+
         const artist = (typeof artistRaw === 'string') ? artistRaw.trim() : '';
         const artistName = artist || (req.user && req.user.username ? String(req.user.username) : '');
 
@@ -2921,7 +2937,10 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
             metadata,
             duration_seconds: 0,
             release_date: new Date().toISOString().split('T')[0],
-            is_available: true
+            is_available: true,
+            terms_confirmed: termsConfirmed,
+            rights_confirmed: rightsConfirmed,
+            rights_confirmed_at: new Date().toISOString()
         });
 
         // Consume upload credit for free users

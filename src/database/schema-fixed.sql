@@ -92,6 +92,9 @@ CREATE TABLE tracks (
     is_explicit BOOLEAN DEFAULT false,
     is_available BOOLEAN DEFAULT true,
     release_date DATE,
+    terms_confirmed BOOLEAN DEFAULT false,
+    rights_confirmed BOOLEAN DEFAULT false,
+    rights_confirmed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

@@ -249,6 +249,19 @@
             formData.append('album', albumEl ? albumEl.value : '');
             formData.append('genre', genreEl ? genreEl.value : '');
 
+            var termsConfirmed = document.getElementById('termsConfirmed');
+            var rightsConfirmed = document.getElementById('rightsConfirmed');
+            if (!termsConfirmed || !termsConfirmed.checked) {
+                showUploadNotification('Please accept the Terms of Service and Privacy Policy.', 'error');
+                return;
+            }
+            if (!rightsConfirmed || !rightsConfirmed.checked) {
+                showUploadNotification('Please confirm that you own the rights to this music.', 'error');
+                return;
+            }
+            formData.append('termsConfirmed', 'true');
+            formData.append('rightsConfirmed', 'true');
+
             var submitBtn = uploadForm.querySelector('button[type="submit"]');
             var originalText = submitBtn ? submitBtn.textContent : '';
             
