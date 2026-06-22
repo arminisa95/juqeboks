@@ -753,33 +753,21 @@
 
     <nav class="mobile-nav">
         <div class="mobile-nav-items">
-            <a href="#/feed" class="mobile-nav-item" data-nav="feed">
+            <a href="#/feed" class="mobile-nav-item" data-nav="feed" aria-label="Feed">
                 <i class="fas fa-home"></i>
                 <span>_feed</span>
             </a>
-            <a href="#/queue" class="mobile-nav-item" data-nav="queue">
-                <i class="fas fa-list"></i>
-                <span>_queue</span>
-            </a>
-            <a href="#/lists" class="mobile-nav-item" data-nav="lists">
+            <a href="#/lists" class="mobile-nav-item mobile-nav-center" data-nav="lists" aria-label="Lists">
                 <img src="images/U-pink.png" alt="Lists" class="mobile-nav-logo">
                 <span>_lists</span>
             </a>
-            <a href="#/upload" class="mobile-nav-item" data-nav="upload">
-                <i class="fas fa-upload"></i>
-                <span>_upload</span>
-            </a>
-            <button class="mobile-nav-item auth-login" onclick="window.location.hash='#/login'">
+            <button class="mobile-nav-item auth-login" data-nav="user" aria-label="Login" onclick="window.location.hash='#/login'">
                 <i class="fas fa-user"></i>
                 <span>_user</span>
             </button>
-            <button class="mobile-nav-item auth-user" style="display:none;" onclick="window.location.hash='#/profile'">
+            <button class="mobile-nav-item auth-user" data-nav="user" aria-label="Profile" style="display:none;" onclick="window.location.hash='#/profile'">
                 <i class="fas fa-user"></i>
                 <span>_user</span>
-            </button>
-            <button class="mobile-nav-item" id="mobileShowtimeBtn">
-                <i class="fas fa-tv"></i>
-                <span>_showtime</span>
             </button>
         </div>
     </nav>
