@@ -208,6 +208,82 @@
         showVideo: false
     };
 
+    var playSession = {
+        trackId: null,
+        token: null,
+        apiBase: null,
+        startTime: 0,
+        totalSeconds: 0,
+        heartbeatTimer: null,
+        lastHeartbeat: 0
+    };
+
+    function clearPlaySession() {
+        if (playSession.heartbeatTimer) {
+            clearInterval(playSession.heartbeatTimer);
+            playSession.heartbeatTimer = null;
+        }
+        playSession.trackId = null;
+        playSession.startTime = 0;
+        playSession.totalSeconds = 0;
+        playSession.lastHeartbeat = 0;
+    }
+
+    function sendPlayDuration(trackId, durationSeconds, token, apiBase) {
+        if (!trackId || !token || !apiBase || durationSeconds <= 0) return;
+        try {
+            fetch(apiBase + '/play', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ trackId: trackId, durationPlayed: Math.round(durationSeconds), source: 'player' })
+            }).catch(function () {});
+        } catch (_) {
+        }
+    }
+
+    function startPlaySession(trackId, token, apiBase) {
+        if (playSession.trackId && playSession.trackId !== trackId) {
+            endPlaySession();
+        }
+        playSession.trackId = trackId;
+        playSession.token = token;
+        playSession.apiBase = apiBase;
+        playSession.startTime = Date.now();
+        playSession.totalSeconds = 0;
+        playSession.lastHeartbeat = 0;
+
+        if (playSession.heartbeatTimer) {
+            clearInterval(playSession.heartbeatTimer);
+        }
+        playSession.heartbeatTimer = setInterval(function () {
+            if (!playSession.trackId || !state.isPlaying) return;
+            var elapsed = (Date.now() - playSession.startTime) / 1000;
+            playSession.totalSeconds = Math.max(playSession.totalSeconds, elapsed);
+            var delta = playSession.totalSeconds - playSession.lastHeartbeat;
+            if (delta >= 10) {
+                sendPlayDuration(playSession.trackId, delta, playSession.token, playSession.apiBase);
+                playSession.lastHeartbeat = playSession.totalSeconds;
+            }
+        }, 10000);
+    }
+
+    function endPlaySession() {
+        if (!playSession.trackId) return;
+        var elapsed = (Date.now() - playSession.startTime) / 1000;
+        var delta = Math.max(0, elapsed - playSession.lastHeartbeat);
+        if (delta > 0) {
+            sendPlayDuration(playSession.trackId, delta, playSession.token, playSession.apiBase);
+        }
+        clearPlaySession();
+    }
+
+    audio.addEventListener('pause', endPlaySession);
+    audio.addEventListener('ended', endPlaySession);
+    window.addEventListener('beforeunload', endPlaySession);
+
     function stopPlayback(resetState) {
         try {
             audio.pause();
@@ -284,14 +360,7 @@
                 var token = localStorage.getItem('juke_token');
                 var apiBase = window.JukeAPIBase && window.JukeAPIBase.getApiBase ? window.JukeAPIBase.getApiBase() : '';
                 if (token && track.id && apiBase) {
-                    fetch(apiBase + '/play', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + token
-                        },
-                        body: JSON.stringify({ trackId: track.id, durationPlayed: 0, source: 'player' })
-                    }).catch(function () {});
+                    startPlaySession(track.id, token, apiBase);
                 }
             } catch (_) {
             }

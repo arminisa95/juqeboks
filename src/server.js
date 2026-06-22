@@ -2323,15 +2323,23 @@ app.delete('/api/tracks/:trackId/comments/:commentId', authenticateToken, async 
     }
 });
 
-// Record a play event for royalty tracking
+// Record a play event for royalty tracking with anti-fraud checks
 app.post('/api/play', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { trackId, durationPlayed = 0, source = 'feed' } = req.body;
+        const { trackId, durationPlayed = 0, source = 'player' } = req.body;
+        const duration = Math.max(0, parseInt(durationPlayed, 10) || 0);
 
         if (!isValidId(trackId)) {
             return res.status(400).json({ error: 'Invalid track ID' });
         }
+
+        // Anti-fraud: cap single event duration to 5 minutes
+        const cappedDuration = Math.min(duration, 300);
+
+        // Anti-fraud: ignore very short plays (less than 5 seconds) for royalty tracking,
+        // but still count them as light engagement.
+        const royaltyDuration = cappedDuration >= 5 ? cappedDuration : 0;
 
         const track = await db.get(`
             SELECT t.id, t.artist_id, a.id as artist_id
@@ -2344,14 +2352,43 @@ app.post('/api/play', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Track not found' });
         }
 
+        // Anti-fraud: max 1 play per track per user per 30 seconds
+        const recentDuplicate = await db.get(`
+            SELECT id FROM play_history
+            WHERE user_id = $1 AND track_id = $2 AND played_at > NOW() - INTERVAL '30 seconds'
+            LIMIT 1
+        `, [userId, trackId]);
+
+        if (recentDuplicate) {
+            return res.status(429).json({ error: 'Play recorded too recently' });
+        }
+
+        // Anti-fraud: max 1000 plays per user per day, max 12 hours total duration per day
+        const dailyStats = await db.get(`
+            SELECT COUNT(*) as play_count, COALESCE(SUM(duration_played), 0) as total_duration
+            FROM play_history
+            WHERE user_id = $1 AND played_at > NOW() - INTERVAL '1 day'
+        `, [userId]);
+
+        if (parseInt(dailyStats.play_count, 10) >= 1000) {
+            return res.status(429).json({ error: 'Daily play limit reached' });
+        }
+
+        if (parseInt(dailyStats.total_duration, 10) + cappedDuration > 43200) {
+            return res.status(429).json({ error: 'Daily listening limit reached' });
+        }
+
         await db.query(`
             INSERT INTO play_history (user_id, track_id, artist_id, duration_played, source_type)
             VALUES ($1, $2, $3, $4, $5)
-        `, [userId, trackId, track.artist_id, Math.max(0, parseInt(durationPlayed, 10) || 0), source]);
+        `, [userId, trackId, track.artist_id, cappedDuration, source]);
 
-        await db.query('UPDATE tracks SET play_count = play_count + 1 WHERE id = $1', [trackId]);
+        // Only increment play_count for meaningful plays (5+ seconds)
+        if (royaltyDuration > 0) {
+            await db.query('UPDATE tracks SET play_count = play_count + 1 WHERE id = $1', [trackId]);
+        }
 
-        res.json({ success: true });
+        res.json({ success: true, countedDuration: cappedDuration, royaltyDuration });
     } catch (error) {
         console.error('Play tracking error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -2503,6 +2540,61 @@ app.get('/api/admin/royalties', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Royalty report error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Aggregate unpaid balances per artist (for payouts)
+app.get('/api/admin/artist-balances', authenticateToken, async (req, res) => {
+    try {
+        if (!req.user.is_admin) {
+            return res.status(403).json({ error: 'Admin required' });
+        }
+
+        const balances = await db.getAll(`
+            SELECT a.id as artist_id, a.name as artist_name, u.email as owner_email, u.username as owner_username,
+                   SUM(ar.payout_cents) as unpaid_cents,
+                   COUNT(DISTINCT ar.year || '-' || ar.month) as periods,
+                   MAX(ar.year) as last_year,
+                   MAX(ar.month) as last_month
+            FROM artist_royalties ar
+            JOIN artists a ON ar.artist_id = a.id
+            LEFT JOIN users u ON a.created_by_user_id = u.id
+            WHERE ar.paid = false
+            GROUP BY a.id, a.name, u.email, u.username
+            HAVING SUM(ar.payout_cents) > 0
+            ORDER BY unpaid_cents DESC
+        `);
+
+        res.json({ balances: balances || [] });
+    } catch (error) {
+        console.error('Artist balances error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Mark royalties as paid for a specific artist and month
+app.post('/api/admin/payouts/mark-paid', authenticateToken, async (req, res) => {
+    try {
+        if (!req.user.is_admin) {
+            return res.status(403).json({ error: 'Admin required' });
+        }
+
+        const { artistId, year, month } = req.body;
+
+        if (!isValidId(artistId)) {
+            return res.status(400).json({ error: 'Invalid artist ID' });
+        }
+
+        const result = await db.query(`
+            UPDATE artist_royalties
+            SET paid = true, updated_at = CURRENT_TIMESTAMP
+            WHERE artist_id = $1 AND year = $2 AND month = $3 AND paid = false
+        `, [artistId, parseInt(year, 10), parseInt(month, 10)]);
+
+        res.json({ success: true, markedPaid: result.rowCount || 0 });
+    } catch (error) {
+        console.error('Mark paid error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
