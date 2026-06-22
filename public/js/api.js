@@ -1195,21 +1195,24 @@ async function cleanupOldStories() {
     try {
         const token = getAuthToken();
         if (!token) return;
-        
-        // Get all tracks to check for stories older than 1 month
+
+        const currentUserId = getCurrentUserId();
+        if (!currentUserId) return;
+
+        // Get current user's tracks to check for stories older than 1 month
         const tracks = await apiFetchJson('/tracks/new?limit=1000&offset=0', {}, d => Array.isArray(d));
         if (!Array.isArray(tracks)) return;
-        
+
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-        
+
         const oldTracks = tracks.filter(track => {
             if (!track.created_at) return false;
             const trackDate = new Date(track.created_at);
-            return trackDate < oneMonthAgo;
+            return trackDate < oneMonthAgo && String(track.uploader_id) === String(currentUserId);
         });
-        
-        // Delete old tracks (stories)
+
+        // Delete old tracks owned by the current user only
         for (const track of oldTracks) {
             try {
                 await apiFetchJson(`/tracks/${encodeURIComponent(String(track.id))}`, {
@@ -1222,7 +1225,7 @@ async function cleanupOldStories() {
                 console.warn('Failed to delete old story track:', track.id, e);
             }
         }
-        
+
         if (oldTracks.length > 0) {
             console.log(`Cleaned up ${oldTracks.length} old story tracks`);
         }
