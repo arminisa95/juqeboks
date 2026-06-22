@@ -2680,85 +2680,94 @@ app.post('/api/admin/payouts/mark-paid', authenticateToken, async (req, res) => 
 
 // Public analytics endpoint for the _fair dashboard
 app.get('/api/analytics', async (req, res) => {
-    try {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = month === 12
+        ? `${year + 1}-01-01`
+        : `${year}-${String(month + 1).padStart(2, '0')}-01`;
 
-        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-        const endDate = month === 12
-            ? `${year + 1}-01-01`
-            : `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const result = {
+        totalUsers: 0, totalTracks: 0, totalPlays: 0, totalPlaySeconds: 0,
+        totalCollectedCents: 0, platformFeeCents: 0, artistPoolCents: 0,
+        perArtist: [], moneyFlow: [], topArtists: [], year, month,
+        errors: []
+    };
 
-        const totalUsers = await db.get(`SELECT COUNT(*)::int as count FROM users`);
-        const totalTracks = await db.get(`SELECT COUNT(*)::int as count FROM tracks`);
-        const totalPlays = await db.get(`SELECT COUNT(*)::int as count FROM play_history`);
-        const totalPlaySeconds = await db.get(`SELECT COALESCE(SUM(duration_played), 0)::int as seconds FROM play_history`);
-
-        const totalRevenue = await db.get(`
-            SELECT COALESCE(SUM(CASE WHEN account_type = 'group' THEN 1500 ELSE 500 END), 0) as cents
-            FROM users
-            WHERE registration_paid = true AND email_verified = true AND created_at < $1
-        `, [endDate]);
-
-        const totalCollectedCents = parseInt(totalRevenue.cents, 10) || 0;
-        const platformFeeCents = Math.round(totalCollectedCents * 0.10);
-        const artistPoolCents = totalCollectedCents - platformFeeCents;
-
-        const perArtist = await db.getAll(`
-            SELECT a.id as artist_id, a.name as artist_name,
-                   SUM(ar.payout_cents) as payout_cents,
-                   COUNT(DISTINCT ar.user_id) as paying_users,
-                   SUM(ar.tracked_seconds) as tracked_seconds
-            FROM artist_royalties ar
-            JOIN artists a ON ar.artist_id = a.id
-            WHERE ar.year = $1 AND ar.month = $2
-            GROUP BY a.id, a.name
-            ORDER BY payout_cents DESC
-        `, [year, month]);
-
-        const moneyFlow = await db.getAll(`
-            SELECT u.username as listener_username,
-                   a.name as artist_name,
-                   ar.payout_cents,
-                   ar.tracked_seconds,
-                   ar.share_percent
-            FROM artist_royalties ar
-            JOIN users u ON ar.user_id = u.id
-            JOIN artists a ON ar.artist_id = a.id
-            WHERE ar.year = $1 AND ar.month = $2 AND ar.payout_cents > 0
-            ORDER BY ar.payout_cents DESC
-            LIMIT 100
-        `, [year, month]);
-
-        const topArtists = await db.getAll(`
-            SELECT a.name as artist_name, COALESCE(SUM(ph.duration_played), 0) as total_seconds
-            FROM play_history ph
-            JOIN artists a ON ph.artist_id = a.id
-            WHERE ph.played_at >= $1 AND ph.played_at < $2
-            GROUP BY a.id, a.name
-            ORDER BY total_seconds DESC
-            LIMIT 10
-        `, [startDate, endDate]);
-
-        res.json({
-            totalUsers: totalUsers.count || 0,
-            totalTracks: totalTracks.count || 0,
-            totalPlays: totalPlays.count || 0,
-            totalPlaySeconds: totalPlaySeconds.seconds || 0,
-            totalCollectedCents,
-            platformFeeCents,
-            artistPoolCents,
-            perArtist,
-            moneyFlow,
-            topArtists,
-            year,
-            month
-        });
-    } catch (error) {
-        console.error('Analytics error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+    async function safeQuery(name, fn) {
+        try {
+            return await fn();
+        } catch (error) {
+            console.error(`Analytics query error (${name}):`, error.message);
+            result.errors.push(name + ': ' + error.message);
+            return null;
+        }
     }
+
+    const totalUsers = await safeQuery('totalUsers', () => db.get(`SELECT COUNT(*)::int as count FROM users`));
+    if (totalUsers) result.totalUsers = totalUsers.count || 0;
+
+    const totalTracks = await safeQuery('totalTracks', () => db.get(`SELECT COUNT(*)::int as count FROM tracks`));
+    if (totalTracks) result.totalTracks = totalTracks.count || 0;
+
+    const totalPlays = await safeQuery('totalPlays', () => db.get(`SELECT COUNT(*)::int as count FROM play_history`));
+    if (totalPlays) result.totalPlays = totalPlays.count || 0;
+
+    const totalPlaySeconds = await safeQuery('totalPlaySeconds', () => db.get(`SELECT COALESCE(SUM(duration_played), 0)::int as seconds FROM play_history`));
+    if (totalPlaySeconds) result.totalPlaySeconds = totalPlaySeconds.seconds || 0;
+
+    const totalRevenue = await safeQuery('totalRevenue', () => db.get(`
+        SELECT COALESCE(SUM(CASE WHEN account_type = 'group' THEN 1500 ELSE 500 END), 0) as cents
+        FROM users
+        WHERE registration_paid = true AND email_verified = true AND created_at < $1
+    `, [endDate]));
+
+    const totalCollectedCents = totalRevenue ? (parseInt(totalRevenue.cents, 10) || 0) : 0;
+    result.totalCollectedCents = totalCollectedCents;
+    result.platformFeeCents = Math.round(totalCollectedCents * 0.10);
+    result.artistPoolCents = totalCollectedCents - result.platformFeeCents;
+
+    const perArtist = await safeQuery('perArtist', () => db.getAll(`
+        SELECT a.id as artist_id, a.name as artist_name,
+               SUM(ar.payout_cents) as payout_cents,
+               COUNT(DISTINCT ar.user_id) as paying_users,
+               SUM(ar.tracked_seconds) as tracked_seconds
+        FROM artist_royalties ar
+        JOIN artists a ON ar.artist_id = a.id
+        WHERE ar.year = $1 AND ar.month = $2
+        GROUP BY a.id, a.name
+        ORDER BY payout_cents DESC
+    `, [year, month]));
+    if (perArtist) result.perArtist = perArtist;
+
+    const moneyFlow = await safeQuery('moneyFlow', () => db.getAll(`
+        SELECT u.username as listener_username,
+               a.name as artist_name,
+               ar.payout_cents,
+               ar.tracked_seconds,
+               ar.share_percent
+        FROM artist_royalties ar
+        JOIN users u ON ar.user_id = u.id
+        JOIN artists a ON ar.artist_id = a.id
+        WHERE ar.year = $1 AND ar.month = $2 AND ar.payout_cents > 0
+        ORDER BY ar.payout_cents DESC
+        LIMIT 100
+    `, [year, month]));
+    if (moneyFlow) result.moneyFlow = moneyFlow;
+
+    const topArtists = await safeQuery('topArtists', () => db.getAll(`
+        SELECT a.name as artist_name, COALESCE(SUM(ph.duration_played), 0) as total_seconds
+        FROM play_history ph
+        JOIN artists a ON ph.artist_id = a.id
+        WHERE ph.played_at >= $1 AND ph.played_at < $2
+        GROUP BY a.id, a.name
+        ORDER BY total_seconds DESC
+        LIMIT 10
+    `, [startDate, endDate]));
+    if (topArtists) result.topArtists = topArtists;
+
+    res.json(result);
 });
 
 // Search for music - optimiert mit besserer Performance
