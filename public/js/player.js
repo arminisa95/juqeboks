@@ -280,6 +280,22 @@
             state.isPlaying = true;
             saveState();
 
+            try {
+                var token = localStorage.getItem('juke_token');
+                var apiBase = window.JukeAPIBase && window.JukeAPIBase.getApiBase ? window.JukeAPIBase.getApiBase() : '';
+                if (token && track.id && apiBase) {
+                    fetch(apiBase + '/play', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ trackId: track.id, durationPlayed: 0, source: 'player' })
+                    }).catch(function () {});
+                }
+            } catch (_) {
+            }
+
             var p = null;
             try {
                 p = audio.play();

@@ -19,7 +19,7 @@ CREATE TABLE users (
     avatar_url VARCHAR(500),
     bio TEXT,
     subscription_tier VARCHAR(20) DEFAULT 'premium' CHECK (subscription_tier IN ('free', 'premium', 'pro')),
-    account_type VARCHAR(20) DEFAULT 'user' CHECK (account_type IN ('user', 'artist', 'group')),
+    account_type VARCHAR(20) DEFAULT 'user' CHECK (account_type IN ('user', 'group')),
     group_size INTEGER DEFAULT 1,
     is_active BOOLEAN DEFAULT true,
     email_verified BOOLEAN DEFAULT false,
@@ -38,6 +38,7 @@ CREATE TABLE artists (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(200) NOT NULL,
     bio TEXT,
+    created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     image_url VARCHAR(500),
     website_url VARCHAR(500),
     social_links JSONB,
@@ -153,6 +154,34 @@ CREATE TABLE play_history (
     duration_played INTEGER, -- seconds actually played
     device_type VARCHAR(50),
     source_type VARCHAR(50) -- 'playlist', 'album', 'artist', 'search', etc.
+);
+
+CREATE TABLE monthly_royalty_pools (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    year INTEGER NOT NULL,
+    month INTEGER NOT NULL,
+    total_collected_cents BIGINT NOT NULL DEFAULT 0,
+    platform_fee_cents BIGINT NOT NULL DEFAULT 0,
+    artist_pool_cents BIGINT NOT NULL DEFAULT 0,
+    processed BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(year, month)
+);
+
+CREATE TABLE artist_royalties (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    year INTEGER NOT NULL,
+    month INTEGER NOT NULL,
+    tracked_seconds BIGINT NOT NULL DEFAULT 0,
+    share_percent DECIMAL(10, 6) NOT NULL DEFAULT 0,
+    payout_cents BIGINT NOT NULL DEFAULT 0,
+    paid BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(artist_id, user_id, year, month)
 );
 
 -- User sessions for authentication

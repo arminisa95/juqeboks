@@ -28,13 +28,12 @@ const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const STRIPE_USER_PRICE_ID = process.env.STRIPE_USER_PRICE_ID || '';
-const STRIPE_ARTIST_PRICE_ID = process.env.STRIPE_ARTIST_PRICE_ID || '';
 const STRIPE_GROUP_PRICE_ID = process.env.STRIPE_GROUP_PRICE_ID || '';
 const APP_BASE_URL = process.env.APP_BASE_URL || `http://localhost:${PORT}`;
 
 const stripe = STRIPE_SECRET_KEY ? require('stripe')(STRIPE_SECRET_KEY) : null;
 const monetizationService = new MonetizationService();
-const createdPriceIds = { user: null, artist: null, group: null };
+const createdPriceIds = { user: null, group: null };
 
 function getS3Client() {
     if (!S3_BUCKET || !S3_ENDPOINT || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY) return null;
@@ -93,26 +92,22 @@ async function deleteS3KeyIfAny(key) {
 async function getOrCreateStripePrice(accountType, groupSize) {
     if (!stripe) return null;
 
-    const configuredId =
-        accountType === 'artist' ? STRIPE_ARTIST_PRICE_ID :
-        accountType === 'group' ? STRIPE_GROUP_PRICE_ID :
-        STRIPE_USER_PRICE_ID;
+    const configuredId = accountType === 'group' ? STRIPE_GROUP_PRICE_ID : STRIPE_USER_PRICE_ID;
 
     if (configuredId) return configuredId;
     if (createdPriceIds[accountType]) return createdPriceIds[accountType];
 
-    const isArtist = accountType === 'artist';
     const isGroup = accountType === 'group';
-    const unitAmount = isArtist ? 1000 : (isGroup ? 1500 : 500);
-    const name = isArtist ? 'juqeboks Artist Registration' : (isGroup ? 'juqeboks Group (5 Users)' : 'juqeboks User Subscription');
-    const description = isArtist ? 'One-time artist registration fee' : (isGroup ? 'Monthly subscription for 5 users' : 'Monthly user subscription');
+    const unitAmount = isGroup ? 1500 : 500;
+    const name = isGroup ? 'juqeboks Group (5 Users)' : 'juqeboks User Subscription';
+    const description = isGroup ? 'Monthly subscription for 5 users' : 'Monthly user subscription';
 
     try {
         const price = await stripe.prices.create({
             unit_amount: unitAmount,
             currency: 'eur',
             product_data: { name, description },
-            recurring: isArtist ? undefined : { interval: 'month' },
+            recurring: { interval: 'month' },
         });
         createdPriceIds[accountType] = price.id;
         return price.id;
@@ -140,13 +135,12 @@ async function createStripeCustomer(user) {
 async function createCheckoutSession(user, priceId, customerId) {
     if (!stripe || !priceId) return null;
     try {
-        const isArtist = user.account_type === 'artist';
         const successUrl = `${APP_BASE_URL}/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`;
         const cancelUrl = `${APP_BASE_URL}/index.html#/verify-pending`;
         const session = await stripe.checkout.sessions.create({
             customer: customerId,
             line_items: [{ price: priceId, quantity: 1 }],
-            mode: isArtist ? 'payment' : 'subscription',
+            mode: 'subscription',
             success_url: successUrl,
             cancel_url: cancelUrl,
             metadata: {
@@ -185,7 +179,6 @@ app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), asy
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
         const userId = session.metadata && session.metadata.user_id;
-        const accountType = session.metadata && session.metadata.account_type;
         const subscriptionId = session.subscription;
 
         if (userId) {
@@ -194,12 +187,10 @@ app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), asy
                     'UPDATE users SET registration_paid = true, stripe_subscription_id = $1 WHERE id = $2',
                     [subscriptionId || null, userId]
                 );
-                if (accountType !== 'artist') {
-                    await db.query(
-                        `INSERT INTO upload_credits (user_id, credits) VALUES ($1, 999) ON CONFLICT (user_id) DO NOTHING`,
-                        [userId]
-                    );
-                }
+                await db.query(
+                    `INSERT INTO upload_credits (user_id, credits) VALUES ($1, 999) ON CONFLICT (user_id) DO NOTHING`,
+                    [userId]
+                );
             } catch (error) {
                 console.error('Webhook user update error:', error);
             }
@@ -284,6 +275,7 @@ async function initializeDatabase() {
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 name VARCHAR(200) NOT NULL,
                 bio TEXT,
+                created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
                 verified BOOLEAN DEFAULT false,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -385,6 +377,45 @@ async function initializeDatabase() {
                 body TEXT NOT NULL,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS play_history (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+                artist_id UUID REFERENCES artists(id) ON DELETE SET NULL,
+                played_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                duration_played INTEGER DEFAULT 0,
+                device_type VARCHAR(50),
+                source_type VARCHAR(50)
+            );
+
+            CREATE TABLE IF NOT EXISTS monthly_royalty_pools (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                year INTEGER NOT NULL,
+                month INTEGER NOT NULL,
+                total_collected_cents BIGINT NOT NULL DEFAULT 0,
+                platform_fee_cents BIGINT NOT NULL DEFAULT 0,
+                artist_pool_cents BIGINT NOT NULL DEFAULT 0,
+                processed BOOLEAN DEFAULT false,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(year, month)
+            );
+
+            CREATE TABLE IF NOT EXISTS artist_royalties (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                year INTEGER NOT NULL,
+                month INTEGER NOT NULL,
+                tracked_seconds BIGINT NOT NULL DEFAULT 0,
+                share_percent DECIMAL(10, 6) NOT NULL DEFAULT 0,
+                payout_cents BIGINT NOT NULL DEFAULT 0,
+                paid BOOLEAN DEFAULT false,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(artist_id, user_id, year, month)
+            );
         `;
 
         await db.query(schema);
@@ -396,6 +427,7 @@ async function initializeDatabase() {
         await db.query("ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album VARCHAR(200) DEFAULT 'Single'");
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
+        await db.query('ALTER TABLE artists ADD COLUMN IF NOT EXISTS created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL');
 
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100)');
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(100)');
@@ -412,6 +444,22 @@ async function initializeDatabase() {
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)');
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255)');
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_checkout_session_id VARCHAR(255)');
+
+        await db.query(`
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'users_account_type_check'
+                ) THEN
+                    ALTER TABLE users DROP CONSTRAINT users_account_type_check;
+                END IF;
+
+                ALTER TABLE users
+                ADD CONSTRAINT users_account_type_check
+                CHECK (account_type IN ('user', 'group'));
+            END $$;
+        `);
 
         await db.query(`
             DO $$
@@ -518,6 +566,15 @@ async function runMigrations() {
 
         await db.query(`
             UPDATE users
+            SET account_type = 'user',
+                email_verified = true,
+                email_verified_at = CURRENT_TIMESTAMP,
+                registration_paid = true
+            WHERE account_type = 'artist';
+        `);
+
+        await db.query(`
+            UPDATE users
             SET email_verified = true,
                 email_verified_at = CURRENT_TIMESTAMP,
                 registration_paid = true
@@ -607,7 +664,11 @@ const generateToken = (user) => {
             id: user.id,
             username: user.username,
             email: user.email,
-            is_admin: !!(user && (user.is_admin || user.isAdmin))
+            is_admin: !!(user && (user.is_admin || user.isAdmin)),
+            account_type: user.account_type || 'user',
+            group_size: user.group_size || 1,
+            email_verified: !!user.email_verified,
+            registration_paid: !!user.registration_paid,
         },
         JWT_SECRET,
         { expiresIn: '24h' }
@@ -636,7 +697,7 @@ app.post('/api/auth/register', async (req, res) => {
     try {
         const { username, email, password, firstName, lastName, accountType, groupSize } = req.body;
 
-        const normalizedAccountType = ['user', 'artist', 'group'].includes(accountType) ? accountType : 'user';
+        const normalizedAccountType = ['user', 'group'].includes(accountType) ? accountType : 'user';
         const normalizedGroupSize = normalizedAccountType === 'group' ? (Math.min(Math.max(parseInt(groupSize, 10) || 5, 2), 20)) : 1;
         const isAdmin = String(username || '').trim().toLowerCase() === 'admin' && String(password || '') === 'admin';
 
@@ -2262,6 +2323,190 @@ app.delete('/api/tracks/:trackId/comments/:commentId', authenticateToken, async 
     }
 });
 
+// Record a play event for royalty tracking
+app.post('/api/play', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { trackId, durationPlayed = 0, source = 'feed' } = req.body;
+
+        if (!isValidId(trackId)) {
+            return res.status(400).json({ error: 'Invalid track ID' });
+        }
+
+        const track = await db.get(`
+            SELECT t.id, t.artist_id, a.id as artist_id
+            FROM tracks t
+            JOIN artists a ON t.artist_id = a.id
+            WHERE t.id = $1
+        `, [trackId]);
+
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        await db.query(`
+            INSERT INTO play_history (user_id, track_id, artist_id, duration_played, source_type)
+            VALUES ($1, $2, $3, $4, $5)
+        `, [userId, trackId, track.artist_id, Math.max(0, parseInt(durationPlayed, 10) || 0), source]);
+
+        await db.query('UPDATE tracks SET play_count = play_count + 1 WHERE id = $1', [trackId]);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Play tracking error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Calculate monthly royalties: 90% of collected subscription revenue goes to artists
+// pro-rata based on each user's listening share per artist.
+app.post('/api/admin/royalties/calculate', authenticateToken, async (req, res) => {
+    try {
+        if (!req.user.is_admin) {
+            return res.status(403).json({ error: 'Admin required' });
+        }
+
+        const { year, month } = req.body;
+        const now = new Date();
+        const targetYear = year ? parseInt(year, 10) : now.getFullYear();
+        const targetMonth = month ? parseInt(month, 10) : now.getMonth() + 1;
+
+        const startDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-01`;
+        const endDate = targetMonth === 12
+            ? `${targetYear + 1}-01-01`
+            : `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`;
+
+        // Total subscription revenue collected this month (in cents)
+        const revenueResult = await db.get(`
+            SELECT COALESCE(SUM(
+                CASE WHEN account_type = 'group' THEN 1500 ELSE 500 END
+            ), 0) as total_cents
+            FROM users
+            WHERE registration_paid = true
+              AND email_verified = true
+              AND created_at < $1
+        `, [endDate]);
+
+        const totalCollectedCents = parseInt(revenueResult.total_cents, 10) || 0;
+        const platformFeeCents = Math.round(totalCollectedCents * 0.10);
+        const artistPoolCents = totalCollectedCents - platformFeeCents;
+
+        await db.query(`
+            INSERT INTO monthly_royalty_pools (year, month, total_collected_cents, platform_fee_cents, artist_pool_cents, processed)
+            VALUES ($1, $2, $3, $4, $5, true)
+            ON CONFLICT (year, month) DO UPDATE SET
+                total_collected_cents = EXCLUDED.total_collected_cents,
+                platform_fee_cents = EXCLUDED.platform_fee_cents,
+                artist_pool_cents = EXCLUDED.artist_pool_cents,
+                processed = true,
+                updated_at = CURRENT_TIMESTAMP
+        `, [targetYear, targetMonth, totalCollectedCents, platformFeeCents, artistPoolCents]);
+
+        // Clear previous calculations for this month
+        await db.query(`
+            DELETE FROM artist_royalties WHERE year = $1 AND month = $2
+        `, [targetYear, targetMonth]);
+
+        // Per user: sum of listening seconds per artist
+        const userArtistPlays = await db.getAll(`
+            SELECT user_id, artist_id, COALESCE(SUM(duration_played), 0) as seconds
+            FROM play_history
+            WHERE played_at >= $1 AND played_at < $2
+              AND artist_id IS NOT NULL
+            GROUP BY user_id, artist_id
+        `, [startDate, endDate]);
+
+        // Per user: total listening seconds
+        const userTotals = {};
+        for (const row of userArtistPlays) {
+            const uid = row.user_id;
+            const secs = parseInt(row.seconds, 10) || 0;
+            userTotals[uid] = (userTotals[uid] || 0) + secs;
+        }
+
+        // User subscription value (in cents) for this month
+        const userValues = await db.getAll(`
+            SELECT id, CASE WHEN account_type = 'group' THEN 1500 ELSE 500 END as value_cents
+            FROM users
+            WHERE registration_paid = true AND email_verified = true
+        `);
+
+        const userValueMap = {};
+        for (const u of userValues) {
+            userValueMap[u.id] = parseInt(u.value_cents, 10) || 0;
+        }
+
+        // Calculate per-artist, per-user payouts
+        for (const row of userArtistPlays) {
+            const uid = row.user_id;
+            const aid = row.artist_id;
+            const artistSeconds = parseInt(row.seconds, 10) || 0;
+            const totalUserSeconds = userTotals[uid] || 1;
+            const userValue = userValueMap[uid] || 0;
+
+            if (artistSeconds <= 0 || userValue <= 0) continue;
+
+            const share = artistSeconds / totalUserSeconds;
+            const payoutCents = Math.round(userValue * share * 0.90); // 90% of that user's subscription
+
+            await db.query(`
+                INSERT INTO artist_royalties (artist_id, user_id, year, month, tracked_seconds, share_percent, payout_cents)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `, [aid, uid, targetYear, targetMonth, artistSeconds, (share * 100).toFixed(6), payoutCents]);
+        }
+
+        res.json({
+            success: true,
+            year: targetYear,
+            month: targetMonth,
+            totalCollectedCents,
+            platformFeeCents,
+            artistPoolCents,
+        });
+    } catch (error) {
+        console.error('Royalty calculation error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Admin royalty report for a month
+app.get('/api/admin/royalties', authenticateToken, async (req, res) => {
+    try {
+        if (!req.user.is_admin) {
+            return res.status(403).json({ error: 'Admin required' });
+        }
+
+        const { year, month } = req.query;
+        const now = new Date();
+        const targetYear = year ? parseInt(year, 10) : now.getFullYear();
+        const targetMonth = month ? parseInt(month, 10) : now.getMonth() + 1;
+
+        const pool = await db.get(`
+            SELECT * FROM monthly_royalty_pools WHERE year = $1 AND month = $2
+        `, [targetYear, targetMonth]);
+
+        const perArtist = await db.getAll(`
+            SELECT a.name as artist_name, ar.artist_id,
+                   SUM(ar.tracked_seconds) as total_seconds,
+                   SUM(ar.payout_cents) as total_payout_cents,
+                   COUNT(DISTINCT ar.user_id) as listeners
+            FROM artist_royalties ar
+            JOIN artists a ON ar.artist_id = a.id
+            WHERE ar.year = $1 AND ar.month = $2
+            GROUP BY ar.artist_id, a.name
+            ORDER BY total_payout_cents DESC
+        `, [targetYear, targetMonth]);
+
+        res.json({
+            pool: pool || null,
+            artists: perArtist || []
+        });
+    } catch (error) {
+        console.error('Royalty report error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Search for music - optimiert mit besserer Performance
 app.get('/api/search', async (req, res) => {
     try {
@@ -2500,6 +2745,7 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
             const newArtist = await db.insert('artists', {
                 name: artistName,
                 bio: 'Uploaded via JUKE platform',
+                created_by_user_id: userId,
                 verified: false
             });
             artistId = newArtist.id;

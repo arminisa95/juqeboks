@@ -380,34 +380,24 @@
         <main class="auth-main">
             <div class="register-container">
                 <div class="register-header">
-                    <h1 class="register-title">_user registration</h1>
+                    <h1 class="register-title">Join juqeboks</h1>
                     <button class="register-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close welcome">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <p class="welcome-subtitle">Choose your account type to get started</p>
-                <div class="account-type-grid">
+                <p class="welcome-subtitle">Choose your subscription to get started</p>
+                <div class="account-type-grid two-column">
                     <div class="account-type-card" data-type="user">
                         <div class="account-type-icon">_user</div>
-                        <h3>Listener</h3>
+                        <h3>Individual</h3>
                         <p class="account-type-price">5€ <span>/ month</span></p>
                         <ul>
                             <li>Unlimited listening</li>
                             <li>Create playlists</li>
-                            <li>Like & comment</li>
+                            <li>Upload your music</li>
+                            <li>Support artists directly</li>
                         </ul>
                         <button type="button" class="account-type-select">Choose _user</button>
-                    </div>
-                    <div class="account-type-card" data-type="artist">
-                        <div class="account-type-icon">_artist</div>
-                        <h3>Artist</h3>
-                        <p class="account-type-price">10€ <span>one-time</span></p>
-                        <ul>
-                            <li>Upload your music</li>
-                            <li>Artist profile</li>
-                            <li>Analytics dashboard</li>
-                        </ul>
-                        <button type="button" class="account-type-select">Choose _artist</button>
                     </div>
                     <div class="account-type-card" data-type="group">
                         <div class="account-type-icon">_group</div>
@@ -415,9 +405,10 @@
                         <p class="account-type-price">15€ <span>/ month</span></p>
                         <p class="account-type-mini">5 users included</p>
                         <ul>
-                            <li>All _user features</li>
+                            <li>All individual features</li>
                             <li>Up to 5 accounts</li>
                             <li>Shared billing</li>
+                            <li>Everyone can upload</li>
                         </ul>
                         <button type="button" class="account-type-select">Choose _group</button>
                     </div>
@@ -440,7 +431,7 @@
                 </div>
 
                 <div class="selected-account-type">
-                    <span id="selectedTypeLabel">_user</span>
+                    <span id="selectedTypeLabel">Individual</span>
                     <span id="selectedTypePrice">5€ / month</span>
                     <a href="#/welcome">Change</a>
                 </div>
