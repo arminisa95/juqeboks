@@ -1012,13 +1012,14 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(400).json({ error: 'Username and password are required' });
         }
 
-        // Find user
-        const user = await db.get(
-            `SELECT id, username, email, password_hash, first_name, last_name, is_admin,
-                    account_type, group_size, subscription_tier, email_verified, registration_paid
-             FROM users WHERE username = $1 OR email = $1`,
-            [username]
-        );
+        // Find user - use SELECT * to avoid missing column errors
+        let user;
+        try {
+            user = await db.get('SELECT * FROM users WHERE username = $1 OR email = $1', [username]);
+        } catch (dbErr) {
+            console.error('Login DB query error:', dbErr.message);
+            return res.status(500).json({ error: 'Database error: ' + dbErr.message });
+        }
 
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -1045,9 +1046,9 @@ app.post('/api/auth/login', async (req, res) => {
                 email: user.email,
                 firstName: user.first_name,
                 lastName: user.last_name,
-                accountType: user.account_type,
-                groupSize: user.group_size,
-                subscriptionTier: user.subscription_tier,
+                accountType: user.account_type || 'user',
+                groupSize: user.group_size || 1,
+                subscriptionTier: user.subscription_tier || 'premium',
                 isAdmin: !!user.is_admin,
                 emailVerified: !!user.email_verified,
                 registrationPaid: !!user.registration_paid,
@@ -1060,7 +1061,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Login failed: ' + (error.message || 'Internal server error') });
     }
 });
 
