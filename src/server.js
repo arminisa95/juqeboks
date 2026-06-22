@@ -596,6 +596,51 @@ async function runMigrations() {
             );
         `);
 
+        // Create analytics tables with integer references to match production SERIAL ids
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS play_history (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
+                artist_id INTEGER REFERENCES artists(id) ON DELETE SET NULL,
+                duration_played INTEGER DEFAULT 0,
+                source_type VARCHAR(50),
+                played_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS artist_royalties (
+                id SERIAL PRIMARY KEY,
+                artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                year INTEGER NOT NULL,
+                month INTEGER NOT NULL,
+                tracked_seconds BIGINT NOT NULL DEFAULT 0,
+                share_percent DECIMAL(10, 6) NOT NULL DEFAULT 0,
+                payout_cents BIGINT NOT NULL DEFAULT 0,
+                paid BOOLEAN DEFAULT false,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(artist_id, user_id, year, month)
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS monthly_royalty_pools (
+                id SERIAL PRIMARY KEY,
+                year INTEGER NOT NULL,
+                month INTEGER NOT NULL,
+                total_collected_cents BIGINT NOT NULL DEFAULT 0,
+                platform_fee_cents BIGINT NOT NULL DEFAULT 0,
+                artist_pool_cents BIGINT NOT NULL DEFAULT 0,
+                processed BOOLEAN DEFAULT false,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(year, month)
+            );
+        `);
+
         const existing = await db.get(
             'SELECT applied_at FROM migrations WHERE name = $1',
             ['mark_existing_users_verified_paid']
@@ -2714,8 +2759,8 @@ app.get('/api/analytics', async (req, res) => {
     const totalPlays = await safeQuery('totalPlays', () => db.get(`SELECT COUNT(*)::int as count FROM play_history`));
     if (totalPlays) result.totalPlays = totalPlays.count || 0;
 
-    const totalPlaySeconds = await safeQuery('totalPlaySeconds', () => db.get(`SELECT COALESCE(SUM(duration_played), 0)::int as seconds FROM play_history`));
-    if (totalPlaySeconds) result.totalPlaySeconds = totalPlaySeconds.seconds || 0;
+    const totalPlaySeconds = await safeQuery('totalPlaySeconds', () => db.get(`SELECT COALESCE(SUM(duration_played), 0)::bigint as seconds FROM play_history`));
+    if (totalPlaySeconds) result.totalPlaySeconds = parseInt(totalPlaySeconds.seconds, 10) || 0;
 
     const totalRevenue = await safeQuery('totalRevenue', () => db.get(`
         SELECT COALESCE(SUM(CASE WHEN account_type = 'group' THEN 1500 ELSE 500 END), 0) as cents
