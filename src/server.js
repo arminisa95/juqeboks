@@ -263,10 +263,6 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-app.get('/health', (req, res) => {
-    res.status(200).json({ ok: true });
-});
-
 app.get('/favicon.ico', (req, res) => {
     res.redirect(302, '/images/juqe.png');
 });
@@ -3673,11 +3669,22 @@ app.get('/keep-alive', async (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'OK', 
+    res.json({
+        status: 'OK',
         service: 'JUKE Web Service',
         timestamp: new Date().toISOString()
     });
+});
+
+// Database setup endpoint (also runs on startup)
+app.get('/setup-database', async (req, res) => {
+    try {
+        await initializeDatabase();
+        res.json({ success: true, message: 'Database setup completed' });
+    } catch (error) {
+        console.error('/setup-database error:', error);
+        res.status(500).json({ error: 'Database setup failed: ' + error.message });
+    }
 });
 
 // Admin: Reset all users and create testuser (one-time setup endpoint)
