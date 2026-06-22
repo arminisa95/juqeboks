@@ -205,21 +205,15 @@ async function login(username, password) {
             localStorage.setItem('juke_user', JSON.stringify(data.user));
             currentUser = data.user;
 
-            const needsOnboarding = data.needsEmailVerification || data.needsPayment;
-            const redirectTo = needsOnboarding ? '#/verify-pending' : '#/feed';
-
             if (document.body && document.body.dataset && document.body.dataset.spa) {
                 try {
                     document.dispatchEvent(new Event('auth:changed'));
                 } catch (_) {
                 }
-                window.location.hash = redirectTo;
+                window.location.hash = '#/feed';
             } else {
-                // Redirect to feed or verify-pending
                 const base = getBasePath();
-                window.location.href = needsOnboarding
-                    ? `${base}/views/register.html`
-                    : `${base}/views/user.html`;
+                window.location.href = `${base}/views/user.html`;
             }
             return { success: true };
         } else {
@@ -535,9 +529,6 @@ async function register(username, email, password, firstName, lastName, accountT
             // Store token and user data
             localStorage.setItem('juke_token', data.token);
             localStorage.setItem('juke_user', JSON.stringify(data.user));
-            localStorage.setItem('juke_pending_email', data.user.email);
-            localStorage.setItem('juke_pending_session', data.stripeSessionId || '');
-            localStorage.setItem('juke_pending_checkout_url', data.checkoutUrl || '');
             currentUser = data.user;
 
             if (document.body && document.body.dataset && document.body.dataset.spa) {
@@ -545,10 +536,10 @@ async function register(username, email, password, firstName, lastName, accountT
                     document.dispatchEvent(new Event('auth:changed'));
                 } catch (_) {
                 }
-                window.location.hash = '#/verify-pending';
+                window.location.hash = '#/feed';
             } else {
                 const base = getBasePath();
-                window.location.href = `${base}/views/register.html`;
+                window.location.href = `${base}/views/user.html`;
             }
             return { success: true };
         } else {
