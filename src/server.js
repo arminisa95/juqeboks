@@ -811,41 +811,65 @@ app.post('/api/auth/register', async (req, res) => {
         const passwordHash = await bcrypt.hash(password, saltRounds);
         const verificationToken = crypto.randomBytes(32).toString('hex');
 
-        // Create user
-        const newUser = await db.insert('users', {
-            username,
-            email,
-            password_hash: passwordHash,
-            first_name: firstName,
-            last_name: lastName,
-            is_admin: isAdmin,
-            account_type: normalizedAccountType,
-            group_size: normalizedGroupSize,
-            subscription_tier: 'premium',
-            email_verified: false,
-            email_verified_token: verificationToken,
-            registration_paid: false,
-        });
+        // Create user - only include columns that definitely exist
+        let newUser;
+        try {
+            newUser = await db.insert('users', {
+                username,
+                email,
+                password_hash: passwordHash,
+                first_name: firstName || null,
+                last_name: lastName || null,
+                is_admin: isAdmin,
+            });
+        } catch (insertErr) {
+            console.error('User insert error:', insertErr.message);
+            return res.status(500).json({ error: 'Failed to create user: ' + insertErr.message });
+        }
 
-        // Send verification email
-        const emailResult = await sendEmailVerification(newUser, verificationToken);
-        const emailSent = !!(emailResult && (emailResult.sent || emailResult.simulated));
+        // Try to set extended fields (may fail on older schemas)
+        try {
+            await db.query(
+                `UPDATE users SET account_type = $1, group_size = $2, subscription_tier = $3,
+                 email_verified = $4, email_verified_token = $5, registration_paid = $6
+                 WHERE id = $7`,
+                [normalizedAccountType, normalizedGroupSize, 'premium', false, verificationToken, false, newUser.id]
+            );
+            // Re-fetch user with updated fields
+            const updated = await db.get('SELECT * FROM users WHERE id = $1', [newUser.id]);
+            if (updated) newUser = updated;
+        } catch (updateErr) {
+            console.error('User extended fields update (non-fatal):', updateErr.message);
+        }
 
-        // Create Stripe checkout session
+        // Send verification email (non-fatal)
+        let emailSent = false;
+        try {
+            const emailResult = await sendEmailVerification(newUser, verificationToken);
+            emailSent = !!(emailResult && (emailResult.sent || emailResult.simulated));
+        } catch (emailErr) {
+            console.error('Email send error (non-fatal):', emailErr.message);
+        }
+
+        // Create Stripe checkout session (non-fatal)
         let checkoutUrl = null;
         let stripeSessionId = null;
         if (stripe) {
-            const customerId = await createStripeCustomer(newUser);
-            const priceId = await getOrCreateStripePrice(normalizedAccountType, normalizedGroupSize);
-            const session = await createCheckoutSession(newUser, priceId, customerId);
-            if (session) {
-                checkoutUrl = session.url;
-                stripeSessionId = session.id;
-                await db.query('UPDATE users SET stripe_customer_id = $1, stripe_checkout_session_id = $2 WHERE id = $3', [
-                    customerId,
-                    session.id,
-                    newUser.id,
-                ]);
+            try {
+                const customerId = await createStripeCustomer(newUser);
+                const priceId = await getOrCreateStripePrice(normalizedAccountType, normalizedGroupSize);
+                const session = await createCheckoutSession(newUser, priceId, customerId);
+                if (session) {
+                    checkoutUrl = session.url;
+                    stripeSessionId = session.id;
+                    await db.query('UPDATE users SET stripe_customer_id = $1, stripe_checkout_session_id = $2 WHERE id = $3', [
+                        customerId,
+                        session.id,
+                        newUser.id,
+                    ]);
+                }
+            } catch (stripeErr) {
+                console.error('Stripe setup error (non-fatal):', stripeErr.message);
             }
         }
 
@@ -853,22 +877,22 @@ app.post('/api/auth/register', async (req, res) => {
         const token = generateToken(newUser);
 
         res.status(201).json({
-            message: 'User registered successfully. Please verify your email and complete payment.',
+            message: 'User registered successfully.',
             user: {
                 id: newUser.id,
                 username: newUser.username,
                 email: newUser.email,
                 firstName: newUser.first_name,
                 lastName: newUser.last_name,
-                accountType: newUser.account_type,
-                groupSize: newUser.group_size,
+                accountType: newUser.account_type || 'user',
+                groupSize: newUser.group_size || 1,
                 isAdmin: !!(newUser.is_admin || isAdmin),
-                emailVerified: newUser.email_verified,
-                registrationPaid: newUser.registration_paid,
+                emailVerified: !!newUser.email_verified,
+                registrationPaid: !!newUser.registration_paid,
             },
             token,
             needsEmailVerification: true,
-            needsPayment: true,
+            needsPayment: !!(stripe),
             checkoutUrl,
             stripeSessionId,
             emailSent,
@@ -876,7 +900,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Registration failed: ' + (error.message || 'Internal server error') });
     }
 });
 
@@ -3698,6 +3722,61 @@ app.get('/health', (req, res) => {
         service: 'JUKE Web Service',
         timestamp: new Date().toISOString()
     });
+});
+
+// Admin: Reset all users and create testuser (one-time setup endpoint)
+app.post('/api/admin/reset-users', async (req, res) => {
+    try {
+        const { secret } = req.body;
+        // Simple secret to prevent accidental calls
+        if (secret !== 'juqe-reset-2024') {
+            return res.status(403).json({ error: 'Invalid secret' });
+        }
+
+        // Delete all dependent records first
+        try { await db.query('DELETE FROM user_favorites'); } catch (_) {}
+        try { await db.query('DELETE FROM track_comments'); } catch (_) {}
+        try { await db.query('DELETE FROM play_history'); } catch (_) {}
+        try { await db.query('DELETE FROM user_sessions'); } catch (_) {}
+        try { await db.query('DELETE FROM playlist_tracks'); } catch (_) {}
+        try { await db.query('DELETE FROM playlists'); } catch (_) {}
+        try { await db.query('DELETE FROM likes'); } catch (_) {}
+        try { await db.query('DELETE FROM user_following_artists'); } catch (_) {}
+        try { await db.query('DELETE FROM upload_credits'); } catch (_) {}
+        try { await db.query('DELETE FROM artist_royalties'); } catch (_) {}
+
+        // Delete all users
+        await db.query('DELETE FROM users');
+
+        // Create testuser with password 'testuser'
+        const passwordHash = await bcrypt.hash('testuser', 10);
+        const testUser = await db.insert('users', {
+            username: 'testuser',
+            email: 'testuser@juqeboks.de',
+            password_hash: passwordHash,
+            first_name: 'Test',
+            last_name: 'User',
+            is_admin: false,
+        });
+
+        // Set extended fields
+        try {
+            await db.query(
+                `UPDATE users SET account_type = 'user', subscription_tier = 'premium',
+                 email_verified = true, registration_paid = true WHERE id = $1`,
+                [testUser.id]
+            );
+        } catch (_) {}
+
+        res.json({
+            success: true,
+            message: 'All users deleted. Created testuser/testuser.',
+            user: { id: testUser.id, username: testUser.username, email: testUser.email }
+        });
+    } catch (error) {
+        console.error('Reset users error:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Start server with error handling
