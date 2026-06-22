@@ -500,132 +500,87 @@ async function initializeDatabase() {
             );
         `;
 
-        await db.query(schema);
+        try {
+            await db.query(schema);
+        } catch (schemaErr) {
+            console.error('Schema creation error (non-fatal, tables may already exist):', schemaErr.message);
+        }
 
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS uploader_id UUID REFERENCES users(id) ON DELETE SET NULL');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500)');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)');
-        await db.query("ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album VARCHAR(200) DEFAULT 'Single'");
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS terms_confirmed BOOLEAN DEFAULT false');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS rights_confirmed BOOLEAN DEFAULT false');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS rights_confirmed_at TIMESTAMP WITH TIME ZONE');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_sha256 VARCHAR(64)');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS risk_score INTEGER DEFAULT 0');
-        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS moderation_status VARCHAR(20) DEFAULT \'approved\'');
-        await db.query('ALTER TABLE artists ADD COLUMN IF NOT EXISTS created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL');
+        // These ALTER TABLE statements must always run regardless of schema creation result
+        // Each wrapped individually to handle type mismatches on production (SERIAL vs UUID)
+        const alterStatements = [
+            'ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_url VARCHAR(500)',
+            'ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_url VARCHAR(500)',
+            'ALTER TABLE tracks ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)',
+            "ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album VARCHAR(200) DEFAULT 'Single'",
+            'ALTER TABLE tracks ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP',
+            'ALTER TABLE tracks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP',
+            'ALTER TABLE tracks ADD COLUMN IF NOT EXISTS terms_confirmed BOOLEAN DEFAULT false',
+            'ALTER TABLE tracks ADD COLUMN IF NOT EXISTS rights_confirmed BOOLEAN DEFAULT false',
+            'ALTER TABLE tracks ADD COLUMN IF NOT EXISTS rights_confirmed_at TIMESTAMP WITH TIME ZONE',
+            'ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_sha256 VARCHAR(64)',
+            'ALTER TABLE tracks ADD COLUMN IF NOT EXISTS risk_score INTEGER DEFAULT 0',
+            "ALTER TABLE tracks ADD COLUMN IF NOT EXISTS moderation_status VARCHAR(20) DEFAULT 'approved'",
+            // Users table - critical columns for auth
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100)',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(100)',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false',
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(20) DEFAULT 'premium'",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) DEFAULT 'user'",
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS group_size INTEGER DEFAULT 1',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS copyright_strikes INTEGER DEFAULT 0',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS upload_disabled BOOLEAN DEFAULT false',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false',
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_token VARCHAR(255)",
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP WITH TIME ZONE',
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_paid BOOLEAN DEFAULT false",
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255)',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_checkout_session_id VARCHAR(255)',
+        ];
 
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100)');
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(100)');
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)');
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT');
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false');
-        await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(20) DEFAULT 'premium'");
-        await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) DEFAULT 'user'");
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS group_size INTEGER DEFAULT 1');
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS copyright_strikes INTEGER DEFAULT 0');
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS upload_disabled BOOLEAN DEFAULT false');
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false');
-        await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_token VARCHAR(255)");
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP WITH TIME ZONE');
-        await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_paid BOOLEAN DEFAULT false");
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)');
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255)');
-        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_checkout_session_id VARCHAR(255)');
+        for (const stmt of alterStatements) {
+            try {
+                await db.query(stmt);
+            } catch (alterErr) {
+                console.error('ALTER TABLE error (non-fatal):', alterErr.message, '|', stmt.substring(0, 60));
+            }
+        }
 
-        await db.query(`
-            DO $$
-            BEGIN
-                IF EXISTS (
-                    SELECT 1 FROM pg_constraint
-                    WHERE conname = 'users_account_type_check'
-                ) THEN
+        // Constraint modifications - each wrapped in try/catch for production compatibility
+        const constraintBlocks = [
+            `DO $$ BEGIN
+                IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_account_type_check') THEN
                     ALTER TABLE users DROP CONSTRAINT users_account_type_check;
                 END IF;
-
-                ALTER TABLE users
-                ADD CONSTRAINT users_account_type_check
-                CHECK (account_type IN ('user', 'group'));
-            END $$;
-        `);
-
-        await db.query(`
-            DO $$
-            BEGIN
-                IF NOT EXISTS (
-                    SELECT 1
-                    FROM pg_constraint
-                    WHERE conname = 'user_favorites_user_track_unique'
-                ) THEN
-                    ALTER TABLE user_favorites
-                    ADD CONSTRAINT user_favorites_user_track_unique UNIQUE(user_id, track_id);
+                ALTER TABLE users ADD CONSTRAINT users_account_type_check CHECK (account_type IN ('user', 'group'));
+            END $$;`,
+            `DO $$ BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_favorites_user_track_unique') THEN
+                    ALTER TABLE user_favorites ADD CONSTRAINT user_favorites_user_track_unique UNIQUE(user_id, track_id);
                 END IF;
-            END $$;
-        `);
-
-        await db.query(`
-            DO $$
-            BEGIN
-                IF NOT EXISTS (
-                    SELECT 1
-                    FROM pg_constraint
-                    WHERE conname = 'user_likes_unique'
-                ) THEN
-                    ALTER TABLE user_likes
-                    ADD CONSTRAINT user_likes_unique UNIQUE(liker_id, liked_user_id);
+            END $$;`,
+            `DO $$ BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_likes_unique') THEN
+                    ALTER TABLE user_likes ADD CONSTRAINT user_likes_unique UNIQUE(liker_id, liked_user_id);
                 END IF;
-            END $$;
-        `);
-
-        await db.query(`
-            DO $$
-            BEGIN
-                IF NOT EXISTS (
-                    SELECT 1
-                    FROM pg_constraint
-                    WHERE conname = 'playlist_likes_unique'
-                ) THEN
-                    ALTER TABLE playlist_likes
-                    ADD CONSTRAINT playlist_likes_unique UNIQUE(user_id, playlist_id);
+            END $$;`,
+            `DO $$ BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'playlist_likes_unique') THEN
+                    ALTER TABLE playlist_likes ADD CONSTRAINT playlist_likes_unique UNIQUE(user_id, playlist_id);
                 END IF;
-            END $$;
-        `);
+            END $$;`,
+        ];
 
-        await db.query(`
-            DO $$
-            DECLARE r record;
-            BEGIN
-                IF to_regclass('public.track_comments') IS NULL THEN
-                    RETURN;
-                END IF;
-
-                -- Drop only the FK that references tracks (keep user FK intact)
-                FOR r IN (
-                    SELECT c.conname
-                    FROM pg_constraint c
-                    WHERE c.conrelid = 'track_comments'::regclass
-                      AND c.contype = 'f'
-                      AND c.confrelid = 'tracks'::regclass
-                ) LOOP
-                    EXECUTE format('ALTER TABLE track_comments DROP CONSTRAINT IF EXISTS %I', r.conname);
-                END LOOP;
-
-                IF EXISTS (
-                    SELECT 1
-                    FROM information_schema.columns
-                    WHERE table_schema = 'public'
-                      AND table_name = 'track_comments'
-                      AND column_name = 'track_id'
-                      AND data_type <> 'text'
-                ) THEN
-                    ALTER TABLE track_comments
-                    ALTER COLUMN track_id TYPE TEXT
-                    USING track_id::text;
-                END IF;
-            END $$;
-        `);
+        for (const block of constraintBlocks) {
+            try {
+                await db.query(block);
+            } catch (constraintErr) {
+                console.error('Constraint block error (non-fatal):', constraintErr.message);
+            }
+        }
 
         console.log('Database schema initialized');
 
