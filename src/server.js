@@ -3713,16 +3713,11 @@ app.post('/api/admin/reset-users', async (req, res) => {
             first_name: 'Test',
             last_name: 'User',
             is_admin: false,
+            email_verified: true,
+            registration_paid: true,
+            account_type: 'user',
+            subscription_tier: 'premium',
         });
-
-        // Set extended fields
-        try {
-            await db.query(
-                `UPDATE users SET account_type = 'user', subscription_tier = 'premium',
-                 email_verified = true, registration_paid = true WHERE id = $1`,
-                [testUser.id]
-            );
-        } catch (_) {}
 
         res.json({
             success: true,
