@@ -1,62 +1,67 @@
-/*REGISTER
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*/
+/* REGISTER - BLACK & WHITE */
+
+body.auth-page {
+    background: #000 !important;
+}
 
 .register-container {
     width: min(92vw, 480px);
     margin: 0 auto;
-    padding: 24px;
-    background: var(--bg-card);
-    border-radius: 10px;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    backdrop-filter: blur(4px);
-    border: 1px solid var(--border-tertiary);
+    padding: 28px;
+    background: #fff;
+    border-radius: 0;
+    border: 2px solid #000;
+    box-shadow: 8px 8px 0 #000;
 }
 
 .register-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 18px;
+    margin-bottom: 24px;
 }
 
 .register-title {
-    color: #fff;
+    color: #000;
     margin: 0;
     font-size: 1.6em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .register-close-btn {
     background: none;
     border: none;
-    color: var(--white-60);
+    color: #000;
     font-size: 1.2em;
     cursor: pointer;
     padding: 8px;
-    border-radius: 50%;
+    border-radius: 0;
     transition: all 0.2s ease;
 }
 
 .register-close-btn:hover {
     color: #fff;
-    background: var(--bg-card-hover);
+    background: #000;
 }
 
-/* SUBSCRIPTION PLANS STYLING */
+/* SUBSCRIPTION PLANS */
 .subscription-section {
     margin: 24px 0;
 }
 
 .subscription-title {
-    color: #fff;
+    color: #000;
     font-size: 1.3em;
     margin-bottom: 8px;
     text-align: center;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
 .subscription-subtitle {
-    color: var(--white-70);
+    color: #333;
     text-align: center;
     margin-bottom: 20px;
     font-size: 0.9em;
@@ -71,23 +76,30 @@
 .plan-card {
     flex: 1;
     padding: 20px;
-    border: 2px solid var(--border-primary);
-    border-radius: 12px;
-    background: var(--bg-card);
+    border: 2px solid #000;
+    border-radius: 0;
+    background: #fff;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     position: relative;
 }
 
 .plan-card:hover {
-    border-color: var(--border-primary-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px var(--shadow-secondary);
+    background: #f5f5f5;
+    box-shadow: 4px 4px 0 #000;
 }
 
 .plan-card.selected {
-    border-color: #00ffd0;
-    background: var(--bg-card-hover);
+    border-color: #000;
+    background: #000;
+}
+
+.plan-card.selected .plan-name,
+.plan-card.selected .price,
+.plan-card.selected .period,
+.plan-card.selected .plan-features li,
+.plan-card.selected .plan-badge {
+    color: #fff;
 }
 
 .plan-header {
@@ -95,9 +107,10 @@
 }
 
 .plan-name {
-    color: #fff;
+    color: #000;
     font-size: 1.2em;
     margin-bottom: 8px;
+    font-weight: 700;
 }
 
 .plan-price {
@@ -107,13 +120,13 @@
 }
 
 .price {
-    color: #00ffd0;
+    color: #000;
     font-size: 1.8em;
     font-weight: bold;
 }
 
 .period {
-    color: var(--white-70);
+    color: #333;
     font-size: 0.9em;
 }
 
@@ -121,12 +134,13 @@
     position: absolute;
     top: -10px;
     right: 10px;
-    background: linear-gradient(135deg, #ffd700, #ff8c00);
-    color: #000;
+    background: #000;
+    color: #fff;
     padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: 0;
     font-size: 0.75em;
     font-weight: bold;
+    text-transform: uppercase;
 }
 
 .plan-features ul {
@@ -136,7 +150,7 @@
 }
 
 .plan-features li {
-    color: var(--white-80);
+    color: #000;
     padding: 4px 0;
     font-size: 0.85em;
     display: flex;
@@ -145,7 +159,7 @@
 }
 
 .plan-features i {
-    color: #00ffd0;
+    color: #000;
     font-size: 0.8em;
 }
 
@@ -162,20 +176,20 @@
     display: inline-block;
     width: 20px;
     height: 20px;
-    border: 2px solid var(--border-primary);
+    border: 2px solid #000;
     border-radius: 50%;
     cursor: pointer;
     position: relative;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .radio-label:hover {
-    border-color: var(--border-primary-hover);
+    background: #f5f5f5;
 }
 
 .plan-radio input[type="radio"]:checked + .radio-label {
-    border-color: #00ffd0;
-    background: #00ffd0;
+    border-color: #000;
+    background: #000;
 }
 
 .plan-radio input[type="radio"]:checked + .radio-label::after {
@@ -186,19 +200,20 @@
     transform: translate(-50%, -50%);
     width: 8px;
     height: 8px;
-    background: #000;
+    background: #fff;
     border-radius: 50%;
 }
 
-/* PAYMENT SECTION STYLING */
+/* PAYMENT SECTION */
 .payment-section {
     margin: 24px 0;
 }
 
 .payment-title {
-    color: #fff;
+    color: #000;
     font-size: 1.1em;
     margin-bottom: 16px;
+    font-weight: 700;
 }
 
 .payment-methods {
@@ -221,35 +236,36 @@
     align-items: center;
     gap: 8px;
     padding: 12px 16px;
-    border: 2px solid var(--border-primary);
-    border-radius: 8px;
-    background: var(--bg-card);
+    border: 2px solid #000;
+    border-radius: 0;
+    background: #fff;
     cursor: pointer;
-    transition: all 0.3s ease;
-    color: var(--white-80);
+    transition: all 0.2s ease;
+    color: #000;
     font-size: 0.9em;
+    font-weight: 600;
 }
 
 .payment-label:hover {
-    border: 1px solid var(--border-primary-hover);
+    background: #f5f5f5;
 }
 
 .payment-option.selected .payment-label {
-    border-color: #00ffd0;
-    background: var(--bg-card-hover);
+    border-color: #000;
+    background: #000;
     color: #fff;
 }
 
 .card-details {
     padding: 16px;
-    background: var(--bg-card-hover);
-    border-radius: 8px;
-    border: 1px solid var(--border-secondary);
+    background: #f5f5f5;
+    border-radius: 0;
+    border: 2px solid #000;
 }
 
 /* FORM STYLING */
 .form-group {
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
 .form-row {
@@ -263,80 +279,88 @@
 
 .form-group label {
     display: block;
-    color: #dbd8d8;
+    color: #000;
     margin-bottom: 6px;
     font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .form-group input {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border-secondary);
-    background: var(--bg-card);
-    border-radius: 8px;
-    color: #fff;
+    padding: 12px 14px;
+    border: 2px solid #000;
+    background: #fff;
+    border-radius: 0;
+    color: #000;
     font-size: 14px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: #00ffd0;
-    box-shadow: 0 0 0 2px rgba(0, 255, 208, 0.2);
+    background: #f5f5f5;
+    box-shadow: 4px 4px 0 #000;
 }
 
 .form-group input::placeholder {
-    color: var(--white-40);
+    color: #666;
 }
 
 .register-btn {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(135deg, #00ffd0, #00b896);
-    border: none;
-    border-radius: 8px;
-    color: #000;
-    font-weight: bold;
+    background: #000;
+    border: 2px solid #000;
+    border-radius: 0;
+    color: #fff;
+    font-weight: 700;
     font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     margin-top: 24px;
 }
 
 .register-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 255, 208, 0.3);
+    background: #fff;
+    color: #000;
 }
 
 .login-link {
     text-align: center;
-    margin-top: 14px;
-    color: #dbd8d8;
+    margin-top: 18px;
+    color: #000;
     font-size: 14px;
 }
 
 .login-link a {
-    color: #00ffd0;
-    text-decoration: none;
-    transition: color 0.3s ease;
+    color: #000;
+    text-decoration: underline;
+    font-weight: 700;
+    transition: all 0.2s ease;
 }
 
 .login-link a:hover {
-    color: #00c3ff;
+    background: #000;
+    color: #fff;
+    text-decoration: none;
 }
 
 .password-requirements {
     font-size: 0.8em;
-    color: #a0a0a0;
+    color: #333;
     margin-top: 5px;
 }
 
-/* Social Login Styles */
+/* Social Login */
 .divider {
     display: flex;
     align-items: center;
     text-align: center;
-    color: #a0a0a0;
+    color: #000;
     margin: 14px 0;
     font-size: 14px;
 }
@@ -345,7 +369,7 @@
 .divider::after {
     content: '';
     flex: 1;
-    border-bottom: 1px solid var(--border-secondary);
+    border-bottom: 1px solid #000;
 }
 
 .divider:not(:empty)::before {
@@ -368,13 +392,18 @@
     align-items: center;
     justify-content: center;
     padding: 10px;
-    border: 1px solid var(--border-secondary);
-    border-radius: 8px;
-    background: var(--bg-card);
-    color: #dbd8d8;
+    border: 2px solid #000;
+    border-radius: 0;
+    background: #fff;
+    color: #000;
     font-size: 13px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+}
+
+.social-btn:hover {
+    background: #000;
+    color: #fff;
 }
 
 .social-btn i {
@@ -382,34 +411,17 @@
     font-size: 16px;
 }
 
-.social-btn.google:hover {
-    background: #DB4437;
-    border-color: #DB4437;
-}
-
-.social-btn.facebook {
-    background: #4267B2;
-    border-color: #4267B2;
-}
-
-.social-btn.facebook:hover {
-    background: #3b5998;
-    border-color: #3b5998;
-}
-
-.social-btn.apple {
-    background: #000;
-    border-color: #000;
-}
-
+.social-btn.google:hover,
+.social-btn.facebook:hover,
 .social-btn.apple:hover {
-    background: #333;
-    border-color: #333;
+    background: #000;
+    color: #fff;
+    border-color: #000;
 }
 
 /* WELCOME / ACCOUNT TYPE SELECTION */
 .welcome-subtitle {
-    color: var(--white-70);
+    color: #000;
     text-align: center;
     margin-bottom: 20px;
 }
@@ -422,49 +434,63 @@
 }
 
 .account-type-card {
-    border: 2px solid var(--border-primary);
-    border-radius: 12px;
+    border: 2px solid #000;
+    border-radius: 0;
     padding: 20px;
-    background: var(--bg-card);
+    background: #fff;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: all 0.2s ease;
     text-align: center;
 }
 
 .account-type-card:hover {
-    border-color: #00ffd0;
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px var(--shadow-secondary);
+    background: #f5f5f5;
+    box-shadow: 4px 4px 0 #000;
+}
+
+.account-type-card.selected {
+    background: #000;
+    color: #fff;
+}
+
+.account-type-card.selected .account-type-icon,
+.account-type-card.selected .account-type-price,
+.account-type-card.selected .account-type-mini,
+.account-type-card.selected h3,
+.account-type-card.selected ul li,
+.account-type-card.selected .account-type-select {
+    color: #fff;
+    border-color: #fff;
 }
 
 .account-type-icon {
     font-size: 1.2em;
     font-weight: bold;
-    color: #00ffd0;
+    color: #000;
     margin-bottom: 8px;
 }
 
 .account-type-card h3 {
-    color: #fff;
+    color: #000;
     margin: 0 0 8px;
     font-size: 1.1em;
 }
 
 .account-type-price {
-    color: #00ffd0;
+    color: #000;
     font-size: 1.5em;
     font-weight: bold;
     margin: 0 0 4px;
 }
 
 .account-type-price span {
-    color: var(--white-70);
+    color: #333;
     font-size: 0.6em;
     font-weight: normal;
 }
 
 .account-type-mini {
-    color: var(--white-70);
+    color: #333;
     font-size: 0.85em;
     margin: 0 0 10px;
 }
@@ -473,7 +499,7 @@
     list-style: none;
     padding: 0;
     margin: 0 0 16px;
-    color: var(--white-70);
+    color: #000;
     font-size: 0.85em;
 }
 
@@ -485,38 +511,38 @@
     width: 100%;
     padding: 10px;
     background: transparent;
-    border: 1px solid #00ffd0;
-    color: #00ffd0;
-    border-radius: 6px;
+    border: 2px solid #000;
+    color: #000;
+    border-radius: 0;
     cursor: pointer;
     font-weight: 600;
     transition: all 0.2s ease;
 }
 
 .account-type-card:hover .account-type-select {
-    background: #00ffd0;
-    color: #000;
+    background: #000;
+    color: #fff;
 }
 
 .selected-account-type {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--bg-card-hover);
-    border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    background: #f5f5f5;
+    border: 2px solid #000;
+    border-radius: 0;
     padding: 12px 16px;
     margin-bottom: 18px;
-    color: #fff;
+    color: #000;
 }
 
 .selected-account-type span:first-child {
     font-weight: bold;
-    color: #00ffd0;
+    color: #000;
 }
 
 .selected-account-type a {
-    color: var(--white-70);
+    color: #000;
     font-size: 0.85em;
 }
 
@@ -541,23 +567,34 @@
     justify-content: center;
     gap: 6px;
     padding: 10px;
-    border: 1px solid var(--border-primary);
-    border-radius: 8px;
-    background: var(--bg-card);
-    color: var(--white-70);
+    border: 2px solid #000;
+    border-radius: 0;
+    background: #fff;
+    color: #000;
     font-size: 0.85em;
     transition: all 0.2s ease;
 }
 
 .payment-method-option input:checked + span {
-    border-color: #00ffd0;
-    background: rgba(0, 255, 208, 0.1);
+    border-color: #000;
+    background: #000;
     color: #fff;
 }
 
 .terms-checkbox {
     font-size: 0.85em;
-    color: var(--white-70);
+    color: #000;
+}
+
+.terms-checkbox a {
+    color: #000;
+    text-decoration: underline;
+}
+
+.terms-checkbox a:hover {
+    background: #000;
+    color: #fff;
+    text-decoration: none;
 }
 
 /* VERIFY PENDING */
@@ -571,23 +608,31 @@
     display: flex;
     gap: 16px;
     padding: 16px;
-    border: 1px solid var(--border-primary);
-    border-radius: 10px;
-    background: var(--bg-card);
+    border: 2px solid #000;
+    border-radius: 0;
+    background: #fff;
     opacity: 1;
 }
 
 .pending-step.done {
-    border-color: #00ffd0;
-    opacity: 0.6;
+    border-color: #000;
+    background: #000;
+    opacity: 1;
+}
+
+.pending-step.done .step-content h3,
+.pending-step.done .step-content p,
+.pending-step.done .step-number,
+.pending-step.done .verify-btn {
+    color: #fff;
 }
 
 .step-number {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--bg-card-hover);
-    color: #00ffd0;
+    background: #f5f5f5;
+    color: #000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -596,18 +641,18 @@
 }
 
 .pending-step.done .step-number {
-    background: #00ffd0;
+    background: #fff;
     color: #000;
 }
 
 .step-content h3 {
-    color: #fff;
+    color: #000;
     margin: 0 0 6px;
     font-size: 1.1em;
 }
 
 .step-content p {
-    color: var(--white-70);
+    color: #333;
     margin: 0 0 12px;
     font-size: 0.9em;
 }
@@ -615,19 +660,25 @@
 .verify-btn {
     width: 100%;
     padding: 12px;
-    background: #00ffd0;
-    border: none;
-    border-radius: 6px;
-    color: #000;
+    background: #000;
+    border: 2px solid #000;
+    border-radius: 0;
+    color: #fff;
     font-weight: bold;
     cursor: pointer;
     margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.verify-btn:hover {
+    background: #fff;
+    color: #000;
 }
 
 .text-link {
     background: none;
     border: none;
-    color: var(--white-70);
+    color: #000;
     text-decoration: underline;
     cursor: pointer;
     padding: 0;
@@ -635,38 +686,40 @@
 }
 
 .text-link:hover {
-    color: #00ffd0;
+    background: #000;
+    color: #fff;
+    text-decoration: none;
 }
 
 /* RESPONSIVE DESIGN */
 @media (max-width: 480px) {
     .register-container {
         width: 92vw;
-        padding: 16px;
+        padding: 20px;
     }
-    
+
     .subscription-plans {
         flex-direction: column;
         gap: 12px;
     }
-    
+
     .payment-methods {
         flex-direction: column;
     }
-    
+
     .form-row {
         flex-direction: column;
         gap: 8px;
     }
-    
+
     .plan-card {
         padding: 16px;
     }
-    
+
     .subscription-title {
         font-size: 1.1em;
     }
-    
+
     .price {
         font-size: 1.5em;
     }
