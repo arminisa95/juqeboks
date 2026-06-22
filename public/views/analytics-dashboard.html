@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Analytics Dashboard || JUKE</title>
+    <title>JUKE Fair - Money Flow</title>
     
     <!-- JUKE CSS Styles -->
     <link rel="stylesheet" href="../css/styles.css">
@@ -462,7 +462,7 @@
         <div class="analytics-container">
             <!-- Header -->
             <div class="analytics-header">
-                <h1 class="analytics-title">Analytics Dashboard</h1>
+                <h1 class="analytics-title">JUKE Fair</h1>
                 <div class="analytics-controls">
                     <select id="dateRange" class="date-selector">
                         <option value="7">Last 7 days</option>
@@ -503,7 +503,6 @@
                         <div class="metric-icon">
                             <i class="fas fa-play"></i>
                         </div>
-                        <span class="metric-change">+12%</span>
                     </div>
                     <div class="metric-value" id="totalPlays">0</div>
                     <div class="metric-label">Total Plays</div>
@@ -514,7 +513,6 @@
                         <div class="metric-icon">
                             <i class="fas fa-clock"></i>
                         </div>
-                        <span class="metric-change">+8%</span>
                     </div>
                     <div class="metric-value" id="totalMinutes">0</div>
                     <div class="metric-label">Minutes Listened</div>
@@ -525,7 +523,6 @@
                         <div class="metric-icon">
                             <i class="fas fa-upload"></i>
                         </div>
-                        <span class="metric-change">+25%</span>
                     </div>
                     <div class="metric-value" id="totalUploads">0</div>
                     <div class="metric-label">Tracks Uploaded</div>
@@ -536,21 +533,39 @@
                         <div class="metric-icon">
                             <i class="fas fa-users"></i>
                         </div>
-                        <span class="metric-change">+15%</span>
                     </div>
                     <div class="metric-value" id="totalFollowers">0</div>
                     <div class="metric-label">Followers</div>
                 </div>
             </div>
 
-            <!-- Business Metrics -->
-            <div class="metrics-grid">
+            <!-- Money Pot / Full Pot -->
+            <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="metric-card" style="background: linear-gradient(135deg, rgba(0,255,208,0.15), rgba(0,184,150,0.1)); border-color: rgba(0,255,208,0.4);">
+                    <div class="metric-header">
+                        <div class="metric-icon" style="background: rgba(0,255,208,0.2); color: #00ffd0;">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                    <div class="metric-value" id="fullPot">€0</div>
+                    <div class="metric-label">Total Money in the Pot</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                    </div>
+                    <div class="metric-value" id="platformFee">€0</div>
+                    <div class="metric-label">Platform Fee (10%)</div>
+                </div>
+
                 <div class="metric-card">
                     <div class="metric-header">
                         <div class="metric-icon">
                             <i class="fas fa-users"></i>
                         </div>
-                        <span class="metric-change">+23%</span>
                     </div>
                     <div class="metric-value" id="totalUsers">0</div>
                     <div class="metric-label">Total Users</div>
@@ -561,7 +576,6 @@
                         <div class="metric-icon">
                             <i class="fas fa-euro-sign"></i>
                         </div>
-                        <span class="metric-change">+18%</span>
                     </div>
                     <div class="metric-value" id="monthlyRevenue">€0</div>
                     <div class="metric-label">Monthly Revenue</div>
@@ -572,7 +586,6 @@
                         <div class="metric-icon">
                             <i class="fas fa-hand-holding-usd"></i>
                         </div>
-                        <span class="metric-change">+31%</span>
                     </div>
                     <div class="metric-value" id="artistPayouts">€0</div>
                     <div class="metric-label">Artist Payouts This Month</div>
@@ -583,10 +596,17 @@
                         <div class="metric-icon">
                             <i class="fas fa-chart-line"></i>
                         </div>
-                        <span class="metric-change">+45%</span>
                     </div>
                     <div class="metric-value" id="activeArtists">0</div>
                     <div class="metric-label">Active Artists</div>
+                </div>
+            </div>
+
+            <!-- Money Flow Section -->
+            <div class="activity-section" style="margin-bottom: 2rem;">
+                <h3 class="activity-title">Money Flow: Users → Artists</h3>
+                <div id="moneyFlowTable" style="max-height: 300px; overflow-y: auto;">
+                    <p style="color: rgba(255,255,255,0.6); text-align: center; padding: 1rem;">No money flow data yet.</p>
                 </div>
             </div>
 
@@ -626,33 +646,34 @@
 
             <!-- Recent Activity -->
             <div class="activity-section">
-                <h3 class="activity-title">Recent Activity</h3>
+                <h3 class="activity-title">How the Money Flows</h3>
                 <ul class="activity-list" id="activityList">
                     <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-play"></i>
-                        </div>
+                        <div class="activity-icon"><i class="fas fa-wallet"></i></div>
                         <div class="activity-details">
-                            <div class="activity-text">Someone played your track "Summer Vibes"</div>
-                            <div class="activity-time">2 minutes ago</div>
+                            <div class="activity-text">Users pay subscription fees (€5 user / €15 group)</div>
+                            <div class="activity-time">100% goes into the pot</div>
                         </div>
                     </li>
                     <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-heart"></i>
-                        </div>
+                        <div class="activity-icon"><i class="fas fa-percentage"></i></div>
                         <div class="activity-details">
-                            <div class="activity-text">New follower: @musiclover</div>
-                            <div class="activity-time">1 hour ago</div>
+                            <div class="activity-text">Platform keeps 10% to run JUKE</div>
+                            <div class="activity-time">90% is distributed to artists</div>
                         </div>
                     </li>
                     <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-upload"></i>
-                        </div>
+                        <div class="activity-icon"><i class="fas fa-headphones"></i></div>
                         <div class="activity-details">
-                            <div class="activity-text">You uploaded "Night Dreams"</div>
-                            <div class="activity-time">3 hours ago</div>
+                            <div class="activity-text">Each user's listening time is tracked per artist</div>
+                            <div class="activity-time">Money is split pro-rata by share of listening</div>
+                        </div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                        <div class="activity-details">
+                            <div class="activity-text">Artists receive payouts based on real plays</div>
+                            <div class="activity-time">Paid monthly after royalty calculation</div>
                         </div>
                     </li>
                 </ul>
@@ -759,118 +780,163 @@
             });
         }
 
-        function loadAnalyticsData() {
+        function formatEuro(cents) {
+            return '€' + ((cents || 0) / 100).toFixed(2);
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return '0s';
+            const m = Math.floor(seconds / 60);
+            return m + 'm';
+        }
+
+        async function fetchAnalytics() {
+            const baseUrls = [
+                'https://juke-api.onrender.com/api',
+                'http://localhost:3000/api',
+                '/api'
+            ];
+            let lastErr = null;
+            for (const base of baseUrls) {
+                try {
+                    const res = await fetch(base + '/analytics', { method: 'GET' });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return await res.json();
+                } catch (e) {
+                    lastErr = e;
+                }
+            }
+            throw lastErr;
+        }
+
+        async function loadAnalyticsData() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            const originalContent = refreshBtn ? refreshBtn.innerHTML : '';
+            if (refreshBtn) refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+            try {
+                const data = await fetchAnalytics();
+                updateMetrics(data);
+                updateCharts(data);
+                updateUserInfo(data);
+                updateTopArtists(data);
+                updateMoneyFlow(data);
+            } catch (err) {
+                console.error('Analytics load failed:', err);
+                document.getElementById('moneyFlowTable').innerHTML =
+                    '<p style="color: #ff6b6b; text-align: center; padding: 1rem;">Failed to load analytics data.</p>';
+            }
+
+            if (refreshBtn) {
+                setTimeout(() => refreshBtn.innerHTML = originalContent, 500);
+            }
+        }
+
+        function updateMetrics(data) {
+            data = data || {};
+            document.getElementById('totalPlays').textContent = (data.totalPlays || 0).toLocaleString();
+            document.getElementById('totalMinutes').textContent = Math.floor((data.totalPlaySeconds || 0) / 60).toLocaleString();
+            document.getElementById('totalUploads').textContent = (data.totalTracks || 0).toLocaleString();
+            document.getElementById('totalFollowers').textContent = (data.totalUsers || 0).toLocaleString();
+
+            document.getElementById('totalUsers').textContent = (data.totalUsers || 0).toLocaleString();
+            document.getElementById('monthlyRevenue').textContent = formatEuro(data.totalCollectedCents || 0);
+            document.getElementById('artistPayouts').textContent = formatEuro(data.artistPoolCents || 0);
+            document.getElementById('activeArtists').textContent = (data.perArtist ? data.perArtist.length : 0).toLocaleString();
+
+            document.getElementById('fullPot').textContent = formatEuro(data.totalCollectedCents || 0);
+            document.getElementById('platformFee').textContent = formatEuro(data.platformFeeCents || 0);
+        }
+
+        function updateCharts(data) {
+            data = data || {};
             const dateRange = document.getElementById('dateRange').value;
-            
-            // Simulate API call with demo data
-            setTimeout(() => {
-                updateMetrics();
-                updateCharts(dateRange);
-                updateUserInfo();
-                updateTopArtists();
-            }, 500);
-        }
-
-        function updateMetrics() {
-            // Generate random metrics for demo
-            document.getElementById('totalPlays').textContent = Math.floor(Math.random() * 10000) + 1000;
-            document.getElementById('totalMinutes').textContent = Math.floor(Math.random() * 50000) + 5000;
-            document.getElementById('totalUploads').textContent = Math.floor(Math.random() * 50) + 5;
-            document.getElementById('totalFollowers').textContent = Math.floor(Math.random() * 500) + 50;
-            
-            // Business metrics
-            document.getElementById('totalUsers').textContent = (Math.floor(Math.random() * 50000) + 10000).toLocaleString();
-            document.getElementById('monthlyRevenue').textContent = '€' + (Math.floor(Math.random() * 50000) + 10000).toLocaleString();
-            document.getElementById('artistPayouts').textContent = '€' + (Math.floor(Math.random() * 30000) + 5000).toLocaleString();
-            document.getElementById('activeArtists').textContent = (Math.floor(Math.random() * 2000) + 500).toLocaleString();
-        }
-
-        function updateCharts(dateRange) {
             const days = parseInt(dateRange);
             const labels = [];
             const playsData = [];
 
-            // Generate date labels
             for (let i = days - 1; i >= 0; i--) {
                 const date = new Date();
                 date.setDate(date.getDate() - i);
                 labels.push(date.toLocaleDateString());
-                playsData.push(Math.floor(Math.random() * 200) + 50);
+                playsData.push(0);
             }
 
-            // Update plays chart
             playsChart.data.labels = labels;
             playsChart.data.datasets[0].data = playsData;
             playsChart.update();
 
-            // Update genre chart
-            const genres = ['Electronic', 'Hip Hop', 'Rock', 'Pop', 'Jazz', 'R&B'];
-            const genreData = genres.map(() => Math.floor(Math.random() * 100) + 20);
-            
-            genreChart.data.labels = genres;
-            genreChart.data.datasets[0].data = genreData;
+            const perArtist = data.perArtist || [];
+            genreChart.data.labels = perArtist.slice(0, 6).map(a => a.artist_name || 'Unknown');
+            genreChart.data.datasets[0].data = perArtist.slice(0, 6).map(a => a.payout_cents || 0);
             genreChart.update();
         }
 
-        function updateUserInfo() {
-            // Simulate user data
-            document.getElementById('userName').textContent = 'JUKE Artist';
-            document.getElementById('userTier').textContent = 'Premium Plan';
+        function updateUserInfo(data) {
+            data = data || {};
+            document.getElementById('userName').textContent = 'JUKE Fair Analytics';
+            document.getElementById('userTier').textContent = (data.year || new Date().getFullYear()) + '-' + String(data.month || new Date().getMonth() + 1).padStart(2, '0');
             document.getElementById('uploadCredits').textContent = '∞';
         }
 
-        function updateTopArtists() {
-            // Generate demo data for top listened artists
-            const listenedArtists = [
-                { name: 'Electronic Dreams', plays: 45234, tracks: 12 },
-                { name: 'Hip Hop Kings', plays: 38921, tracks: 8 },
-                { name: 'Rock Legends', plays: 35678, tracks: 15 },
-                { name: 'Pop Sensation', plays: 32145, tracks: 6 },
-                { name: 'Jazz Masters', plays: 28934, tracks: 10 },
-                { name: 'R&B Stars', plays: 26789, tracks: 9 },
-                { name: 'Indie Vibes', plays: 24567, tracks: 11 },
-                { name: 'Classical Works', plays: 22345, tracks: 7 },
-                { name: 'Folk Stories', plays: 20123, tracks: 13 },
-                { name: 'Metal Force', plays: 18976, tracks: 5 }
-            ];
-
+        function updateTopArtists(data) {
+            data = data || {};
+            const listenedArtists = data.topArtists || [];
             const listenedContainer = document.getElementById('topListenedArtists');
-            listenedContainer.innerHTML = listenedArtists.map((artist, index) => `
-                <div class="artist-rank-item">
-                    <div class="artist-rank-number ${index < 3 ? 'top-3' : ''}">${index + 1}</div>
-                    <div class="artist-info">
-                        <div class="artist-name">${artist.name}</div>
-                        <div class="artist-stats">${artist.tracks} tracks</div>
+            listenedContainer.innerHTML = listenedArtists.length
+                ? listenedArtists.map((artist, index) => `
+                    <div class="artist-rank-item">
+                        <div class="artist-rank-number ${index < 3 ? 'top-3' : ''}">${index + 1}</div>
+                        <div class="artist-info">
+                            <div class="artist-name">${artist.artist_name || 'Unknown'}</div>
+                            <div class="artist-stats">${formatDuration(artist.total_seconds)} listened</div>
+                        </div>
+                        <div class="artist-metric plays">${formatDuration(artist.total_seconds)}</div>
                     </div>
-                    <div class="artist-metric plays">${artist.plays.toLocaleString()} plays</div>
-                </div>
-            `).join('');
+                `).join('')
+                : '<p style="color: rgba(255,255,255,0.6); text-align: center; padding: 1rem;">No listening data yet.</p>';
 
-            // Generate demo data for top paid artists
-            const paidArtists = [
-                { name: 'Electronic Dreams', revenue: 12456, plays: 45234 },
-                { name: 'Hip Hop Kings', revenue: 11234, plays: 38921 },
-                { name: 'Rock Legends', revenue: 9876, plays: 35678 },
-                { name: 'Pop Sensation', revenue: 8901, plays: 32145 },
-                { name: 'Jazz Masters', revenue: 7654, plays: 28934 },
-                { name: 'R&B Stars', revenue: 6789, plays: 26789 },
-                { name: 'Indie Vibes', revenue: 5678, plays: 24567 },
-                { name: 'Classical Works', revenue: 4567, plays: 22345 },
-                { name: 'Folk Stories', revenue: 3456, plays: 20123 },
-                { name: 'Metal Force', revenue: 2890, plays: 18976 }
-            ];
-
+            const paidArtists = data.perArtist || [];
             const paidContainer = document.getElementById('topPaidArtists');
-            paidContainer.innerHTML = paidArtists.map((artist, index) => `
-                <div class="artist-rank-item">
-                    <div class="artist-rank-number ${index < 3 ? 'top-3' : ''}">${index + 1}</div>
-                    <div class="artist-info">
-                        <div class="artist-name">${artist.name}</div>
-                        <div class="artist-stats">${artist.plays.toLocaleString()} plays</div>
+            paidContainer.innerHTML = paidArtists.length
+                ? paidArtists.map((artist, index) => `
+                    <div class="artist-rank-item">
+                        <div class="artist-rank-number ${index < 3 ? 'top-3' : ''}">${index + 1}</div>
+                        <div class="artist-info">
+                            <div class="artist-name">${artist.artist_name || 'Unknown'}</div>
+                            <div class="artist-stats">${artist.paying_users || 0} paying listeners</div>
+                        </div>
+                        <div class="artist-metric revenue">${formatEuro(artist.payout_cents || 0)}</div>
                     </div>
-                    <div class="artist-metric revenue">€${artist.revenue.toLocaleString()}</div>
-                </div>
-            `).join('');
+                `).join('')
+                : '<p style="color: rgba(255,255,255,0.6); text-align: center; padding: 1rem;">No payout data yet.</p>';
+        }
+
+        function updateMoneyFlow(data) {
+            data = data || {};
+            const flow = data.moneyFlow || [];
+            const container = document.getElementById('moneyFlowTable');
+            container.innerHTML = flow.length
+                ? `<table style="width: 100%; border-collapse: collapse; color: #fff; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                            <th style="text-align: left; padding: 0.5rem;">Listener</th>
+                            <th style="text-align: left; padding: 0.5rem;">Artist</th>
+                            <th style="text-align: right; padding: 0.5rem;">Share</th>
+                            <th style="text-align: right; padding: 0.5rem;">Flow</th>
+                        </tr>
+                    </thead>
+                    <tbody>` +
+                    flow.map(f => `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 0.5rem;">${f.listener_username || 'Unknown'}</td>
+                            <td style="padding: 0.5rem;">${f.artist_name || 'Unknown'}</td>
+                            <td style="text-align: right; padding: 0.5rem;">${(f.share_percent || 0).toFixed(2)}%</td>
+                            <td style="text-align: right; padding: 0.5rem; color: #00ffd0; font-weight: bold;">${formatEuro(f.payout_cents || 0)}</td>
+                        </tr>
+                    `).join('') +
+                    `</tbody></table>`
+                : '<p style="color: rgba(255,255,255,0.6); text-align: center; padding: 1rem;">No money flow data yet. Calculate royalties first in admin panel.</p>';
         }
 
         function refreshData() {
@@ -888,27 +954,6 @@
             }, 1000);
         }
 
-        // Show upgrade prompt for free users (demo)
-        function showUpgradePrompt() {
-            const upgradeCard = document.createElement('div');
-            upgradeCard.className = 'upgrade-prompt';
-            upgradeCard.innerHTML = `
-                <h3 class="upgrade-title">Upgrade to Premium</h3>
-                <p class="upgrade-text">Get detailed analytics, unlimited uploads, and more!</p>
-                <a href="subscription-plans.html" class="upgrade-btn">Upgrade Now</a>
-            `;
-            document.body.appendChild(upgradeCard);
-
-            // Auto-remove after 10 seconds
-            setTimeout(() => {
-                if (upgradeCard.parentNode) {
-                    upgradeCard.parentNode.removeChild(upgradeCard);
-                }
-            }, 10000);
-        }
-
-        // Show upgrade prompt after 5 seconds for demo
-        setTimeout(showUpgradePrompt, 5000);
     </script>
 </body>
 </html>
