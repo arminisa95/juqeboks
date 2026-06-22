@@ -339,7 +339,17 @@
                                     if (progressBar) progressBar.style.width = '100%';
                                     if (progressText) progressText.textContent = 'Upload complete!';
                                     
-                                    showUploadNotification('Track "' + titleVal + '" uploaded successfully!', 'success');
+                                    var moderationText = '';
+                                    if (data.moderationStatus === 'blocked') {
+                                        moderationText = ' Upload was blocked by the risk filter.';
+                                    } else if (data.moderationStatus === 'pending') {
+                                        moderationText = ' Track is pending manual review.';
+                                    }
+                                    if (data.riskScore > 0) {
+                                        moderationText += ' Risk score: ' + data.riskScore + '.';
+                                    }
+                                    
+                                    showUploadNotification('Track "' + titleVal + '" uploaded successfully!' + moderationText, data.moderationStatus === 'blocked' ? 'error' : 'success');
                                     
                                     // Form zurücksetzen nach kurzer Verzögerung
                                     setTimeout(function() {
@@ -350,8 +360,10 @@
                                         progressContainer.style.display = 'none';
                                         if (progressBar) progressBar.style.width = '0%';
                                         
-                                        // Redirect zum Feed
-                                        window.location.hash = '#/feed';
+                                        // Redirect zum Feed only if not blocked
+                                        if (data.moderationStatus !== 'blocked') {
+                                            window.location.hash = '#/feed';
+                                        }
                                     }, 1500);
                                     
                                     resolve();

@@ -48,6 +48,64 @@ function getS3Client() {
     });
 }
 
+function computeFileHash(filePath) {
+    try {
+        if (!filePath || !fs.existsSync(filePath)) return null;
+        const hash = crypto.createHash('sha256');
+        hash.update(fs.readFileSync(filePath));
+        return hash.digest('hex');
+    } catch (error) {
+        console.error('Hash computation error:', error);
+        return null;
+    }
+}
+
+async function calculateUploadRiskScore(db, file, userId, metadata) {
+    let score = 0;
+    let reasons = [];
+
+    if (!file || !file.path) return { score, reasons };
+
+    // Duplicate hash check
+    const hash = computeFileHash(file.path);
+    if (hash) {
+        const existing = await db.get('SELECT id FROM tracks WHERE audio_sha256 = $1 LIMIT 1', [hash]);
+        if (existing) {
+            score += 50;
+            reasons.push('duplicate_audio_hash');
+        }
+    }
+
+    // File size anomalies
+    if (!file.size || file.size < 50000) {
+        score += 10;
+        reasons.push('file_too_small');
+    }
+    if (file.size > 200 * 1024 * 1024) {
+        score += 10;
+        reasons.push('file_too_large');
+    }
+
+    // User history
+    const user = await db.get('SELECT copyright_strikes FROM users WHERE id = $1', [userId]);
+    if (user && user.copyright_strikes > 0) {
+        score += Math.min(user.copyright_strikes * 15, 45);
+        reasons.push('prior_copyright_strikes');
+    }
+
+    // Metadata quality
+    if (!metadata || !metadata.genre) {
+        score += 5;
+        reasons.push('missing_genre');
+    }
+    if (!metadata || !metadata.coverUrl) {
+        score += 5;
+        reasons.push('missing_cover');
+    }
+
+    return { score: Math.min(score, 100), reasons };
+}
+
 function makePublicObjectUrl(key) {
     if (S3_PUBLIC_BASE_URL) return String(S3_PUBLIC_BASE_URL).replace(/\/$/, '') + '/' + key;
     return String(S3_ENDPOINT).replace(/\/$/, '') + '/' + S3_BUCKET + '/' + key;
@@ -267,6 +325,8 @@ async function initializeDatabase() {
                 subscription_tier VARCHAR(20) DEFAULT 'free',
                 is_active BOOLEAN DEFAULT true,
                 email_verified BOOLEAN DEFAULT false,
+                copyright_strikes INTEGER DEFAULT 0,
+                upload_disabled BOOLEAN DEFAULT false,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
@@ -319,8 +379,27 @@ async function initializeDatabase() {
                 terms_confirmed BOOLEAN DEFAULT false,
                 rights_confirmed BOOLEAN DEFAULT false,
                 rights_confirmed_at TIMESTAMP WITH TIME ZONE,
+                audio_sha256 VARCHAR(64),
+                risk_score INTEGER DEFAULT 0,
+                moderation_status VARCHAR(20) DEFAULT 'approved' CHECK (moderation_status IN ('approved', 'pending', 'blocked')),
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS copyright_reports (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+                reporter_name VARCHAR(200) NOT NULL,
+                reporter_email VARCHAR(255) NOT NULL,
+                rights_holder VARCHAR(200),
+                work_title VARCHAR(300),
+                reason TEXT NOT NULL,
+                track_url VARCHAR(500),
+                status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'removed', 'dismissed')),
+                admin_notes TEXT,
+                resolved_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                resolved_at TIMESTAMP WITH TIME ZONE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
 
             CREATE TABLE IF NOT EXISTS playlists (
@@ -433,6 +512,9 @@ async function initializeDatabase() {
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS terms_confirmed BOOLEAN DEFAULT false');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS rights_confirmed BOOLEAN DEFAULT false');
         await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS rights_confirmed_at TIMESTAMP WITH TIME ZONE');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS audio_sha256 VARCHAR(64)');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS risk_score INTEGER DEFAULT 0');
+        await db.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS moderation_status VARCHAR(20) DEFAULT \'approved\'');
         await db.query('ALTER TABLE artists ADD COLUMN IF NOT EXISTS created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL');
 
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100)');
@@ -443,6 +525,8 @@ async function initializeDatabase() {
         await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(20) DEFAULT 'premium'");
         await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) DEFAULT 'user'");
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS group_size INTEGER DEFAULT 1');
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS copyright_strikes INTEGER DEFAULT 0');
+        await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS upload_disabled BOOLEAN DEFAULT false');
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false');
         await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_token VARCHAR(255)");
         await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP WITH TIME ZONE');
@@ -1963,6 +2047,7 @@ app.get('/api/tracks', async (req, res) => {
             LEFT JOIN albums al ON t.album_id = al.id
             LEFT JOIN users u ON t.uploader_id = u.id
             WHERE COALESCE(t.is_available, true) = true
+              AND COALESCE(t.moderation_status, 'approved') = 'approved'
         `;
 
         const params = [];
@@ -1994,7 +2079,7 @@ app.get('/api/tracks', async (req, res) => {
         // Total Count für Pagination (nur wenn offset = 0)
         let totalCount = null;
         if (offsetNum === 0) {
-            let countQuery = `SELECT COUNT(*) as total FROM tracks t WHERE COALESCE(t.is_available, true) = true`;
+            let countQuery = `SELECT COUNT(*) as total FROM tracks t WHERE COALESCE(t.is_available, true) = true AND COALESCE(t.moderation_status, 'approved') = 'approved'`;
             const countParams = [];
             if (genre && genre.trim()) {
                 countQuery += ` AND LOWER(t.genre) = LOWER($1)`;
@@ -2049,6 +2134,7 @@ app.get('/api/tracks/new', async (req, res) => {
             LEFT JOIN albums al ON t.album_id = al.id
             LEFT JOIN users u ON t.uploader_id = u.id
             WHERE COALESCE(t.is_available, true) = true
+              AND COALESCE(t.moderation_status, 'approved') = 'approved'
             ORDER BY t.created_at DESC
             LIMIT $1 OFFSET $2
         `, [limitNum, offsetNum]);
@@ -2114,6 +2200,9 @@ app.get('/api/tracks/user/:id', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Invalid user ID' });
         }
 
+        const isOwner = req.user && String(req.user.id) === String(id);
+        const isAdmin = req.user && req.user.is_admin;
+
         const tracks = await db.getAll(`
             SELECT t.*, 
                    a.name as artist_name,
@@ -2125,9 +2214,10 @@ app.get('/api/tracks/user/:id', authenticateToken, async (req, res) => {
             LEFT JOIN albums al ON t.album_id = al.id
             LEFT JOIN users u ON t.uploader_id = u.id
             WHERE t.uploader_id = $1
+              AND ($2 = true OR COALESCE(t.moderation_status, 'approved') = 'approved')
             ORDER BY t.created_at DESC
             LIMIT 200
-        `, [id]);
+        `, [id, isOwner || isAdmin]);
 
         const normalized = tracks.map((t) => {
             const audioUrl = t.audio_url || (t.file_path ? `/uploads/${path.basename(t.file_path)}` : null);
@@ -2168,6 +2258,13 @@ app.get('/api/tracks/:id', async (req, res) => {
 
         if (!track) {
             return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const currentUserId = req.user ? req.user.id : null;
+        const isOwner = currentUserId && String(track.uploader_id) === String(currentUserId);
+        const isAdmin = req.user && req.user.is_admin;
+        if (track.moderation_status === 'blocked' && !isOwner && !isAdmin) {
+            return res.status(403).json({ error: 'This track is not available' });
         }
 
         const audioUrl = track.audio_url || (track.file_path ? `/uploads/${path.basename(track.file_path)}` : null);
@@ -2830,6 +2927,14 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
             });
         }
 
+        const uploader = await db.get('SELECT upload_disabled, copyright_strikes FROM users WHERE id = $1', [userId]);
+        if (uploader && uploader.upload_disabled) {
+            return res.status(403).json({
+                success: false,
+                error: 'Upload access has been disabled for this account due to repeated copyright violations.'
+            });
+        }
+
         const artist = (typeof artistRaw === 'string') ? artistRaw.trim() : '';
         const artistName = artist || (req.user && req.user.username ? String(req.user.username) : '');
 
@@ -2839,6 +2944,16 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
 
         if (!artistName) {
             return res.status(400).json({ error: 'Artist is required' });
+        }
+
+        // Compute audio hash and risk score
+        const audioHash = computeFileHash(file.path);
+        const risk = await calculateUploadRiskScore(db, file, userId, { genre, coverUrl: cover ? 'yes' : null });
+        let moderationStatus = 'approved';
+        if (risk.score >= 80) {
+            moderationStatus = 'blocked';
+        } else if (risk.score >= 40) {
+            moderationStatus = 'pending';
         }
 
         // Get or create artist first
@@ -2937,10 +3052,13 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
             metadata,
             duration_seconds: 0,
             release_date: new Date().toISOString().split('T')[0],
-            is_available: true,
+            is_available: moderationStatus !== 'blocked',
             terms_confirmed: termsConfirmed,
             rights_confirmed: rightsConfirmed,
-            rights_confirmed_at: new Date().toISOString()
+            rights_confirmed_at: new Date().toISOString(),
+            audio_sha256: audioHash,
+            risk_score: risk.score,
+            moderation_status: moderationStatus
         });
 
         // Consume upload credit for free users
@@ -2959,14 +3077,128 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
             });
         }
 
-        res.json({ success: true, track: result });
+        res.json({
+            success: true,
+            track: result,
+            riskScore: risk.score,
+            riskReasons: risk.reasons,
+            moderationStatus: moderationStatus
+        });
     } catch (error) {
         console.error('Upload error:', error);
         res.status(500).json({ error: 'Upload failed' });
     }
 });
 
-// ... (rest of the code remains the same)
+// Submit a copyright report (Notice-and-Takedown)
+app.post('/api/copyright-reports', async (req, res) => {
+    try {
+        const { trackId, reporterName, reporterEmail, rightsHolder, workTitle, reason, trackUrl } = req.body;
+
+        if (!isValidId(trackId) || !reporterName || !reporterEmail || !reason) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        const track = await db.get('SELECT id, title, uploader_id FROM tracks WHERE id = $1', [trackId]);
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const report = await db.insert('copyright_reports', {
+            track_id: trackId,
+            reporter_name: reporterName,
+            reporter_email: reporterEmail,
+            rights_holder: rightsHolder || reporterName,
+            work_title: workTitle || track.title,
+            reason,
+            track_url: trackUrl || null,
+            status: 'pending'
+        });
+
+        res.json({ success: true, report: report || { id: null } });
+    } catch (error) {
+        console.error('Copyright report error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Admin: list copyright reports
+app.get('/api/admin/copyright-reports', authenticateToken, async (req, res) => {
+    try {
+        if (!req.user.is_admin) {
+            return res.status(403).json({ error: 'Admin required' });
+        }
+
+        const status = req.query.status || 'pending';
+        const reports = await db.getAll(`
+            SELECT cr.*, t.title as track_title, u.username as uploader_username, t.moderation_status
+            FROM copyright_reports cr
+            JOIN tracks t ON cr.track_id = t.id
+            LEFT JOIN users u ON t.uploader_id = u.id
+            WHERE cr.status = $1 OR $1 = 'all'
+            ORDER BY cr.created_at DESC
+        `, [status === 'all' ? 'all' : status]);
+
+        res.json({ reports: reports || [] });
+    } catch (error) {
+        console.error('List reports error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Admin: resolve a copyright report (remove or dismiss)
+app.post('/api/admin/copyright-reports/:id/resolve', authenticateToken, async (req, res) => {
+    try {
+        if (!req.user.is_admin) {
+            return res.status(403).json({ error: 'Admin required' });
+        }
+
+        const reportId = req.params.id;
+        const { action, notes } = req.body;
+
+        if (!isValidId(reportId) || !['removed', 'dismissed', 'reviewed'].includes(action)) {
+            return res.status(400).json({ error: 'Invalid action' });
+        }
+
+        const report = await db.get('SELECT * FROM copyright_reports WHERE id = $1', [reportId]);
+        if (!report) {
+            return res.status(404).json({ error: 'Report not found' });
+        }
+
+        await db.query('BEGIN');
+
+        if (action === 'removed') {
+            // Block the track and increment strike counter on uploader
+            await db.query(`
+                UPDATE tracks SET moderation_status = 'blocked', is_available = false, updated_at = CURRENT_TIMESTAMP
+                WHERE id = $1
+            `, [report.track_id]);
+
+            const track = await db.get('SELECT uploader_id FROM tracks WHERE id = $1', [report.track_id]);
+            if (track && track.uploader_id) {
+                await db.query(`
+                    UPDATE users
+                    SET copyright_strikes = copyright_strikes + 1,
+                        upload_disabled = CASE WHEN copyright_strikes + 1 >= 3 THEN true ELSE upload_disabled END
+                    WHERE id = $1
+                `, [track.uploader_id]);
+            }
+        }
+
+        await db.query(`
+            UPDATE copyright_reports
+            SET status = $1, admin_notes = $2, resolved_by_user_id = $3, resolved_at = CURRENT_TIMESTAMP
+            WHERE id = $4
+        `, [action, notes || null, req.user.id, reportId]);
+
+        await db.query('COMMIT');
+        res.json({ success: true, action });
+    } catch (error) {
+        try { await db.query('ROLLBACK'); } catch (_) {}
+        console.error('Resolve report error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 app.delete('/api/tracks/:id', authenticateToken, async (req, res) => {
     try {

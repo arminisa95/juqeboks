@@ -27,6 +27,8 @@ CREATE TABLE users (
     group_size INTEGER DEFAULT 1,
     is_active BOOLEAN DEFAULT true,
     email_verified BOOLEAN DEFAULT false,
+    copyright_strikes INTEGER DEFAULT 0,
+    upload_disabled BOOLEAN DEFAULT false,
     email_verified_token VARCHAR(255),
     email_verified_at TIMESTAMP WITH TIME ZONE,
     registration_paid BOOLEAN DEFAULT false,
@@ -95,8 +97,27 @@ CREATE TABLE tracks (
     terms_confirmed BOOLEAN DEFAULT false,
     rights_confirmed BOOLEAN DEFAULT false,
     rights_confirmed_at TIMESTAMP WITH TIME ZONE,
+    audio_sha256 VARCHAR(64),
+    risk_score INTEGER DEFAULT 0,
+    moderation_status VARCHAR(20) DEFAULT 'approved' CHECK (moderation_status IN ('approved', 'pending', 'blocked')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE copyright_reports (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+    reporter_name VARCHAR(200) NOT NULL,
+    reporter_email VARCHAR(255) NOT NULL,
+    rights_holder VARCHAR(200),
+    work_title VARCHAR(300),
+    reason TEXT NOT NULL,
+    track_url VARCHAR(500),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'removed', 'dismissed')),
+    admin_notes TEXT,
+    resolved_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    resolved_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ========================================

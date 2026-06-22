@@ -2777,6 +2777,9 @@ function createCollectionTrackCard(track) {
                     <button class="action-btn share-btn" data-track-id="${track.id}" type="button" aria-label="Share">
                         <i class="far fa-paper-plane"></i>
                     </button>
+                    <button class="action-btn report-btn" data-track-id="${track.id}" type="button" aria-label="Report copyright" title="Report copyright">
+                        <i class="far fa-flag"></i>
+                    </button>
                     ${canDelete ? `
                     <button class="action-btn delete-btn" onclick="deleteTrack('${track.id}', event);" aria-label="Delete track">
                         <i class="fas fa-trash"></i>
@@ -2799,6 +2802,23 @@ function createCollectionTrackCard(track) {
                 try {
                     if (typeof window.shareTrackById === 'function') {
                         window.shareTrackById(String(track.id), { title: track.title, text: track.artist_name });
+                    }
+                } catch (_) {
+                }
+            });
+        }
+
+        const reportBtn = card.querySelector('.report-btn');
+        if (reportBtn && !reportBtn.dataset.bound) {
+            reportBtn.dataset.bound = '1';
+            reportBtn.addEventListener('click', function (e) {
+                try {
+                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                } catch (_) {
+                }
+                try {
+                    if (typeof window.reportTrackCopyright === 'function') {
+                        window.reportTrackCopyright(String(track.id), track.title);
                     }
                 } catch (_) {
                 }
@@ -3695,6 +3715,43 @@ function renderKoleqtionPlaylists(playlists, grid) {
     });
 }
 
+async function reportTrackCopyright(trackId, trackTitle) {
+    try {
+        const name = window.prompt('Your name or rights-holder name:');
+        if (!name) return;
+        const email = window.prompt('Your email address:');
+        if (!email) return;
+        const work = window.prompt('Title of the copyrighted work:', trackTitle || '');
+        const reason = window.prompt('Reason for the report (e.g. unauthorized upload):');
+        if (!reason) return;
+
+        const apiBase = window.JukeAPIBase && window.JukeAPIBase.getApiBase ? window.JukeAPIBase.getApiBase() : '';
+        const response = await fetch(apiBase + '/copyright-reports', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                trackId: trackId,
+                reporterName: name,
+                reporterEmail: email,
+                rightsHolder: name,
+                workTitle: work || trackTitle,
+                reason: reason,
+                trackUrl: window.location.href
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            window.alert('Thank you. Your report has been submitted and will be reviewed.');
+        } else {
+            window.alert('Report could not be submitted: ' + (data.error || 'unknown error'));
+        }
+    } catch (error) {
+        console.error('Report error:', error);
+        window.alert('Report failed. Please contact us via email.');
+    }
+}
+
 window.JukeApi = {
     loadTracks,
     loadMyTracks,
@@ -3704,6 +3761,7 @@ window.JukeApi = {
 };
 
 window.deleteTrack = deleteTrack;
+window.reportTrackCopyright = reportTrackCopyright;
 window.loadDisqoPage = loadDisqoPage;
 window.setupKoleqtionTabs = setupKoleqtionTabs;
 window.openTrackMediaViewer = openTrackMediaViewer;

@@ -90,6 +90,7 @@
         });
 
         document.getElementById('balancesBtn').addEventListener('click', loadBalances);
+        document.getElementById('reportsBtn').addEventListener('click', loadReports);
     }
 
     function loadBalances() {
@@ -136,6 +137,63 @@
             btn.textContent = 'Paid';
             btn.disabled = true;
             loadBalances();
+        }).catch(function () {
+            btn.textContent = 'Error';
+        });
+    }
+
+    function loadReports() {
+        var filter = document.getElementById('reportFilter').value;
+        setStatus('reportsStatus', 'Loading...');
+        apiGet('/admin/copyright-reports?status=' + encodeURIComponent(filter)).then(function (data) {
+            if (data.error) {
+                setStatus('reportsStatus', 'Error: ' + data.error);
+                return;
+            }
+            var tbody = document.querySelector('#reportsTable tbody');
+            tbody.innerHTML = '';
+            (data.reports || []).forEach(function (r) {
+                var tr = document.createElement('tr');
+                var reason = (r.reason || '').substring(0, 80) + ((r.reason || '').length > 80 ? '...' : '');
+                var tdActions = document.createElement('td');
+                if (r.status === 'pending') {
+                    var btnRemove = document.createElement('button');
+                    btnRemove.className = 'admin-btn';
+                    btnRemove.textContent = 'Remove';
+                    btnRemove.style.marginRight = '6px';
+                    btnRemove.addEventListener('click', function () { resolveReport(r.id, 'removed', btnRemove); });
+                    var btnDismiss = document.createElement('button');
+                    btnDismiss.className = 'admin-btn';
+                    btnDismiss.textContent = 'Dismiss';
+                    btnDismiss.addEventListener('click', function () { resolveReport(r.id, 'dismissed', btnDismiss); });
+                    tdActions.appendChild(btnRemove);
+                    tdActions.appendChild(btnDismiss);
+                } else {
+                    tdActions.textContent = r.status;
+                }
+                tr.innerHTML = '<td>' + (r.track_title || '-') + '</td>' +
+                    '<td>' + (r.uploader_username || '-') + '</td>' +
+                    '<td>' + (r.reporter_name || '-') + '<br><small>' + (r.reporter_email || '') + '</small></td>' +
+                    '<td>' + (r.rights_holder || '-') + '</td>' +
+                    '<td>' + (r.status || '-') + '</td>';
+                tr.appendChild(tdActions);
+                tbody.appendChild(tr);
+            });
+            document.getElementById('reportsTable').style.display = 'table';
+            setStatus('reportsStatus', (data.reports || []).length + ' report(s)');
+        }).catch(function () {
+            setStatus('reportsStatus', 'Request failed');
+        });
+    }
+
+    function resolveReport(reportId, action, btn) {
+        btn.textContent = '...';
+        apiPost('/admin/copyright-reports/' + encodeURIComponent(reportId) + '/resolve', { action: action }).then(function (data) {
+            if (data.error) {
+                btn.textContent = 'Error';
+                return;
+            }
+            loadReports();
         }).catch(function () {
             btn.textContent = 'Error';
         });

@@ -61,6 +61,26 @@
             </table>
             <div id="balancesStatus" class="status" style="display:none;"></div>
         </div>
+
+        <div class="admin-card">
+            <h2 class="admin-title">Copyright Reports (Takedown)</h2>
+            <div class="admin-row">
+                <select id="reportFilter" class="admin-input">
+                    <option value="pending">Pending</option>
+                    <option value="all">All</option>
+                    <option value="removed">Removed</option>
+                    <option value="dismissed">Dismissed</option>
+                </select>
+                <button class="admin-btn" id="reportsBtn">Load Reports</button>
+            </div>
+            <table class="admin-table" id="reportsTable" style="display:none;">
+                <thead>
+                    <tr><th>Track</th><th>Uploader</th><th>Reporter</th><th>Rights Holder</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div id="reportsStatus" class="status" style="display:none;"></div>
+        </div>
     </div>
 
     <script src="js/api-base.js"></script>
