@@ -3706,18 +3706,31 @@ app.post('/api/admin/reset-users', async (req, res) => {
 
         // Create testuser with password 'testuser'
         const passwordHash = await bcrypt.hash('testuser', 10);
-        const testUser = await db.insert('users', {
-            username: 'testuser',
-            email: 'testuser@juqeboks.de',
-            password_hash: passwordHash,
-            first_name: 'Test',
-            last_name: 'User',
-            is_admin: false,
-            email_verified: true,
-            registration_paid: true,
-            account_type: 'user',
-            subscription_tier: 'premium',
-        });
+        let testUser;
+        try {
+            testUser = await db.insert('users', {
+                username: 'testuser',
+                email: 'testuser@juqeboks.de',
+                password_hash: passwordHash,
+                first_name: 'Test',
+                last_name: 'User',
+                is_admin: false,
+            });
+        } catch (insertErr) {
+            console.error('Reset insert error:', insertErr.message);
+            return res.status(500).json({ error: 'Failed to create user: ' + insertErr.message });
+        }
+
+        // Try to set extended fields (may fail if columns don't exist yet)
+        try {
+            await db.query(
+                `UPDATE users SET email_verified = true, registration_paid = true,
+                 account_type = 'user', subscription_tier = 'premium' WHERE id = $1`,
+                [testUser.id]
+            );
+        } catch (updateErr) {
+            console.error('Reset extended fields update (non-fatal):', updateErr.message);
+        }
 
         res.json({
             success: true,
@@ -3736,6 +3749,11 @@ const server = app.listen(PORT, () => {
     console.log(`📱 Health check: http://localhost:${PORT}/health`);
     console.log(`🔗 Keep-alive: http://localhost:${PORT}/keep-alive`);
     console.log(`⚙️  Database setup: http://localhost:${PORT}/setup-database`);
+
+    // Initialize database schema and ensure admin user exists
+    initializeDatabase().then(() => ensureAdminUser()).catch((err) => {
+        console.error('Startup initialization error:', err.message);
+    });
 });
 
 // Handle server errors
