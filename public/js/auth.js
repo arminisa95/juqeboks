@@ -710,6 +710,10 @@ function setupRegisterForm() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        // Clear previous errors first
+        const existingError = document.getElementById('registerError');
+        if (existingError) existingError.remove();
+
         const username = document.getElementById('username').value.trim();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
@@ -718,25 +722,27 @@ function setupRegisterForm() {
         const lastName = document.getElementById('lastName').value.trim();
         const accountTypeValue = accountTypeInput ? accountTypeInput.value : 'user';
         const groupSize = document.getElementById('groupSize') ? document.getElementById('groupSize').value : 5;
+        const paymentMethodEl = form.querySelector('input[name="paymentMethod"]:checked');
+        const paymentMethod = paymentMethodEl ? paymentMethodEl.value : 'card';
         const terms = document.getElementById('terms');
         const submitBtn = form.querySelector('button[type="submit"]');
 
+        function showRegisterError(msg) {
+            const div = document.createElement('div');
+            div.id = 'registerError';
+            div.className = 'error-message';
+            div.textContent = msg;
+            form.insertBefore(div, form.firstChild);
+        }
+
         // Validate password confirmation
         if (password !== confirmPassword) {
-            const errorDiv = document.createElement('div');
-            errorDiv.id = 'registerError';
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = 'Passwords do not match!';
-            form.insertBefore(errorDiv, form.firstChild);
+            showRegisterError('Passwords do not match!');
             return;
         }
 
         if (terms && !terms.checked) {
-            const errorDiv = document.createElement('div');
-            errorDiv.id = 'registerError';
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = 'Please agree to the terms and authorize the payment.';
-            form.insertBefore(errorDiv, form.firstChild);
+            showRegisterError('Please agree to the terms and authorize the payment.');
             return;
         }
 
@@ -744,20 +750,11 @@ function setupRegisterForm() {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Creating account...';
 
-        // Clear previous errors
-        const errorDiv = document.getElementById('registerError');
-        if (errorDiv) errorDiv.remove();
-
         // Attempt registration
         const result = await register(username, email, password, firstName, lastName, accountTypeValue, groupSize);
 
         if (!result.success) {
-            // Show error
-            const errorDiv = document.createElement('div');
-            errorDiv.id = 'registerError';
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = result.error;
-            form.insertBefore(errorDiv, form.firstChild);
+            showRegisterError(result.error || 'Registration failed. Please try a different username or email.');
         }
 
         // Reset button

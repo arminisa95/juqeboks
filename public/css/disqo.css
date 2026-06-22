@@ -5,7 +5,7 @@
 .disqo-main {
     padding: 24px;
     background-color: var(--bg-primary);
-    color: var(--text-primary);
+    color: #fff;
 }
 
 .disqo-container {
@@ -24,7 +24,7 @@
 }
 
 .disqo-header-item {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -73,14 +73,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 0.9rem;
 }
 
 .disqo-track-num .play-icon {
     display: none;
     font-size: 1rem;
-    color: var(--text-primary);
+    color: #fff;
 }
 
 .disqo-track-row:hover .disqo-track-num .track-number {
@@ -97,7 +97,7 @@
 
 .disqo-track-row.playing .disqo-track-num .play-icon {
     display: block;
-    color: var(--accent-pink);
+    color: var(--juke-pink, #F72193);
 }
 
 /* Track Title & Cover */
@@ -122,23 +122,23 @@
 
 .disqo-track-title {
     font-weight: 600;
-    color: var(--text-primary);
+    color: #fff;
     font-size: 1rem;
 }
 
 .disqo-track-row.playing .disqo-track-title {
-    color: var(--accent-pink);
+    color: var(--juke-pink, #F72193);
 }
 
 /* Artist, Album, Duration */
 .disqo-track-artist,
 .disqo-track-album {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 0.9rem;
 }
 
 .disqo-track-duration {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 0.9rem;
     text-align: right;
 }
@@ -174,7 +174,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--text-secondary);
+        color: rgba(255, 255, 255, 0.6);
         font-size: 1rem;
     }
 

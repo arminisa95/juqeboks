@@ -121,6 +121,18 @@ body.auth-page {
     text-decoration: none;
 }
 
+/* ERROR MESSAGES */
+.error-message {
+    background: #ff0000;
+    color: #fff;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 2px solid #cc0000;
+    text-align: center;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .login-container {
