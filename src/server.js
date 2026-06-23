@@ -1555,6 +1555,18 @@ app.post('/api/users/:id/like', authenticateToken, async (req, res) => {
 // User reposts: tracks a user has reposted to their profile
 app.get('/api/reposts', authenticateToken, async (req, res) => {
     try {
+        // Ensure table exists (defensive for older deployments)
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS user_reposts (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
+                caption TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, track_id)
+            );
+        `);
+
         const userId = req.user.id;
         const rows = await db.getAll(`
             SELECT ur.id, ur.track_id, ur.caption, ur.created_at,
@@ -1562,14 +1574,14 @@ app.get('/api/reposts', authenticateToken, async (req, res) => {
                    u.username as uploader_name
             FROM user_reposts ur
             JOIN tracks t ON ur.track_id = t.id
-            LEFT JOIN users u ON t.uploaded_by = u.id
+            LEFT JOIN users u ON t.uploader_id = u.id
             WHERE ur.user_id = $1
             ORDER BY ur.created_at DESC
         `, [userId]);
         res.json({ reposts: rows });
     } catch (error) {
         console.error('Get reposts error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error', detail: error.message });
     }
 });
 
