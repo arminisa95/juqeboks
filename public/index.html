@@ -724,34 +724,30 @@
         </div>
     </div>
 
-    <nav class="mobile-nav">
-        <div class="mobile-nav-items">
-            <a href="#/feed" class="mobile-nav-item" data-nav="feed" aria-label="Start">
-                <i class="fas fa-home"></i>
-                <span>_start</span>
-            </a>
-            <a href="#/feed" class="mobile-nav-item" data-nav="feed" aria-label="Feed">
-                <i class="fas fa-stream"></i>
-                <span>_feed</span>
-            </a>
-            <button class="mobile-nav-item auth-login mobile-nav-center" data-nav="user" aria-label="Login" onclick="window.location.hash='#/login'">
-                <img src="images/U-pink.png" alt="U" class="mobile-nav-logo">
-                <span>_U</span>
-            </button>
-            <button class="mobile-nav-item auth-user mobile-nav-center" data-nav="user" aria-label="Profile" style="display:none;" onclick="window.location.hash='#/profile'">
-                <img src="images/U-pink.png" alt="U" class="mobile-nav-logo">
-                <span>_U</span>
-            </button>
-            <a href="#/lists" class="mobile-nav-item" data-nav="lists" aria-label="Lists">
-                <i class="fas fa-list"></i>
-                <span>_lists</span>
-            </a>
-            <a href="#/disqo" class="mobile-nav-item" data-nav="disqo" aria-label="Find">
-                <i class="fas fa-search"></i>
-                <span>_find</span>
-            </a>
-        </div>
-    </nav>
+            <nav class="mobile-nav">
+            <div class="mobile-nav-items">
+                <a href="#/feed" class="mobile-nav-item" data-nav="feed" aria-label="Feed">
+                    <i class="fas fa-home"></i>
+                    <span>_feed</span>
+                </a>
+                <button class="mobile-nav-item auth-login mobile-nav-center" data-nav="user" aria-label="Login" onclick="window.location.hash='#/login'">
+                    <img src="images/U-pink.png" alt="U" class="mobile-nav-logo">
+                    <span>_U</span>
+                </button>
+                <button class="mobile-nav-item auth-user mobile-nav-center" data-nav="user" aria-label="Profile" style="display:none;" onclick="window.location.hash='#/profile'">
+                    <img src="images/U-pink.png" alt="U" class="mobile-nav-logo">
+                    <span>_U</span>
+                </button>
+                <button class="mobile-nav-item auth-login" data-nav="user" aria-label="Login" onclick="window.location.hash='#/login'">
+                    <i class="fas fa-user"></i>
+                    <span>_user</span>
+                </button>
+                <button class="mobile-nav-item auth-user" data-nav="user" aria-label="Profile" style="display:none;" onclick="window.location.hash='#/profile'">
+                    <i class="fas fa-user"></i>
+                    <span>_user</span>
+                </button>
+            </div>
+        </nav>
 
     <div class="fullscreen-player" id="fullscreenPlayer">
         <div class="fs-header">
