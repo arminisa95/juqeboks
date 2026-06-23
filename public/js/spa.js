@@ -173,6 +173,7 @@
 
             case '#/profile':
                 if (typeof setupProfilePage === 'function') setupProfilePage();
+                if (window.JukeProfile && typeof window.JukeProfile.init === 'function') window.JukeProfile.init();
                 break;
 
             case '#/login':

@@ -641,6 +641,17 @@ async function runMigrations() {
             );
         `);
 
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS user_reposts (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
+                caption TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, track_id)
+            );
+        `);
+
         const existing = await db.get(
             'SELECT applied_at FROM migrations WHERE name = $1',
             ['mark_existing_users_verified_paid']
@@ -1536,6 +1547,77 @@ app.post('/api/users/:id/like', authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error('Toggle user like error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// User reposts: tracks a user has reposted to their profile
+app.get('/api/reposts', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const rows = await db.getAll(`
+            SELECT ur.id, ur.track_id, ur.caption, ur.created_at,
+                   t.title, t.artist_name, t.cover_image_url, t.audio_url, t.duration_seconds,
+                   u.username as uploader_name
+            FROM user_reposts ur
+            JOIN tracks t ON ur.track_id = t.id
+            LEFT JOIN users u ON t.uploaded_by = u.id
+            WHERE ur.user_id = $1
+            ORDER BY ur.created_at DESC
+        `, [userId]);
+        res.json({ reposts: rows });
+    } catch (error) {
+        console.error('Get reposts error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/reposts', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { trackId, caption } = req.body;
+        if (!trackId) {
+            return res.status(400).json({ error: 'trackId is required' });
+        }
+
+        const track = await db.get('SELECT id FROM tracks WHERE id = $1', [trackId]);
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const existing = await db.get(
+            'SELECT id FROM user_reposts WHERE user_id = $1 AND track_id = $2',
+            [userId, trackId]
+        );
+        if (existing) {
+            return res.status(409).json({ error: 'Already reposted' });
+        }
+
+        const result = await db.query(
+            'INSERT INTO user_reposts (user_id, track_id, caption) VALUES ($1, $2, $3) RETURNING id, created_at',
+            [userId, trackId, caption || null]
+        );
+        res.json({ success: true, repost: result.rows[0] });
+    } catch (error) {
+        console.error('Create repost error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.delete('/api/reposts/:id', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id } = req.params;
+        const result = await db.query(
+            'DELETE FROM user_reposts WHERE id = $1 AND user_id = $2 RETURNING id',
+            [id, userId]
+        );
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Repost not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete repost error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

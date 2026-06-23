@@ -40,6 +40,7 @@
     <script src="js/media-editor.js"></script>
     <script src="js/player.js" defer></script>
     <script src="js/auth.js" defer></script>
+    <script src="js/profile.js" defer></script>
     <script src="js/api.js" defer></script>
     <script src="js/lists.js" defer></script>
     <script src="js/uploadPage.js" defer></script>
@@ -562,111 +563,99 @@
         </main>
     </template>
 
-    <template id="tpl-profile">
+        <template id="tpl-profile">
         <main class="auth-main">
             <div class="profile-container">
                 <div class="profile-header">
-                    <h1 class="profile-title">Profile & Settings</h1>
+                    <h1 class="profile-title">_U</h1>
                     <button class="profile-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close profile">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
 
-                <div class="profile-subtitle">Signed in as <span class="username-display"></span></div>
-
-                <div id="profileMessage" class="profile-message"></div>
-
-                <form id="profileForm">
-                    <div class="form-group">
-                        <label for="profileUsername">Username</label>
-                        <input type="text" id="profileUsername" name="profileUsername" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="profileEmail">Email</label>
-                        <input type="email" id="profileEmail" name="profileEmail" disabled>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="profileFirstName">First Name</label>
-                            <input type="text" id="profileFirstName" name="profileFirstName">
+                <div class="profile-card">
+                    <div class="profile-avatar-section">
+                        <div class="avatar-preview" id="avatarPreview">
+                            <img id="avatarPreviewImg" src="images/juqe.png" alt="Avatar">
                         </div>
-                        <div class="form-group">
-                            <label for="profileLastName">Last Name</label>
-                            <input type="text" id="profileLastName" name="profileLastName">
-                        </div>
+                        <input type="file" id="profileAvatarFile" accept="image/*" style="display:none;">
+                        <button type="button" id="avatarUploadBtn" class="profile-btn secondary">Upload Picture</button>
+                        <button type="button" id="avatarRemoveBtn" class="profile-btn secondary" style="display:none;">Remove</button>
+                        <input type="hidden" id="profileAvatar">
                     </div>
-
-                    <div class="form-group">
-                        <label for="profileBio">Bio</label>
-                        <input type="text" id="profileBio" name="profileBio" placeholder="Tell us something about you">
-                    </div>
-
-                    <div class="profile-section" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                        <h3 style="color: #00ffd0; margin-bottom: 1rem; font-size: 1.1rem;">Change Password</h3>
-                        
-                        <div class="form-group">
-                            <label for="currentPassword">Current Password</label>
-                            <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password">
-                        </div>
-
-                        <div class="form-row">
+                    <div class="profile-info-section">
+                        <div class="profile-subtitle">Signed in as <span class="username-display"></span></div>
+                        <div id="profileMessage" class="profile-message"></div>
+                        <form id="profileForm">
                             <div class="form-group">
-                                <label for="newPassword">New Password</label>
-                                <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password" minlength="8">
+                                <label for="profileUsername">Username</label>
+                                <input type="text" id="profileUsername" name="profileUsername" required>
                             </div>
                             <div class="form-group">
-                                <label for="confirmPassword">Confirm New Password</label>
-                                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password" minlength="8">
+                                <label for="profileEmail">Email</label>
+                                <input type="email" id="profileEmail" name="profileEmail" disabled>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="profileAvatar">Profile Picture</label>
-                        <div class="avatar-upload-container">
-                            <div class="avatar-preview" id="avatarPreview">
-                                <img id="avatarPreviewImg" src="images/juqe.png" alt="Profile Preview" class="avatar-preview-img">
-                                <div class="avatar-preview-placeholder">
-                                    <i class="fas fa-camera"></i>
-                                    <span>Click to upload</span>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="profileFirstName">First Name</label>
+                                    <input type="text" id="profileFirstName" name="profileFirstName">
+                                </div>
+                                <div class="form-group">
+                                    <label for="profileLastName">Last Name</label>
+                                    <input type="text" id="profileLastName" name="profileLastName">
                                 </div>
                             </div>
-                            <input type="file" id="profileAvatarFile" name="profileAvatarFile" accept="image/*" class="avatar-input-hidden">
-                            <input type="url" id="profileAvatar" name="profileAvatar" placeholder="https://..." class="avatar-input-hidden">
-                            <button type="button" id="avatarUploadBtn" class="profile-btn secondary">Upload Picture</button>
-                            <button type="button" id="avatarRemoveBtn" class="profile-btn secondary hidden">Remove Picture</button>
-                        </div>
+                            <div class="form-group">
+                                <label for="profileBio">Bio</label>
+                                <textarea id="profileBio" name="profileBio" rows="3" placeholder="Tell us something about you..."></textarea>
+                            </div>
+                            <button type="submit" class="profile-btn primary">Save Profile</button>
+                        </form>
                     </div>
-
-                    <button type="submit" class="profile-btn">Save Settings</button>
-                </form>
-
-                <button type="button" id="logoutBtn" class="profile-btn secondary">Log out</button>
-
-                <div class="profile-section" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <h3 style="color: #00ffd0; margin-bottom: 1rem; font-size: 1.1rem;">Subscription & Billing</h3>
-                    <a href="views/subscription-plans.html" class="profile-btn premium" target="_blank" style="display: inline-flex; align-items: center; text-decoration: none; margin-bottom: 0.5rem;">
-                        <i class="fas fa-crown" style="margin-right: 0.5rem;"></i>
-                        _premium (Change Plan)
-                    </a>
-                    <a href="views/analytics-dashboard.html" class="profile-btn analytics" target="_blank" style="display: inline-flex; align-items: center; text-decoration: none; margin-bottom: 0.5rem;">
-                        <i class="fas fa-chart-line" style="margin-right: 0.5rem;"></i>
-                        _analytics (Dashboard)
-                    </a>
                 </div>
 
-                <div class="profile-section" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <h3 style="color: #00ffd0; margin-bottom: 1rem; font-size: 1.1rem;">Legal & Support</h3>
-                    <button type="button" id="showtimeBtn" class="profile-btn legal" style="display: inline-flex; align-items: center; text-decoration: none; margin-bottom: 0.5rem;">
-                        <i class="fas fa-tv" style="margin-right: 0.5rem;"></i>
-                        _showtime
-                    </button>
-                    <button type="button" id="deleteProfileBtn" class="profile-btn danger" style="display: inline-flex; align-items: center; text-decoration: none; margin-bottom: 0.5rem;">
-                        <i class="fas fa-trash-alt" style="margin-right: 0.5rem;"></i>
-                        Delete Profile
-                    </button>
+                <div class="profile-tabs">
+                    <button class="profile-tab active" data-tab="my-stuff">My Stuff</button>
+                    <button class="profile-tab" data-tab="reposts">Reposts</button>
+                    <button class="profile-tab" data-tab="find-repost">Repost</button>
+                </div>
+
+                <div class="profile-tab-content active" id="tab-my-stuff">
+                    <div class="profile-section-header">
+                        <h2>My Uploads</h2>
+                        <span class="profile-count" id="myStuffCount">0</span>
+                    </div>
+                    <div class="profile-posts-grid" id="myStuffGrid">
+                        <p class="profile-empty">No uploads yet. Go to <a href="#/upload">_uqload</a> to upload tracks.</p>
+                    </div>
+                </div>
+
+                <div class="profile-tab-content" id="tab-reposts">
+                    <div class="profile-section-header">
+                        <h2>My Reposts</h2>
+                        <span class="profile-count" id="repostsCount">0</span>
+                    </div>
+                    <div class="profile-posts-grid" id="repostsGrid">
+                        <p class="profile-empty">No reposts yet. Use the Repost tab to add tracks.</p>
+                    </div>
+                </div>
+
+                <div class="profile-tab-content" id="tab-find-repost">
+                    <div class="profile-section-header">
+                        <h2>Repost from Others</h2>
+                    </div>
+                    <div class="profile-search-row">
+                        <input type="text" id="repostSearch" class="search-bar" placeholder="Search tracks to repost...">
+                        <button class="profile-btn primary" id="repostSearchBtn">Search</button>
+                    </div>
+                    <div class="profile-posts-grid" id="repostSearchResults">
+                        <p class="profile-empty">Search for tracks to repost.</p>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button type="button" id="logoutBtn" class="profile-btn">Logout</button>
+                    <button type="button" id="deleteProfileBtn" class="profile-btn danger">Delete Profile</button>
                 </div>
             </div>
         </main>
