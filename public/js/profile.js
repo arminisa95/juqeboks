@@ -123,9 +123,24 @@
         throw lastErr || new Error('Network error');
     }
 
+    async function loadPublicProfile() {
+        const user = getUser();
+        if (!user) return;
+        const avatar = document.getElementById('publicAvatarImg');
+        const bio = document.getElementById('publicBioText');
+        const usernameEls = document.querySelectorAll('.username-display');
+        if (avatar) {
+            avatar.src = user.avatar_url || 'images/juqe.png';
+        }
+        if (bio) {
+            bio.textContent = user.bio || 'No bio yet.';
+        }
+        usernameEls.forEach(el => el.textContent = user.username || '');
+    }
+
     async function loadMyUploads() {
-        const grid = document.getElementById('myStuffGrid');
-        const countEl = document.getElementById('myStuffCount');
+        const grid = document.getElementById('postsGrid');
+        const countEl = document.getElementById('publicPostsCount');
         if (!grid) return;
         try {
             const data = await api('/tracks/my', { headers: authHeaders() });
@@ -147,7 +162,7 @@
 
     async function loadReposts() {
         const grid = document.getElementById('repostsGrid');
-        const countEl = document.getElementById('repostsCount');
+        const countEl = document.getElementById('publicRepostsCount');
         if (!grid) return;
         try {
             const data = await api('/reposts', { headers: authHeaders() });
@@ -235,7 +250,7 @@
         document.querySelectorAll('.profile-tab-content').forEach(content => {
             content.classList.toggle('active', content.id === 'tab-' + tabId);
         });
-        if (tabId === 'my-stuff') loadMyUploads();
+        if (tabId === 'posts') loadMyUploads();
         if (tabId === 'reposts') loadReposts();
     }
 
@@ -268,8 +283,8 @@
 
     function init() {
         if (!requireAuth()) return;
+        loadPublicProfile();
         bindTabs();
-        bindRepostSearch();
         loadMyUploads();
     }
 

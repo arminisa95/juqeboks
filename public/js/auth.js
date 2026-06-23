@@ -959,6 +959,238 @@ async function deleteProfile() {
     }
 }
 
+function setupPrefPage() {
+    const prefForm = document.getElementById('prefForm');
+    const logoutBtn = document.getElementById('prefLogoutBtn');
+    const deleteProfileBtn = document.getElementById('prefDeleteProfileBtn');
+    if (!prefForm && !logoutBtn && !deleteProfileBtn) return;
+
+    if (prefForm && prefForm.dataset.bound === 'true') return;
+    if (prefForm) prefForm.dataset.bound = 'true';
+    if (logoutBtn) logoutBtn.dataset.bound = 'true';
+    if (deleteProfileBtn) deleteProfileBtn.dataset.bound = 'true';
+
+    const token = localStorage.getItem('juke_token');
+    if (!token) return;
+
+    let user = null;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        user = {
+            id: payload.id,
+            username: payload.username,
+            email: payload.email,
+            firstName: payload.first_name,
+            lastName: payload.last_name,
+            avatarUrl: payload.avatar_url,
+            bio: payload.bio,
+            emailVerified: payload.email_verified,
+            registrationPaid: payload.registration_paid
+        };
+    } catch (error) {
+        console.error('Error parsing token:', error);
+        return;
+    }
+
+    const usernameEl = document.getElementById('prefUsername');
+    const emailEl = document.getElementById('prefEmail');
+    const firstNameEl = document.getElementById('prefFirstName');
+    const lastNameEl = document.getElementById('prefLastName');
+    const bioEl = document.getElementById('prefBio');
+    const avatarEl = document.getElementById('prefAvatar');
+    const messageEl = document.getElementById('prefMessage');
+    const currentPasswordEl = document.getElementById('prefCurrentPassword');
+    const newPasswordEl = document.getElementById('prefNewPassword');
+    const confirmPasswordEl = document.getElementById('prefConfirmPassword');
+    const avatarPreview = document.getElementById('prefAvatarPreview');
+    const avatarPreviewImg = document.getElementById('prefAvatarPreviewImg');
+    const avatarFileInput = document.getElementById('prefAvatarFile');
+    const uploadBtn = document.getElementById('prefAvatarUploadBtn');
+    const removeBtn = document.getElementById('prefAvatarRemoveBtn');
+    const paymentStatusEl = document.getElementById('prefPaymentStatus');
+    const payBtn = document.getElementById('prefPayBtn');
+
+    if (usernameEl) usernameEl.value = user.username || '';
+    if (emailEl) emailEl.value = user.email || '';
+    if (firstNameEl) firstNameEl.value = user.firstName || '';
+    if (lastNameEl) lastNameEl.value = user.lastName || '';
+    if (bioEl) bioEl.value = user.bio || '';
+    if (avatarEl) avatarEl.value = user.avatarUrl || '';
+
+    if (avatarPreview && avatarPreviewImg && user.avatarUrl) {
+        avatarPreviewImg.src = user.avatarUrl;
+        avatarPreview.classList.add('has-image');
+        if (removeBtn) removeBtn.style.display = 'inline-block';
+        if (uploadBtn) uploadBtn.textContent = 'Change Picture';
+    }
+
+    if (avatarPreview && avatarFileInput) {
+        avatarPreview.addEventListener('click', () => avatarFileInput.click());
+        if (uploadBtn) uploadBtn.addEventListener('click', () => avatarFileInput.click());
+        if (removeBtn) removeBtn.addEventListener('click', () => {
+            avatarPreviewImg.src = 'images/juqe.png';
+            avatarPreview.classList.remove('has-image');
+            if (avatarEl) avatarEl.value = '';
+            avatarFileInput.value = '';
+            if (removeBtn) removeBtn.style.display = 'none';
+            if (uploadBtn) uploadBtn.textContent = 'Upload Picture';
+            avatarPreview.dataset.newAvatar = 'true';
+        });
+
+        avatarFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                showMessage(messageEl, 'Please select an image file.', 'error');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage(messageEl, 'Image size must be less than 5MB.', 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                avatarPreviewImg.src = e.target.result;
+                avatarPreview.classList.add('has-image');
+                if (removeBtn) removeBtn.style.display = 'inline-block';
+                if (uploadBtn) uploadBtn.textContent = 'Change Picture';
+                avatarPreview.dataset.newAvatar = 'true';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => logout());
+    }
+
+    if (deleteProfileBtn) {
+        deleteProfileBtn.addEventListener('click', () => deleteProfile());
+    }
+
+    if (paymentStatusEl) {
+        const statusText = user.registrationPaid ? 'Paid' : (user.emailVerified ? 'Verified — payment pending' : 'Email verification pending');
+        paymentStatusEl.innerHTML = `<span class="pref-status-badge ${user.registrationPaid ? 'paid' : 'pending'}">${statusText}</span>`;
+    }
+
+    if (payBtn) {
+        const checkoutUrl = localStorage.getItem('juke_pending_checkout_url');
+        if (!checkoutUrl || user.registrationPaid) {
+            payBtn.style.display = 'none';
+        } else {
+            payBtn.addEventListener('click', () => {
+                if (checkoutUrl) window.location.href = checkoutUrl;
+            });
+        }
+    }
+
+    if (prefForm) {
+        prefForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (messageEl) {
+                messageEl.style.display = 'none';
+                messageEl.className = 'profile-message';
+                messageEl.textContent = '';
+            }
+
+            if (avatarPreview && avatarPreview.dataset.newAvatar === 'true' && avatarFileInput.files[0]) {
+                try {
+                    const avatarFormData = new FormData();
+                    avatarFormData.append('avatar', avatarFileInput.files[0]);
+                    const result = await apiFetchJson('/users/avatar', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: avatarFormData
+                    }, function (d) { return !!d && typeof d === 'object' && !Array.isArray(d); });
+                    if (avatarEl) avatarEl.value = result.avatar_url || '';
+                    avatarPreview.dataset.newAvatar = 'false';
+                } catch (error) {
+                    console.error('Avatar upload error:', error);
+                    showMessage(messageEl, 'Failed to upload avatar: ' + (error.message || 'Please try again.'), 'error');
+                    return;
+                }
+            }
+
+            try {
+                if (currentPasswordEl && newPasswordEl && confirmPasswordEl) {
+                    const currentPassword = currentPasswordEl.value.trim();
+                    const newPassword = newPasswordEl.value.trim();
+                    const confirmPassword = confirmPasswordEl.value.trim();
+                    if (currentPassword && newPassword && confirmPassword) {
+                        if (newPassword !== confirmPassword) {
+                            showMessage(messageEl, 'New passwords do not match.', 'error');
+                            return;
+                        }
+                        if (newPassword.length < 8) {
+                            showMessage(messageEl, 'New password must be at least 8 characters.', 'error');
+                            return;
+                        }
+                        try {
+                            await apiFetchJson('/auth/change-password', {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ currentPassword, newPassword })
+                            });
+                            currentPasswordEl.value = '';
+                            newPasswordEl.value = '';
+                            confirmPasswordEl.value = '';
+                            showMessage(messageEl, 'Password changed successfully!', 'success');
+                        } catch (error) {
+                            showMessage(messageEl, 'Failed to change password. Please check your current password.', 'error');
+                            return;
+                        }
+                    }
+                }
+
+                const newUsername = usernameEl ? usernameEl.value.trim() : user.username;
+                if (newUsername && newUsername !== user.username) {
+                    try {
+                        await apiFetchJson('/auth/change-username', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ newUsername })
+                        });
+                    } catch (error) {
+                        showMessage(messageEl, 'Username already taken or invalid.', 'error');
+                        return;
+                    }
+                }
+
+                const result = await apiFetchJson('/users/profile', {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: newUsername,
+                        first_name: firstNameEl ? firstNameEl.value.trim() : user.firstName,
+                        last_name: lastNameEl ? lastNameEl.value.trim() : user.lastName,
+                        bio: bioEl ? bioEl.value.trim() : user.bio,
+                        avatar_url: avatarEl ? avatarEl.value.trim() : user.avatarUrl
+                    })
+                }, function (d) { return !!d && typeof d === 'object' && !Array.isArray(d); });
+
+                if (result) {
+                    if (result.token) localStorage.setItem('juke_token', result.token);
+                    const updatedUser = {
+                        ...user,
+                        username: newUsername,
+                        firstName: firstNameEl ? firstNameEl.value.trim() : user.firstName,
+                        lastName: lastNameEl ? lastNameEl.value.trim() : user.lastName,
+                        bio: bioEl ? bioEl.value.trim() : user.bio,
+                        avatarUrl: avatarEl ? avatarEl.value.trim() : user.avatarUrl,
+                    };
+                    currentUser = updatedUser;
+                    updateAuthUI();
+                    if (avatarPreview) delete avatarPreview.dataset.newAvatar;
+                    showMessage(messageEl, 'Settings updated successfully!', 'success');
+                }
+            } catch (error) {
+                console.error('Settings update error:', error);
+                showMessage(messageEl, 'Failed to update settings. Please try again.', 'error');
+            }
+        });
+    }
+}
+
 // Initialize auth on page load
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
@@ -967,4 +1199,5 @@ document.addEventListener('DOMContentLoaded', () => {
     setupWelcomeScreen();
     setupVerifyPending();
     setupProfilePage();
+    setupPrefPage();
 });

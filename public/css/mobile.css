@@ -97,10 +97,17 @@
 }
 
 .mobile-nav-item.mobile-nav-center .mobile-nav-logo {
-    height: 2.2rem !important;
+    height: 2.6rem !important;
     width: auto !important;
     margin-bottom: 0;
     filter: none;
+    transform: translateY(0);
+    transition: transform 0.2s ease;
+}
+
+.mobile-nav-item.mobile-nav-center.active .mobile-nav-logo,
+.mobile-nav-item.mobile-nav-center:hover .mobile-nav-logo {
+    transform: scale(1.1) translateY(-2px);
 }
 
 /* Mobile Header with Logo */

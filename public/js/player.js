@@ -1562,7 +1562,9 @@
         var navItems = document.querySelectorAll('.mobile-nav-item');
         navItems.forEach(function(item) {
             var nav = item.getAttribute('data-nav');
-            if (hash.includes(nav)) {
+            var href = item.getAttribute('href') || '';
+            // Match exact hash start for cleaner active states
+            if (nav && hash.indexOf('#/' + nav) === 0) {
                 item.classList.add('active');
             } else {
                 item.classList.remove('active');

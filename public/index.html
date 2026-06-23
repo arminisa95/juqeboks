@@ -565,7 +565,7 @@
 
         <template id="tpl-profile">
         <main class="auth-main">
-            <div class="profile-container">
+            <div class="profile-container profile-public">
                 <div class="profile-header">
                     <h1 class="profile-title">_U</h1>
                     <button class="profile-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close profile">
@@ -573,89 +573,118 @@
                     </button>
                 </div>
 
-                <div class="profile-card">
-                    <div class="profile-avatar-section">
-                        <div class="avatar-preview" id="avatarPreview">
-                            <img id="avatarPreviewImg" src="images/juqe.png" alt="Avatar">
+                <div class="profile-public-header">
+                    <div class="profile-public-avatar">
+                        <img id="publicAvatarImg" src="images/juqe.png" alt="Avatar">
+                    </div>
+                    <div class="profile-public-meta">
+                        <div class="profile-public-username">
+                            <span class="username-display"></span>
                         </div>
-                        <input type="file" id="profileAvatarFile" accept="image/*" style="display:none;">
-                        <button type="button" id="avatarUploadBtn" class="profile-btn secondary">Upload Picture</button>
-                        <button type="button" id="avatarRemoveBtn" class="profile-btn secondary" style="display:none;">Remove</button>
-                        <input type="hidden" id="profileAvatar">
+                        <div class="profile-public-stats">
+                            <div class="profile-stat"><span id="publicPostsCount">0</span> posts</div>
+                            <div class="profile-stat"><span id="publicRepostsCount">0</span> reposts</div>
+                        </div>
                     </div>
-                    <div class="profile-info-section">
-                        <div class="profile-subtitle">Signed in as <span class="username-display"></span></div>
-                        <div id="profileMessage" class="profile-message"></div>
-                        <form id="profileForm">
-                            <div class="form-group">
-                                <label for="profileUsername">Username</label>
-                                <input type="text" id="profileUsername" name="profileUsername" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="profileEmail">Email</label>
-                                <input type="email" id="profileEmail" name="profileEmail" disabled>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="profileFirstName">First Name</label>
-                                    <input type="text" id="profileFirstName" name="profileFirstName">
-                                </div>
-                                <div class="form-group">
-                                    <label for="profileLastName">Last Name</label>
-                                    <input type="text" id="profileLastName" name="profileLastName">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="profileBio">Bio</label>
-                                <textarea id="profileBio" name="profileBio" rows="3" placeholder="Tell us something about you..."></textarea>
-                            </div>
-                            <button type="submit" class="profile-btn primary">Save Profile</button>
-                        </form>
-                    </div>
+                </div>
+
+                <div class="profile-public-bio">
+                    <p id="publicBioText">No bio yet.</p>
+                </div>
+
+                <div class="profile-public-actions">
+                    <button class="profile-btn secondary" onclick="window.location.hash='#/pref'">Edit Profile</button>
+                    <button class="profile-btn secondary" onclick="window.location.hash='#/upload'">New Post</button>
                 </div>
 
                 <div class="profile-tabs">
-                    <button class="profile-tab active" data-tab="my-stuff">My Stuff</button>
+                    <button class="profile-tab active" data-tab="posts">Posts</button>
                     <button class="profile-tab" data-tab="reposts">Reposts</button>
-                    <button class="profile-tab" data-tab="find-repost">Repost</button>
                 </div>
 
-                <div class="profile-tab-content active" id="tab-my-stuff">
-                    <div class="profile-section-header">
-                        <h2>My Uploads</h2>
-                        <span class="profile-count" id="myStuffCount">0</span>
-                    </div>
-                    <div class="profile-posts-grid" id="myStuffGrid">
-                        <p class="profile-empty">No uploads yet. Go to <a href="#/upload">_uqload</a> to upload tracks.</p>
+                <div class="profile-tab-content active" id="tab-posts">
+                    <div class="profile-posts-grid" id="postsGrid">
+                        <p class="profile-empty">No posts yet. Upload your first track.</p>
                     </div>
                 </div>
 
                 <div class="profile-tab-content" id="tab-reposts">
-                    <div class="profile-section-header">
-                        <h2>My Reposts</h2>
-                        <span class="profile-count" id="repostsCount">0</span>
-                    </div>
                     <div class="profile-posts-grid" id="repostsGrid">
-                        <p class="profile-empty">No reposts yet. Use the Repost tab to add tracks.</p>
+                        <p class="profile-empty">No reposts yet.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </template>
+
+    <template id="tpl-pref">
+        <main class="auth-main">
+            <div class="profile-container">
+                <div class="profile-header">
+                    <h1 class="profile-title">_pref</h1>
+                    <button class="profile-close-btn" onclick="window.location.hash='#/feed'" aria-label="Close preferences">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="profile-card">
+                    <div class="profile-avatar-section">
+                        <div class="avatar-preview" id="prefAvatarPreview">
+                            <img id="prefAvatarPreviewImg" src="images/juqe.png" alt="Avatar">
+                        </div>
+                        <input type="file" id="prefAvatarFile" accept="image/*" style="display:none;">
+                        <button type="button" id="prefAvatarUploadBtn" class="profile-btn secondary">Upload Picture</button>
+                        <button type="button" id="prefAvatarRemoveBtn" class="profile-btn secondary" style="display:none;">Remove</button>
+                        <input type="hidden" id="prefAvatar">
+                    </div>
+                    <div class="profile-info-section">
+                        <div class="profile-subtitle">Signed in as <span class="username-display"></span></div>
+                        <div id="prefMessage" class="profile-message"></div>
+                        <form id="prefForm">
+                            <div class="form-group">
+                                <label for="prefUsername">Username</label>
+                                <input type="text" id="prefUsername" name="prefUsername" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="prefEmail">Email</label>
+                                <input type="email" id="prefEmail" name="prefEmail" disabled>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="prefFirstName">First Name</label>
+                                    <input type="text" id="prefFirstName" name="prefFirstName">
+                                </div>
+                                <div class="form-group">
+                                    <label for="prefLastName">Last Name</label>
+                                    <input type="text" id="prefLastName" name="prefLastName">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="prefBio">Bio</label>
+                                <textarea id="prefBio" name="prefBio" rows="3" placeholder="Tell us something about you..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Password Change</label>
+                                <input type="password" id="prefCurrentPassword" placeholder="Current password">
+                                <input type="password" id="prefNewPassword" placeholder="New password" style="margin-top:8px;">
+                                <input type="password" id="prefConfirmPassword" placeholder="Confirm new password" style="margin-top:8px;">
+                            </div>
+                            <button type="submit" class="profile-btn primary">Save Settings</button>
+                        </form>
                     </div>
                 </div>
 
-                <div class="profile-tab-content" id="tab-find-repost">
-                    <div class="profile-section-header">
-                        <h2>Repost from Others</h2>
+                <div class="pref-section">
+                    <h2 class="pref-section-title">Payment</h2>
+                    <div id="prefPaymentStatus" class="pref-payment-status">
+                        <span class="pref-status-badge">Loading...</span>
                     </div>
-                    <div class="profile-search-row">
-                        <input type="text" id="repostSearch" class="search-bar" placeholder="Search tracks to repost...">
-                        <button class="profile-btn primary" id="repostSearchBtn">Search</button>
-                    </div>
-                    <div class="profile-posts-grid" id="repostSearchResults">
-                        <p class="profile-empty">Search for tracks to repost.</p>
-                    </div>
+                    <button id="prefPayBtn" class="profile-btn primary" style="margin-top:12px;">Complete Payment</button>
                 </div>
 
                 <div class="profile-actions">
-                    <button type="button" id="logoutBtn" class="profile-btn">Logout</button>
-                    <button type="button" id="deleteProfileBtn" class="profile-btn danger">Delete Profile</button>
+                    <button type="button" id="prefLogoutBtn" class="profile-btn">Logout</button>
+                    <button type="button" id="prefDeleteProfileBtn" class="profile-btn danger">Delete Profile</button>
                 </div>
             </div>
         </main>
@@ -742,9 +771,9 @@
                     <i class="fas fa-search"></i>
                     <span>_find</span>
                 </a>
-                <a href="#/disqo" class="mobile-nav-item" data-nav="disqo" aria-label="Disqo">
-                    <i class="fas fa-record-vinyl"></i>
-                    <span>_disqo</span>
+                <a href="#/pref" class="mobile-nav-item" data-nav="pref" aria-label="Preferences">
+                    <i class="fas fa-cog"></i>
+                    <span>_pref</span>
                 </a>
             </div>
         </nav>

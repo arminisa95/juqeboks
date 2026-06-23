@@ -56,6 +56,8 @@
                 return { templateId: 'tpl-verify-pending', file: 'views/register.html', selector: 'main' };
             case '#/profile':
                 return { templateId: 'tpl-profile', file: 'views/profile.html', selector: 'main' };
+            case '#/pref':
+                return { templateId: 'tpl-pref', file: 'views/pref.html', selector: 'main' };
             case '#/impressum':
                 return { templateId: 'tpl-impressum', file: 'views/impressum.html', selector: 'main' };
             default:
@@ -172,8 +174,11 @@
                 break;
 
             case '#/profile':
-                if (typeof setupProfilePage === 'function') setupProfilePage();
                 if (window.JukeProfile && typeof window.JukeProfile.init === 'function') window.JukeProfile.init();
+                break;
+
+            case '#/pref':
+                if (typeof setupPrefPage === 'function') setupPrefPage();
                 break;
 
             case '#/login':
