@@ -993,6 +993,13 @@ async function loadLists() {
             return !!d && typeof d === 'object' && !Array.isArray(d);
         });
 
+        // Sync global likedTrackIds so like buttons reflect current state
+        try {
+            const favorites = (profile && profile.favorites) ? profile.favorites : [];
+            likedTrackIds = new Set(favorites.map((t) => String(t && t.id)));
+        } catch (_) {
+        }
+
         if (likedEl) {
             likedEl.innerHTML = '';
             const favorites = profile.favorites || [];

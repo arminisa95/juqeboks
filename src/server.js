@@ -418,7 +418,7 @@ async function initializeDatabase() {
             `            CREATE TABLE IF NOT EXISTS user_favorites (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+                track_id TEXT NOT NULL,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
             `,
@@ -568,6 +568,12 @@ async function initializeDatabase() {
                 ALTER TABLE users ADD CONSTRAINT users_account_type_check CHECK (account_type IN ('user', 'group'));
             END $$;`,
             `DO $$ BEGIN
+                IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_favorites' AND column_name = 'track_id') THEN
+                    IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_favorites_track_id_fkey') THEN
+                        ALTER TABLE user_favorites DROP CONSTRAINT user_favorites_track_id_fkey;
+                    END IF;
+                    ALTER TABLE user_favorites ALTER COLUMN track_id TYPE TEXT USING track_id::text;
+                END IF;
                 IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_favorites_user_track_unique') THEN
                     ALTER TABLE user_favorites ADD CONSTRAINT user_favorites_user_track_unique UNIQUE(user_id, track_id);
                 END IF;
@@ -1183,7 +1189,7 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
                    al.cover_image_url as album_cover_image_url,
                    u.username as uploader_username
             FROM user_favorites uf
-            JOIN tracks t ON uf.track_id = t.id
+            JOIN tracks t ON uf.track_id::text = t.id::text
             JOIN artists a ON t.artist_id = a.id
             LEFT JOIN albums al ON t.album_id = al.id
             LEFT JOIN users u ON t.uploader_id = u.id
@@ -2358,24 +2364,24 @@ app.post('/api/tracks/:id/like', authenticateToken, async (req, res) => {
         }
 
         const existing = await db.get(
-            'SELECT id FROM user_favorites WHERE user_id = $1 AND track_id::text = $2::text',
+            'SELECT id FROM user_favorites WHERE user_id = $1 AND track_id = $2',
             [userId, trackId]
         );
 
         if (existing) {
             await db.query(
-                'DELETE FROM user_favorites WHERE user_id = $1 AND track_id::text = $2::text',
+                'DELETE FROM user_favorites WHERE user_id = $1 AND track_id = $2',
                 [userId, trackId]
             );
         } else {
             await db.query(
-                'INSERT INTO user_favorites (user_id, track_id) VALUES ($1, $2::text) ON CONFLICT DO NOTHING',
+                'INSERT INTO user_favorites (user_id, track_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
                 [userId, trackId]
             );
         }
 
         const likeCountRow = await db.get(
-            'SELECT COUNT(*)::int as count FROM user_favorites WHERE track_id::text = $1::text',
+            'SELECT COUNT(*)::int as count FROM user_favorites WHERE track_id = $1',
             [trackId]
         );
 
