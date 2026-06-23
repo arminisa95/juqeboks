@@ -652,6 +652,7 @@ async function runMigrations() {
             );
         `);
 
+        // Run one-time data migrations only when not already applied
         const existing = await db.get(
             'SELECT applied_at FROM migrations WHERE name = $1',
             ['mark_existing_users_verified_paid']
