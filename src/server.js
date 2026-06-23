@@ -1570,10 +1570,11 @@ app.get('/api/reposts', authenticateToken, async (req, res) => {
         const userId = req.user.id;
         const rows = await db.getAll(`
             SELECT ur.id, ur.track_id, ur.caption, ur.created_at,
-                   t.title, t.artist_name, t.cover_image_url, t.audio_url, t.duration_seconds,
+                   t.title, a.name as artist_name, t.cover_image_url, t.audio_url, t.duration_seconds,
                    u.username as uploader_name
             FROM user_reposts ur
             JOIN tracks t ON ur.track_id = t.id
+            LEFT JOIN artists a ON t.artist_id = a.id
             LEFT JOIN users u ON t.uploader_id = u.id
             WHERE ur.user_id = $1
             ORDER BY ur.created_at DESC
@@ -1587,6 +1588,17 @@ app.get('/api/reposts', authenticateToken, async (req, res) => {
 
 app.post('/api/reposts', authenticateToken, async (req, res) => {
     try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS user_reposts (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
+                caption TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, track_id)
+            );
+        `);
+
         const userId = req.user.id;
         const { trackId, caption } = req.body;
         if (!trackId) {
@@ -1619,6 +1631,17 @@ app.post('/api/reposts', authenticateToken, async (req, res) => {
 
 app.delete('/api/reposts/:id', authenticateToken, async (req, res) => {
     try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS user_reposts (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
+                caption TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, track_id)
+            );
+        `);
+
         const userId = req.user.id;
         const { id } = req.params;
         const result = await db.query(
