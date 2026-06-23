@@ -879,6 +879,7 @@ function renderTrackCard(t) {
                 <span>${t.duration_seconds ? `${Math.floor(t.duration_seconds / 60)}:${String(t.duration_seconds % 60).padStart(2, '0')}` : ''}${dateTxt ? ` · ${dateTxt}` : ''}</span>
                 <span>
                     <button class="card-action-btn card-comment-btn" type="button" aria-label="Comments"><i class="far fa-comment"></i></button>
+                    <button class="card-action-btn card-repost-btn" type="button" aria-label="Repost" data-track-id="${t.id}"><i class="fas fa-retweet"></i></button>
                     <button class="card-action-btn card-share-btn" type="button" aria-label="Share"><i class="far fa-paper-plane"></i></button>
                 </span>
             </div>
@@ -915,6 +916,21 @@ function renderTrackCard(t) {
                 e.stopPropagation();
                 try {
                     safeOpenComments(String(t.id), t.title || 'Comments');
+                } catch (_) {
+                }
+            });
+        }
+
+        const repostBtn = div.querySelector('.card-repost-btn');
+        if (repostBtn && !repostBtn.dataset.bound) {
+            repostBtn.dataset.bound = '1';
+            repostBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                try {
+                    if (typeof window.repostTrackById === 'function') {
+                        window.repostTrackById(String(t.id), { title: t.title, text: t.artist_name });
+                        repostBtn.classList.add('reposted');
+                    }
                 } catch (_) {
                 }
             });

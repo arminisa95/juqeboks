@@ -79,6 +79,66 @@ function escapeHtml(value) {
         return '';
     }
 }
+function playInlineVideo(container, track) {
+    try {
+        var existing = container.querySelector('video.post-media');
+        if (existing) {
+            if (existing.paused) existing.play(); else existing.pause();
+            return;
+        }
+        var img = container.querySelector('img.post-media');
+        var playBtn = container.querySelector('.post-play');
+        var video = document.createElement('video');
+        video.className = 'post-media';
+        video.src = resolveAssetUrl(track.video_url, '');
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.controls = false;
+        video.style.display = 'block';
+        video.style.width = '100%';
+        video.style.height = 'auto';
+        video.style.maxHeight = '78vh';
+        video.style.objectFit = 'cover';
+        if (img && img.parentNode) {
+            img.parentNode.insertBefore(video, img);
+            img.style.display = 'none';
+        } else {
+            container.appendChild(video);
+        }
+        if (playBtn) playBtn.style.display = 'none';
+        try { video.play(); } catch (_) {}
+    } catch (_) {
+    }
+}
+
+function playTrackInVisualPlayer(track) {
+    try {
+        if (window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
+            window.JukePlayer.playTrack(track, { autoShowVideo: false });
+            return;
+        }
+        if (track && track.id && typeof playTrack === 'function') {
+            playTrack(String(track.id));
+        }
+    } catch (_) {
+    }
+}
+
+window.repostTrackById = function (trackId, meta) {
+    try {
+        apiFetchJson('/reposts', { method: 'POST', body: JSON.stringify({ trackId: Number(trackId) }) }, function (d) { return !!(d && d.success); })
+            .then(function () {
+                try { showToast('Reposted to your profile'); } catch (_) {}
+            })
+            .catch(function (err) {
+                try { showToast(err && err.message ? err.message : 'Repost failed'); } catch (_) { alert('Repost failed'); }
+            });
+    } catch (_) {
+    }
+};
+
 
 function formatRelativeTime(value) {
     try {
@@ -2557,6 +2617,9 @@ function createFeedPostCard(track) {
                 <button class="post-action post-comment-toggle" type="button" aria-expanded="false" aria-label="Comments">
                     <i class="far fa-comment"></i>
                 </button>
+                <button class="post-action repost-btn" data-track-id="${track.id}" type="button" aria-label="Repost">
+                    <i class="fas fa-retweet"></i>
+                </button>
                 <button class="post-action share-btn" type="button" aria-label="Share">
                     <i class="far fa-paper-plane"></i>
                 </button>
@@ -2621,16 +2684,22 @@ function createFeedPostCard(track) {
                     }
                 } else {
                     try {
-                        // Open stories tray for this single track (like stories behavior)
-                        openStoriesTrayForTrack(track);
-                    } catch (_) {
-                        // Fallback to original behavior
-                        var list = (feedState && Array.isArray(feedState.queueTracks) && feedState.queueTracks.length) ? feedState.queueTracks : [track];
-                        if (typeof window.openTrackMediaViewer === 'function') {
-                            window.openTrackMediaViewer(list, String(track.id));
+                        // Inline video, visual player for audio, media viewer for images
+                        if (track.video_url) {
+                            playInlineVideo(cover, track);
+                        } else if (track.audio_url) {
+                            playTrackInVisualPlayer(track);
                         } else {
-                            playTrack(String(track.id));
+                            var list = (feedState && Array.isArray(feedState.queueTracks) && feedState.queueTracks.length) ? feedState.queueTracks : [track];
+                            if (typeof window.openTrackMediaViewer === 'function') {
+                                window.openTrackMediaViewer(list, String(track.id));
+                            } else if (typeof openStoriesTrayForTrack === 'function') {
+                                openStoriesTrayForTrack(track);
+                            }
                         }
+                    } catch (_) {
+                        // Fallback
+                        playTrack(String(track.id));
                     }
                 }
                 lastTap = now;
@@ -2641,7 +2710,14 @@ function createFeedPostCard(track) {
             play.dataset.bound = '1';
             play.addEventListener('click', function (e) {
                 e.stopPropagation();
-                playTrack(String(track.id));
+                const cover = card.querySelector('.post-media-wrap');
+                if (track.video_url) {
+                    playInlineVideo(cover, track);
+                } else if (track.audio_url) {
+                    playTrackInVisualPlayer(track);
+                } else {
+                    playTrack(String(track.id));
+                }
             });
         }
         
@@ -2677,6 +2753,31 @@ function createFeedPostCard(track) {
                 try {
                     if (typeof window.shareTrackById === 'function') {
                         window.shareTrackById(String(track.id), { title: track.title, text: track.artist_name });
+                    }
+                } catch (_) {
+                }
+            });
+        }
+        
+        const repostBtn = card.querySelector('.repost-btn');
+        if (repostBtn && !repostBtn.dataset.bound) {
+            repostBtn.dataset.bound = '1';
+            repostBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                try {
+                    if (typeof window.repostTrackById === 'function') {
+                        window.repostTrackById(String(track.id), { title: track.title, text: track.artist_name });
+                    } else {
+                        apiFetchJson('/reposts', { method: 'POST', body: JSON.stringify({ trackId: Number(track.id) }) }, function (d) { return !!(d && d.success); })
+                            .then(function () {
+                                repostBtn.classList.add('reposted');
+                                const icon = repostBtn.querySelector('i');
+                                if (icon) icon.className = 'fas fa-retweet';
+                                try { showToast('Reposted to your profile'); } catch (_) {}
+                            })
+                            .catch(function (err) {
+                                try { showToast(err && err.message ? err.message : 'Repost failed'); } catch (_) { alert('Repost failed'); }
+                            });
                     }
                 } catch (_) {
                 }

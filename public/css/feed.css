@@ -703,6 +703,10 @@ text-overflow: ellipsis;
     object-fit: cover;
 }
 
+video.post-media {
+    background: #000;
+}
+
 .post-play {
     position: absolute;
     inset: auto 12px 12px auto;
@@ -921,6 +925,10 @@ text-overflow: ellipsis;
 
 /* Save button */
 .post-action.save-btn.saved {
+    color: rgba(0, 180, 150, 0.92);
+}
+
+.post-action.repost-btn.reposted {
     color: rgba(0, 180, 150, 0.92);
 }
 

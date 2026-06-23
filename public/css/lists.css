@@ -242,10 +242,15 @@
 }
 
 .card-action-btn.card-comment-btn,
+.card-action-btn.card-repost-btn,
 .card-action-btn.card-share-btn {
     width: 24px;
     height: 24px;
     font-size: 0.7rem;
+}
+
+.card-action-btn.card-repost-btn.reposted {
+    color: #00ffd0;
 }
 
 /* Playlist Actions - Side by Side Layout */
