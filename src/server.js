@@ -301,11 +301,10 @@ async function initializeDatabase() {
     try {
         console.log('Starting database initialization...');
 
-        // Create tables with IF NOT EXISTS
-        const schema = `
-            CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
-            CREATE TABLE IF NOT EXISTS users (
+        // Create tables with IF NOT EXISTS - split into individual statements for production resilience
+        const createTableStatements = [
+            `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`,
+            `            CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 username VARCHAR(50) UNIQUE NOT NULL,
                 email VARCHAR(255) UNIQUE NOT NULL,
@@ -323,8 +322,8 @@ async function initializeDatabase() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS artists (
+            `,
+            `            CREATE TABLE IF NOT EXISTS artists (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 name VARCHAR(200) NOT NULL,
                 bio TEXT,
@@ -333,8 +332,8 @@ async function initializeDatabase() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS albums (
+            `,
+            `            CREATE TABLE IF NOT EXISTS albums (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 title VARCHAR(200) NOT NULL,
                 artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
@@ -345,8 +344,8 @@ async function initializeDatabase() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS tracks (
+            `,
+            `            CREATE TABLE IF NOT EXISTS tracks (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 title VARCHAR(200) NOT NULL,
                 uploader_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -378,8 +377,8 @@ async function initializeDatabase() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS copyright_reports (
+            `,
+            `            CREATE TABLE IF NOT EXISTS copyright_reports (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
                 reporter_name VARCHAR(200) NOT NULL,
@@ -394,8 +393,8 @@ async function initializeDatabase() {
                 resolved_at TIMESTAMP WITH TIME ZONE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS playlists (
+            `,
+            `            CREATE TABLE IF NOT EXISTS playlists (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 name VARCHAR(200) NOT NULL,
@@ -406,8 +405,8 @@ async function initializeDatabase() {
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS playlist_tracks (
+            `,
+            `            CREATE TABLE IF NOT EXISTS playlist_tracks (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 playlist_id UUID NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
                 track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
@@ -415,45 +414,45 @@ async function initializeDatabase() {
                 position INTEGER,
                 UNIQUE(playlist_id, track_id)
             );
-
-            CREATE TABLE IF NOT EXISTS user_favorites (
+            `,
+            `            CREATE TABLE IF NOT EXISTS user_favorites (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS user_likes (
+            `,
+            `            CREATE TABLE IF NOT EXISTS user_likes (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 liker_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 liked_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS playlist_likes (
+            `,
+            `            CREATE TABLE IF NOT EXISTS playlist_likes (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 playlist_id UUID NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS playlist_comments (
+            `,
+            `            CREATE TABLE IF NOT EXISTS playlist_comments (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 playlist_id UUID NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 body TEXT NOT NULL,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS track_comments (
+            `,
+            `            CREATE TABLE IF NOT EXISTS track_comments (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 track_id TEXT NOT NULL,
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 body TEXT NOT NULL,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
-
-            CREATE TABLE IF NOT EXISTS play_history (
+            `,
+            `            CREATE TABLE IF NOT EXISTS play_history (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
@@ -463,8 +462,8 @@ async function initializeDatabase() {
                 device_type VARCHAR(50),
                 source_type VARCHAR(50)
             );
-
-            CREATE TABLE IF NOT EXISTS monthly_royalty_pools (
+            `,
+            `            CREATE TABLE IF NOT EXISTS monthly_royalty_pools (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 year INTEGER NOT NULL,
                 month INTEGER NOT NULL,
@@ -476,8 +475,8 @@ async function initializeDatabase() {
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(year, month)
             );
-
-            CREATE TABLE IF NOT EXISTS artist_royalties (
+            `,
+            `            CREATE TABLE IF NOT EXISTS artist_royalties (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 artist_id UUID NOT NULL REFERENCES artists(id) ON DELETE CASCADE,
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -491,24 +490,31 @@ async function initializeDatabase() {
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(artist_id, user_id, year, month)
             );
-        `);
+            `,
+        ];
 
-        try {
-            await db.query(schema);
-        } catch (schemaErr) {
-            console.error('Schema creation error (non-fatal, tables may already exist):', schemaErr.message);
+        for (const stmt of createTableStatements) {
+            try {
+                await db.query(stmt);
+            } catch (tableErr) {
+                console.error('CREATE TABLE error (non-fatal):', tableErr.message);
+            }
         }
 
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS user_reposts (
-                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
-                caption TEXT,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, track_id)
-            );
-        `);
+        try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS user_reposts (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+                    caption TEXT,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, track_id)
+                );
+            `);
+        } catch (repostsErr) {
+            console.error('CREATE TABLE user_reposts error (non-fatal):', repostsErr.message);
+        }
 
         // These ALTER TABLE statements must always run regardless of schema creation result
         // Each wrapped individually to handle type mismatches on production (SERIAL vs UUID)
