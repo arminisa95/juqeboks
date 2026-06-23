@@ -705,9 +705,9 @@ function setupRegisterForm() {
         const existingError = document.getElementById('registerError');
         if (existingError) existingError.remove();
 
-        const username = document.getElementById('username').value.trim();
+        const username = document.getElementById('registerUsername').value.trim();
         const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+        const password = document.getElementById('registerPassword').value;
         const confirmPassword = document.getElementById('confirm-password').value;
         const firstName = document.getElementById('firstName').value.trim();
         const lastName = document.getElementById('lastName').value.trim();

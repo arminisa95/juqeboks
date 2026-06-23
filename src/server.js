@@ -9,8 +9,6 @@ const fs = require('fs');
 const path = require('path');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const crypto = require('crypto');
-const MonetizationService = require('./monetization/payment-integration');
-const monetizationRoutes = require('./monetization/monetization-api-simple');
 const { sendEmailVerification } = require('./services/email');
 
 const app = express();
@@ -32,7 +30,6 @@ const STRIPE_GROUP_PRICE_ID = process.env.STRIPE_GROUP_PRICE_ID || '';
 const APP_BASE_URL = process.env.APP_BASE_URL || `http://localhost:${PORT}`;
 
 const stripe = STRIPE_SECRET_KEY ? require('stripe')(STRIPE_SECRET_KEY) : null;
-const monetizationService = new MonetizationService();
 const createdPriceIds = { user: null, group: null };
 
 function getS3Client() {
@@ -494,13 +491,24 @@ async function initializeDatabase() {
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(artist_id, user_id, year, month)
             );
-        `;
+        `);
 
         try {
             await db.query(schema);
         } catch (schemaErr) {
             console.error('Schema creation error (non-fatal, tables may already exist):', schemaErr.message);
         }
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS user_reposts (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                track_id UUID NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+                caption TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, track_id)
+            );
+        `);
 
         // These ALTER TABLE statements must always run regardless of schema creation result
         // Each wrapped individually to handle type mismatches on production (SERIAL vs UUID)
@@ -593,62 +601,6 @@ async function runMigrations() {
             CREATE TABLE IF NOT EXISTS migrations (
                 name TEXT PRIMARY KEY,
                 applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // Create analytics tables with integer references to match production SERIAL ids
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS play_history (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
-                artist_id INTEGER REFERENCES artists(id) ON DELETE SET NULL,
-                duration_played INTEGER DEFAULT 0,
-                source_type VARCHAR(50),
-                played_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS artist_royalties (
-                id SERIAL PRIMARY KEY,
-                artist_id INTEGER REFERENCES artists(id) ON DELETE CASCADE,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                year INTEGER NOT NULL,
-                month INTEGER NOT NULL,
-                tracked_seconds BIGINT NOT NULL DEFAULT 0,
-                share_percent DECIMAL(10, 6) NOT NULL DEFAULT 0,
-                payout_cents BIGINT NOT NULL DEFAULT 0,
-                paid BOOLEAN DEFAULT false,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(artist_id, user_id, year, month)
-            );
-        `);
-
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS monthly_royalty_pools (
-                id SERIAL PRIMARY KEY,
-                year INTEGER NOT NULL,
-                month INTEGER NOT NULL,
-                total_collected_cents BIGINT NOT NULL DEFAULT 0,
-                platform_fee_cents BIGINT NOT NULL DEFAULT 0,
-                artist_pool_cents BIGINT NOT NULL DEFAULT 0,
-                processed BOOLEAN DEFAULT false,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(year, month)
-            );
-        `);
-
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS user_reposts (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
-                caption TEXT,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, track_id)
             );
         `);
 
@@ -1555,18 +1507,6 @@ app.post('/api/users/:id/like', authenticateToken, async (req, res) => {
 // User reposts: tracks a user has reposted to their profile
 app.get('/api/reposts', authenticateToken, async (req, res) => {
     try {
-        // Ensure table exists (defensive for older deployments)
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS user_reposts (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
-                caption TEXT,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, track_id)
-            );
-        `);
-
         const userId = req.user.id;
         const rows = await db.getAll(`
             SELECT ur.id, ur.track_id, ur.caption, ur.created_at,
@@ -1588,16 +1528,6 @@ app.get('/api/reposts', authenticateToken, async (req, res) => {
 
 app.post('/api/reposts', authenticateToken, async (req, res) => {
     try {
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS user_reposts (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
-                caption TEXT,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, track_id)
-            );
-        `);
 
         const userId = req.user.id;
         const { trackId, caption } = req.body;
@@ -1631,16 +1561,6 @@ app.post('/api/reposts', authenticateToken, async (req, res) => {
 
 app.delete('/api/reposts/:id', authenticateToken, async (req, res) => {
     try {
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS user_reposts (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
-                caption TEXT,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, track_id)
-            );
-        `);
 
         const userId = req.user.id;
         const { id } = req.params;
