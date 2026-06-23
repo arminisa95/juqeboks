@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>JUKE Fair - Money Flow</title>
+    <title>JUKE Charts - Money Flow</title>
     
     <!-- JUKE CSS Styles -->
     <link rel="stylesheet" href="../css/styles.css">
@@ -18,105 +18,96 @@
     
     <!-- Custom Analytics Styles -->
     <style>
-        /* Analytics Dashboard Styles */
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
         .analytics-container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .analytics-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 2px solid #fff;
         }
 
         .analytics-title {
             color: #fff;
             font-size: 2rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #00ffd0, #00b896);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
         }
 
         .analytics-controls {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-selector,
+        .refresh-btn,
+        .back-btn {
+            background: #fff;
+            color: #000;
+            border: 2px solid #000;
+            border-radius: 0;
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 4px 4px 0 #fff;
         }
 
         .date-selector {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            color: #fff;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            appearance: none;
+            -webkit-appearance: none;
         }
 
-        .date-selector:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(0, 255, 208, 0.5);
-        }
-
-        .refresh-btn {
-            background: linear-gradient(135deg, #00ffd0, #00b896);
-            border: none;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 255, 208, 0.3);
-        }
-
-        .back-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            color: #fff;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
+        .refresh-btn:hover,
         .back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
+            background: #000;
+            color: #fff;
+            border-color: #fff;
+            box-shadow: 4px 4px 0 #fff;
         }
 
-        /* User Info Section */
-        .user-info-card {
-            background: linear-gradient(135deg, rgba(0, 255, 208, 0.1), rgba(0, 184, 150, 0.1));
-            border: 1px solid rgba(0, 255, 208, 0.3);
-            border-radius: 12px;
+        .user-info-card,
+        .metric-card,
+        .chart-card,
+        .activity-section {
+            background: #fff;
+            color: #000;
+            border: 2px solid #000;
+            border-radius: 0;
             padding: 1.5rem;
-            margin-bottom: 2rem;
+            box-shadow: 8px 8px 0 #fff;
+        }
+
+        .user-info-card {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
         .user-details {
@@ -126,26 +117,26 @@
         }
 
         .user-avatar {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #00ffd0, #00b896);
-            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            background: #000;
+            color: #fff;
+            border-radius: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            color: #000;
         }
 
         .user-info h3 {
-            color: #fff;
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
+            margin: 0 0 0.25rem;
+            font-size: 1.1rem;
         }
 
         .user-tier {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
+            margin: 0;
+            color: #666;
+            font-size: 0.85rem;
         }
 
         .credits-info {
@@ -153,95 +144,69 @@
         }
 
         .credits-label {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #666;
             margin-bottom: 0.25rem;
         }
 
         .credits-value {
-            color: #00ffd0;
-            font-size: 2rem;
-            font-weight: bold;
+            font-size: 1.8rem;
+            font-weight: 700;
         }
 
-        /* Metrics Grid */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
             margin-bottom: 2rem;
         }
 
         .metric-card {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(79, 70, 229, 0.1));
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .metric-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(139, 92, 246, 0.2);
+            text-align: center;
         }
 
         .metric-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
         }
 
         .metric-icon {
             width: 40px;
             height: 40px;
-            background: rgba(139, 92, 246, 0.2);
-            border-radius: 8px;
-            display: flex;
+            background: #000;
+            color: #fff;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            color: #8b5cf6;
-        }
-
-        .metric-change {
-            color: #10b981;
-            font-size: 0.8rem;
-            font-weight: bold;
+            font-size: 1.1rem;
+            border-radius: 0;
         }
 
         .metric-value {
-            color: #fff;
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
         }
 
         .metric-label {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #666;
         }
 
-        /* Charts Section */
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
+            gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
-        .chart-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-
         .chart-title {
-            color: #fff;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0 0 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .chart-container {
@@ -249,112 +214,6 @@
             height: 300px;
         }
 
-        /* Activity Section */
-        .activity-section {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-
-        .activity-title {
-            color: #fff;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-        }
-
-        .activity-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-icon {
-            width: 32px;
-            height: 32px;
-            background: rgba(0, 255, 208, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            color: #00ffd0;
-        }
-
-        .activity-details {
-            flex: 1;
-        }
-
-        .activity-text {
-            color: #fff;
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .activity-time {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.8rem;
-        }
-
-        /* Upgrade Prompt */
-        .upgrade-prompt {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 255, 208, 0.1));
-            border: 1px solid rgba(0, 255, 208, 0.3);
-            border-radius: 16px;
-            padding: 2rem;
-            max-width: 400px;
-            text-align: center;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-
-        .upgrade-title {
-            color: #00ffd0;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-        }
-
-        .upgrade-text {
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 1.5rem;
-        }
-
-        .upgrade-btn {
-            background: linear-gradient(135deg, #00ffd0, #00b896);
-            border: none;
-            border-radius: 8px;
-            padding: 1rem 2rem;
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .upgrade-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 255, 208, 0.3);
-        }
-
-        /* Top Artists Lists */
         .top-artists-list {
             max-height: 400px;
             overflow-y: auto;
@@ -365,7 +224,7 @@
             align-items: center;
             gap: 1rem;
             padding: 0.75rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid #000;
         }
 
         .artist-rank-item:last-child {
@@ -375,49 +234,100 @@
         .artist-rank-number {
             width: 30px;
             height: 30px;
-            background: linear-gradient(135deg, #00ffd0, #00b896);
-            border-radius: 50%;
+            background: #000;
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            color: #000;
+            font-weight: 700;
             font-size: 0.8rem;
+            border-radius: 0;
         }
 
         .artist-rank-number.top-3 {
-            background: linear-gradient(135deg, #ffd700, #ff9500);
-        }
-
-        .artist-info {
-            flex: 1;
+            background: #fff;
+            color: #000;
+            border: 2px solid #000;
         }
 
         .artist-name {
-            color: #fff;
-            font-weight: bold;
+            color: #000;
+            font-weight: 700;
             margin-bottom: 0.25rem;
         }
 
         .artist-stats {
-            color: rgba(255, 255, 255, 0.7);
+            color: #666;
             font-size: 0.8rem;
         }
 
         .artist-metric {
             text-align: right;
-            font-weight: bold;
+            font-weight: 700;
         }
 
-        .artist-metric.plays {
-            color: #00ffd0;
+        .activity-section {
+            margin-bottom: 2rem;
         }
 
-        .artist-metric.revenue {
-            color: #ffd700;
+        .activity-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0 0 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* Responsive Design */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: #000;
+            color: #fff;
+            border: 2px solid #fff;
+            border-radius: 0;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            background: #fff;
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-text {
+            margin: 0 0 0.25rem;
+            font-weight: 600;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .contact {
+            text-align: center;
+            padding: 2rem;
+            color: #fff;
+            border-top: 2px solid #fff;
+            margin-top: 2rem;
+        }
+
         @media (max-width: 768px) {
             .analytics-container {
                 padding: 1rem;
@@ -425,22 +335,20 @@
 
             .analytics-header {
                 flex-direction: column;
-                gap: 1rem;
                 align-items: flex-start;
             }
 
             .analytics-controls {
-                flex-wrap: wrap;
+                width: 100%;
             }
 
             .user-info-card {
                 flex-direction: column;
-                gap: 1rem;
                 text-align: center;
             }
 
-            .metrics-grid {
-                grid-template-columns: 1fr;
+            .credits-info {
+                text-align: center;
             }
 
             .charts-grid {
@@ -462,7 +370,7 @@
         <div class="analytics-container">
             <!-- Header -->
             <div class="analytics-header">
-                <h1 class="analytics-title">JUKE Fair</h1>
+                <h1 class="analytics-title">JUKE Charts</h1>
                 <div class="analytics-controls">
                     <select id="dateRange" class="date-selector">
                         <option value="7">Last 7 days</option>
@@ -711,8 +619,8 @@
                     datasets: [{
                         label: 'Plays',
                         data: [],
-                        borderColor: '#00ffd0',
-                        backgroundColor: 'rgba(0, 255, 208, 0.1)',
+                        borderColor: '#000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
                         borderWidth: 2,
                         tension: 0.4
                     }]
@@ -728,18 +636,18 @@
                     scales: {
                         x: {
                             grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: 'rgba(0, 0, 0, 0.1)'
                             },
                             ticks: {
-                                color: 'rgba(255, 255, 255, 0.7)'
+                                color: 'rgba(0, 0, 0, 0.7)'
                             }
                         },
                         y: {
                             grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: 'rgba(0, 0, 0, 0.1)'
                             },
                             ticks: {
-                                color: 'rgba(255, 255, 255, 0.7)'
+                                color: 'rgba(0, 0, 0, 0.7)'
                             }
                         }
                     }
@@ -755,12 +663,12 @@
                     datasets: [{
                         data: [],
                         backgroundColor: [
-                            '#00ffd0',
-                            '#8b5cf6',
-                            '#f59e0b',
-                            '#ef4444',
-                            '#10b981',
-                            '#3b82f6'
+                            '#000',
+                            '#333',
+                            '#666',
+                            '#999',
+                            '#bbb',
+                            '#ddd'
                         ],
                         borderWidth: 0
                     }]
@@ -772,7 +680,7 @@
                         legend: {
                             position: 'right',
                             labels: {
-                                color: 'rgba(255, 255, 255, 0.7)'
+                                color: 'rgba(0, 0, 0, 0.7)'
                             }
                         }
                     }
@@ -874,7 +782,7 @@
 
         function updateUserInfo(data) {
             data = data || {};
-            document.getElementById('userName').textContent = 'JUKE Fair Analytics';
+            document.getElementById('userName').textContent = 'JUKE Charts Analytics';
             document.getElementById('userTier').textContent = (data.year || new Date().getFullYear()) + '-' + String(data.month || new Date().getMonth() + 1).padStart(2, '0');
             document.getElementById('uploadCredits').textContent = '∞';
         }

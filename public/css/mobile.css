@@ -10,12 +10,10 @@
     left: 0;
     width: 100vw;
     height: 60px;
-    background: rgba(0, 0, 0, 0.95);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: #000;
+    border-top: 2px solid #fff;
     z-index: 999;
     padding-bottom: env(safe-area-inset-bottom);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
     box-sizing: border-box;
 }
 
@@ -74,14 +72,13 @@
 .mobile-nav-item.mobile-nav-center {
     position: relative;
     margin-top: -18px;
-    background: rgba(0, 0, 0, 0.95);
-    border: 2px solid rgba(255, 255, 255, 0.25);
+    background: #000;
+    border: 2px solid #fff;
     border-radius: 50%;
     width: 56px;
     height: 56px;
     justify-content: center;
     padding: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .mobile-nav-item.mobile-nav-center img.mobile-nav-logo {

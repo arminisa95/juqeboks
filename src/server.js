@@ -2841,7 +2841,7 @@ app.post('/api/admin/payouts/mark-paid', authenticateToken, async (req, res) => 
     }
 });
 
-// Public analytics endpoint for the _fair dashboard
+// Public analytics endpoint for the _charts dashboard
 app.get('/api/analytics', async (req, res) => {
     const now = new Date();
     const year = now.getFullYear();
