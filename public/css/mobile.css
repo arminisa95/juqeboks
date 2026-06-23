@@ -67,6 +67,26 @@
     color: #fff;
 }
 
+/* Center raised button (U / profile) */
+.mobile-nav-item.mobile-nav-center {
+    position: relative;
+    margin-top: -18px;
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    justify-content: center;
+    padding: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.mobile-nav-item.mobile-nav-center img.mobile-nav-logo {
+    height: 2.4rem !important;
+    width: auto !important;
+    margin-bottom: 0;
+}
+
 /* Visually hide text labels to prevent white spots */
 .mobile-nav-item span {
     position: absolute;
