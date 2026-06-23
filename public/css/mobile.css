@@ -2,34 +2,30 @@
    MOBILE NAVIGATION & PLAYER - 5-Button Spotify-like Design
    ======================================== */
 
-/* Mobile Bottom Navigation Bar - 3-Item Minimal Design */
+/* Mobile Bottom Navigation Bar */
 .mobile-nav {
     display: none;
     position: fixed;
     bottom: 0;
     left: 0;
-    width: 100%;
-    height: 64px;
-    background: rgba(0, 0, 0, 0.92);
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    right: 0;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 999;
     padding-bottom: env(safe-area-inset-bottom);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-sizing: border-box;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
 }
 
 .mobile-nav-items {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    align-items: end;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
     height: 100%;
-    width: 100%;
-    max-width: 420px;
+    max-width: 500px;
     margin: 0 auto;
-    padding: 0 0 8px;
-    box-sizing: border-box;
-    position: relative;
+    padding: 0 8px;
 }
 
 .mobile-nav-item {
@@ -38,12 +34,13 @@
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 0;
-    font-weight: 500;
-    padding: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0; /* Hide text label */
+    font-weight: 400;
+    padding: 12px;
     border-radius: 0;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease;
+    min-width: 48px;
     min-height: 48px;
     background: transparent;
     border: none;
@@ -51,27 +48,48 @@
 }
 
 .mobile-nav-item i {
-    font-size: 1.35rem;
+    font-size: 1.2rem;
     margin-bottom: 0;
     line-height: 1;
-    transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.mobile-nav-item:hover,
-.mobile-nav-item:focus {
-    color: rgba(255, 255, 255, 0.8);
-    outline: none;
+.mobile-nav-items .mobile-nav-item .mobile-nav-logo {
+    height: 2.2rem !important;
+    width: auto !important;
+    margin-bottom: 0;
+}
+
+.mobile-nav-item:hover {
+    color: #fff;
 }
 
 .mobile-nav-item.active {
     color: #fff;
 }
 
-.mobile-nav-item.active i {
-    transform: scale(1.1);
+/* Center raised U button */
+.mobile-nav-item.mobile-nav-center {
+    position: relative;
+    margin-top: -18px;
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+    justify-content: center;
+    padding: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
-/* Hide labels completely - no white spots */
+.mobile-nav-item.mobile-nav-center .mobile-nav-logo {
+    height: 2.4rem !important;
+    width: auto !important;
+    margin-bottom: 0;
+}
+
+/* Visually hide text labels to prevent white spots */
 .mobile-nav-item span {
     position: absolute;
     width: 1px;
@@ -82,50 +100,6 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Center U logo button - raised */
-.mobile-nav-center {
-    position: relative;
-    top: -16px;
-    min-width: 64px;
-    min-height: 64px;
-    padding: 0;
-    margin: 0;
-}
-
-.mobile-nav-center::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: #000;
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    border-radius: 50%;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-    z-index: -1;
-    transition: all 0.2s ease;
-}
-
-.mobile-nav-center:hover::before,
-.mobile-nav-center.active::before {
-    background: #fff;
-    border-color: #fff;
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1), 0 6px 24px rgba(0, 0, 0, 0.5);
-}
-
-.mobile-nav-center .mobile-nav-logo {
-    height: 2.4rem !important;
-    width: auto !important;
-    margin-bottom: 0;
-    filter: brightness(0) invert(1);
-    transition: filter 0.2s ease;
-}
-
-.mobile-nav-center:hover .mobile-nav-logo,
-.mobile-nav-center.active .mobile-nav-logo {
-    filter: none;
 }
 
 /* Mobile Header with Logo */
