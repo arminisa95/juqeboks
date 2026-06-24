@@ -116,7 +116,7 @@ function playInlineVideo(container, track) {
 function playTrackInVisualPlayer(track) {
     try {
         if (window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
-            window.JukePlayer.playTrack(track, { autoShowVideo: false });
+            window.JukePlayer.playTrack(track, { autoShowVideo: true });
             return;
         }
         if (track && track.id && typeof playTrack === 'function') {
@@ -2704,10 +2704,8 @@ function createFeedPostCard(track) {
                     }
                 } else {
                     try {
-                        // Inline video, visual player for audio, media viewer for images
-                        if (track.video_url) {
-                            playInlineVideo(cover, track);
-                        } else if (track.audio_url) {
+                        // Global player for audio/video (same timeline, video syncable)
+                        if (track.video_url || track.audio_url) {
                             playTrackInVisualPlayer(track);
                         } else {
                             var list = (feedState && Array.isArray(feedState.queueTracks) && feedState.queueTracks.length) ? feedState.queueTracks : [track];
@@ -2730,10 +2728,7 @@ function createFeedPostCard(track) {
             play.dataset.bound = '1';
             play.addEventListener('click', function (e) {
                 e.stopPropagation();
-                const cover = card.querySelector('.post-media-wrap');
-                if (track.video_url) {
-                    playInlineVideo(cover, track);
-                } else if (track.audio_url) {
+                if (track.video_url || track.audio_url) {
                     playTrackInVisualPlayer(track);
                 } else {
                     playTrack(String(track.id));
