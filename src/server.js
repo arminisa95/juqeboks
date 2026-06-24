@@ -2124,7 +2124,7 @@ app.get('/api/tracks', async (req, res) => {
         // Basis-Query mit optimierten JOINs
         let query = `
             SELECT t.id, t.title, t.genre, t.duration_seconds, t.play_count, t.like_count,
-                   t.cover_image_url, t.audio_url, t.file_path, t.created_at, t.uploader_id,
+                   t.cover_image_url, t.audio_url, t.video_url, t.file_path, t.created_at, t.uploader_id,
                    a.name as artist_name, a.id as artist_id,
                    al.title as album_title, al.cover_image_url as album_cover_image_url,
                    u.username as uploader_username
