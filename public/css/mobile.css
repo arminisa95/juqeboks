@@ -350,12 +350,8 @@
         margin-bottom: 0 !important;
     }
 
-    /* Hide desktop player and floating button on mobile */
+    /* Hide desktop player on mobile */
     .music-player {
-        display: none !important;
-    }
-
-    .floating-button {
         display: none !important;
     }
 
