@@ -296,7 +296,7 @@
                 progressContainer.style.cssText = 'margin: 1rem 0; display: none;';
                 progressContainer.innerHTML = `
                     <div style="background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; height: 8px;">
-                        <div id="uploadProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00ffd0, #00b894); transition: width 0.3s ease;"></div>
+                        <div id="uploadProgressBar" style="width: 0%; height: 100%; background: #00ffd0; transition: width 0.3s ease;"></div>
                     </div>
                     <div id="uploadProgressText" style="text-align: center; margin-top: 0.5rem; color: #aaa; font-size: 0.9rem;">Preparing upload...</div>
                 `;
@@ -322,6 +322,9 @@
             var bases = [primaryBase, fallbackBase].filter(Boolean);
             bases = bases.filter(function (v, i, a) { return a.indexOf(v) === i; });
 
+            console.log('[Upload] starting upload to bases:', bases);
+            console.log('[Upload] audio:', hasAudio, 'video:', hasVideo, 'mode:', (document.querySelector('input[name="videoAudioMode"]:checked') || {}).value);
+
             function safeJson(res) {
                 return res.json().catch(function () { return null; });
             }
@@ -333,8 +336,8 @@
                 }
 
                 var apiBase = bases[baseIndex];
+                console.log('[Upload] trying base:', apiBase);
                 
-                // 🎯 XMLHttpRequest für Progress Tracking
                 return new Promise(function(resolve) {
                     var xhr = new XMLHttpRequest();
                     
@@ -345,12 +348,17 @@
                             if (progressText) {
                                 var loaded = (e.loaded / 1024 / 1024).toFixed(1);
                                 var total = (e.total / 1024 / 1024).toFixed(1);
-                                progressText.textContent = 'Uploading: ' + percent + '% (' + loaded + ' / ' + total + ' MB)';
+                                if (percent >= 100) {
+                                    progressText.textContent = 'Upload complete, processing on server...';
+                                } else {
+                                    progressText.textContent = 'Uploading: ' + percent + '% (' + loaded + ' / ' + total + ' MB)';
+                                }
                             }
                         }
                     });
                     
                     xhr.addEventListener('load', function() {
+                        console.log('[Upload] response status:', xhr.status, 'length:', xhr.responseText.length);
                         if (xhr.status >= 200 && xhr.status < 300) {
                             try {
                                 var data = JSON.parse(xhr.responseText);
@@ -374,7 +382,6 @@
                                     
                                     showUploadNotification('Track "' + titleVal + '" uploaded successfully!' + moderationText, data.moderationStatus === 'blocked' ? 'error' : 'success');
                                     
-                                    // Form zurücksetzen nach kurzer Verzögerung
                                     setTimeout(function() {
                                         uploadForm.reset();
                                         fileInfo.textContent = 'No files selected';
@@ -383,7 +390,6 @@
                                         progressContainer.style.display = 'none';
                                         if (progressBar) progressBar.style.width = '0%';
                                         
-                                        // Redirect zum Feed only if not blocked
                                         if (data.moderationStatus !== 'blocked') {
                                             window.location.hash = '#/feed';
                                         }
@@ -394,18 +400,27 @@
                                 }
                                 
                                 var msg = (data && data.error) ? data.error : 'Upload failed';
+                                console.log('[Upload] server error:', msg);
                                 showUploadNotification(msg, 'error');
                                 resolve();
-                            } catch (_) {
+                            } catch (parseErr) {
+                                console.log('[Upload] failed to parse response, trying fallback');
                                 tryUpload(baseIndex + 1).then(resolve);
                             }
+                        } else if (xhr.status === 413) {
+                            console.log('[Upload] file too large');
+                            showUploadNotification('File too large. Maximum size is 500MB.', 'error');
+                            resolve();
                         } else if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
+                            console.log('[Upload] status ' + xhr.status + ', trying fallback');
                             tryUpload(baseIndex + 1).then(resolve);
                         } else {
                             try {
                                 var errData = JSON.parse(xhr.responseText);
+                                console.log('[Upload] server error:', errData.error);
                                 showUploadNotification(errData.error || 'Upload failed', 'error');
                             } catch (_) {
+                                console.log('[Upload] upload failed with status:', xhr.status);
                                 showUploadNotification('Upload failed: ' + xhr.status, 'error');
                             }
                             resolve();
@@ -413,17 +428,19 @@
                     });
                     
                     xhr.addEventListener('error', function() {
+                        console.log('[Upload] network error, trying fallback');
                         tryUpload(baseIndex + 1).then(resolve);
                     });
                     
                     xhr.addEventListener('timeout', function() {
+                        console.log('[Upload] timed out');
                         showUploadNotification('Upload timed out. Please try again.', 'error');
                         resolve();
                     });
                     
                     xhr.open('POST', apiBase + '/upload');
                     xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-                    xhr.timeout = 300000; // 5 Minuten Timeout
+                    xhr.timeout = 600000; // 10 minutes
                     xhr.send(formData);
                 });
             }

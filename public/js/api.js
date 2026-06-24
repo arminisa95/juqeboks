@@ -499,8 +499,28 @@ async function loadLikedTrackIds() {
         });
         const favorites = (profile && profile.favorites) ? profile.favorites : [];
         likedTrackIds = new Set(favorites.map((t) => String(t && t.id)));
+        updateLikeButtonStates();
     } catch (e) {
         likedTrackIds = new Set();
+    }
+}
+
+function updateLikeButtonStates() {
+    try {
+        document.querySelectorAll('.like-btn[data-track-id]').forEach(function (btn) {
+            const id = String(btn.dataset.trackId);
+            const isLiked = likedTrackIds.has(id);
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = isLiked ? 'fas fa-heart' : 'far fa-heart';
+            }
+            btn.classList.toggle('liked', isLiked);
+            const countEl = btn.querySelector('.like-count[data-track-id]');
+            if (countEl && !countEl.dataset.originalCount) {
+                countEl.dataset.originalCount = countEl.textContent || '0';
+            }
+        });
+    } catch (_) {
     }
 }
 
@@ -693,8 +713,6 @@ async function loadTracks() {
     try {
         const tracksGrid = document.getElementById('tracksGrid');
 
-        await loadLikedTrackIds();
-
         if (tracksGrid) {
             await loadMyTracks();
             return;
@@ -720,6 +738,8 @@ async function loadTracks() {
                 return;
             }
             window.isFeedInitialized = true;
+            // Load likes in background; don't block the first feed paint
+            loadLikedTrackIds().catch(function() {});
             await loadFeedStream(true);
             return;
         }
@@ -2585,7 +2605,7 @@ function createFeedPostCard(track) {
     const safeTitle = (track && track.title) ? String(track.title) : '';
     const safeArtist = (artistName && typeof artistName === 'string') ? artistName : '';
     const uploadedShort = formatTrackDateShort(track);
-    const coverMedia = `<img class="post-media" src="${coverUrl}" alt="${safeTitle}">`;
+    const coverMedia = `<img class="post-media" src="${coverUrl}" alt="${safeTitle}" loading="lazy" decoding="async">`;
     const uploaderLine = (uploaderName && uploaderId && String(uploaderId) !== String(currentUserId || ''))
         ? `<a href="#/koleqtion/${uploaderId}" class="uploader-link">@${uploaderName}</a>`
         : (uploaderName ? `<span class="uploader-link">@${uploaderName}</span>` : '');

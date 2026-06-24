@@ -7,7 +7,8 @@ const { db } = require('./database/connection');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
 const crypto = require('crypto');
 const { sendEmailVerification } = require('./services/email');
 
@@ -45,16 +46,18 @@ function getS3Client() {
     });
 }
 
-function computeFileHash(filePath) {
-    try {
-        if (!filePath || !fs.existsSync(filePath)) return null;
+function computeFileHashStream(filePath) {
+    return new Promise((resolve, reject) => {
+        if (!filePath || !fs.existsSync(filePath)) return resolve(null);
         const hash = crypto.createHash('sha256');
-        hash.update(fs.readFileSync(filePath));
-        return hash.digest('hex');
-    } catch (error) {
-        console.error('Hash computation error:', error);
-        return null;
-    }
+        const stream = fs.createReadStream(filePath);
+        stream.on('data', (chunk) => hash.update(chunk));
+        stream.on('end', () => resolve(hash.digest('hex')));
+        stream.on('error', (err) => {
+            console.error('Hash stream error:', err);
+            resolve(null);
+        });
+    });
 }
 
 async function calculateUploadRiskScore(db, file, userId, metadata) {
@@ -63,8 +66,8 @@ async function calculateUploadRiskScore(db, file, userId, metadata) {
 
     if (!file || !file.path) return { score, reasons };
 
-    // Duplicate hash check
-    const hash = computeFileHash(file.path);
+    // Duplicate hash check (stream to avoid loading large videos into memory)
+    const hash = await computeFileHashStream(file.path);
     if (hash) {
         const existing = await db.get('SELECT id FROM tracks WHERE audio_sha256 = $1 LIMIT 1', [hash]);
         if (existing) {
@@ -120,15 +123,22 @@ async function uploadFileToS3(client, file, keyPrefix) {
     const filename = path.basename(file.path || file.filename || 'file');
     const ext = path.extname(filename) || '';
     const key = (keyPrefix.replace(/\/$/, '') + '/' + Date.now() + '-' + Math.round(Math.random() * 1e9) + ext).replace(/^\//, '');
-    const body = fs.readFileSync(file.path);
+    const body = fs.createReadStream(file.path);
 
-    await client.send(new PutObjectCommand({
-        Bucket: S3_BUCKET,
-        Key: key,
-        Body: body,
-        ContentType: guessContentType(file)
-    }));
+    const upload = new Upload({
+        client,
+        params: {
+            Bucket: S3_BUCKET,
+            Key: key,
+            Body: body,
+            ContentType: guessContentType(file)
+        },
+        queueSize: 4,
+        partSize: 5 * 1024 * 1024,
+        leavePartsOnError: false
+    });
 
+    await upload.done();
     return { key, url: makePublicObjectUrl(key) };
 }
 
@@ -294,6 +304,11 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     limits: { fileSize: 50 * 1024 * 1024 }
+});
+
+const trackUpload = multer({
+    storage,
+    limits: { fileSize: 500 * 1024 * 1024 }
 });
 
 // Update your initializeDatabase function in server.js
@@ -3070,8 +3085,18 @@ async function checkUploadCredits(req, res, next) {
     }
 }
 
-app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }, { name: 'videoFile', maxCount: 1 }]), async (req, res) => {
+app.post('/api/upload', authenticateToken, checkUploadCredits, trackUpload.fields([{ name: 'audioFile', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }, { name: 'videoFile', maxCount: 1 }]), async (req, res) => {
     try {
+        // Disable Node request/response timeouts for large uploads
+        try { req.setTimeout(0); } catch (_) {}
+        try { res.setTimeout(0); } catch (_) {}
+
+        const uploadStartTime = Date.now();
+        const logStep = (label) => {
+            console.log(`[Upload] ${label}: ${Date.now() - uploadStartTime}ms elapsed`);
+        };
+        logStep('upload route started');
+
         const { title, artist: artistRaw, genre } = req.body;
         const rawAlbum = (req.body && typeof req.body.album === 'string') ? req.body.album : '';
         const albumTitle = (rawAlbum || '').trim() || 'Single';
@@ -3116,8 +3141,10 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
         }
 
         // Compute audio hash and risk score
-        const audioHash = computeFileHash(file.path);
+        const audioHash = await computeFileHashStream(file.path);
+        logStep('hash computed');
         const risk = await calculateUploadRiskScore(db, file, userId, { genre, coverUrl: cover ? 'yes' : null });
+        logStep('risk score calculated');
         let moderationStatus = 'approved';
         if (risk.score >= 80) {
             moderationStatus = 'blocked';
@@ -3178,6 +3205,7 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
         }
 
         if (s3) {
+            logStep('starting S3 uploads');
             const audioIsVideo = file === video;
             let audioObj;
             let videoObj;
@@ -3208,6 +3236,7 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
                 videoUrl = videoObj.url;
                 metadata.video_key = videoObj.key;
             }
+            logStep('S3 uploads complete');
 
             try {
                 if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path);
@@ -3223,6 +3252,7 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
             }
         }
 
+        logStep('inserting track into database');
         const result = await db.insert('tracks', {
             title,
             uploader_id: userId,
@@ -3262,6 +3292,7 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
             });
         }
 
+        logStep('upload finished');
         res.json({
             success: true,
             track: result,
@@ -3271,7 +3302,7 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
         });
     } catch (error) {
         console.error('Upload error:', error);
-        res.status(500).json({ error: 'Upload failed' });
+        res.status(500).json({ success: false, error: 'Upload failed: ' + (error.message || 'unknown error') });
     }
 });
 
@@ -3957,6 +3988,30 @@ app.post('/api/admin/reset-users', async (req, res) => {
         console.error('Reset users error:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+// Global error handler (multer errors, unexpected errors)
+app.use((err, req, res, next) => {
+    if (err && err.name === 'MulterError') {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(413).json({
+                success: false,
+                error: 'File too large. Maximum size is 500MB for tracks and videos.'
+            });
+        }
+        return res.status(400).json({
+            success: false,
+            error: 'File upload error: ' + err.message
+        });
+    }
+    if (err) {
+        console.error('Express error:', err);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+    next();
 });
 
 // Start server with error handling

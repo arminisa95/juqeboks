@@ -33,13 +33,12 @@
             width: 90vw;
             max-width: 1200px;
             height: 85vh;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: #0a1628;
             border-radius: 20px;
             padding: 3rem;
             display: none;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(0, 255, 208, 0.2);
+            border: 1px solid #00ffd0;
         }
 
         .slide.active {
@@ -60,10 +59,7 @@
         .slide-title {
             font-size: 3rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #00ffd0, #1db954);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #00ffd0;
             margin-bottom: 1rem;
         }
 
@@ -93,18 +89,16 @@
 
         .nav-btn {
             padding: 0.8rem 1.5rem;
-            background: linear-gradient(135deg, #00ffd0, #00e6b8);
+            background: #00ffd0;
             color: #0a0a0a;
             border: none;
             border-radius: 20px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
         }
 
         .nav-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 255, 208, 0.4);
+            background: #00e6b8;
         }
 
         .nav-btn:disabled {
@@ -122,18 +116,16 @@
 
         .export-btn {
             padding: 0.8rem 1.5rem;
-            background: linear-gradient(135deg, #1db954, #1ed760);
+            background: #1db954;
             color: #fff;
             border: none;
             border-radius: 20px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
         }
 
         .export-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(29, 185, 84, 0.4);
+            background: #1ed760;
         }
 
         .hero-slide {
@@ -278,8 +270,8 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, rgba(0, 255, 208, 0.1) 0%, rgba(29, 185, 84, 0.1) 100%);
-            border: 1px solid rgba(0, 255, 208, 0.3);
+            background: #0f1a30;
+            border: 1px solid #00ffd0;
             border-radius: 15px;
             padding: 2rem;
             text-align: center;
@@ -677,7 +669,7 @@
         <button class="export-btn" onclick="exportToPDF()">
             <i class="fas fa-file-pdf"></i> Export PDF
         </button>
-        <button class="nav-btn" onclick="closePresentation()" style="background: linear-gradient(135deg, #ff4444, #cc0000);">
+        <button class="nav-btn" onclick="closePresentation()" style="background: #ff4444;">
             <i class="fas fa-times"></i> Close
         </button>
     </div>

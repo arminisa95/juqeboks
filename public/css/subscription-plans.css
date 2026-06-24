@@ -1,28 +1,27 @@
 /* Subscription Plans Page Styles */
 
 .gradient-bg {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: var(--bg-primary);
 }
 
 .card-gradient {
-    background: linear-gradient(135deg, rgba(0, 255, 208, 0.1) 0%, rgba(29, 185, 84, 0.1) 100%);
-    border: 1px solid rgba(0, 255, 208, 0.3);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
 }
 
 .premium-gradient {
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 140, 0, 0.2) 100%);
-    border: 2px solid rgba(255, 215, 0, 0.5);
-    transform: scale(1.05);
+    background: var(--bg-secondary);
+    border: 2px solid #ffd700;
 }
 
 .pro-gradient {
-    background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(79, 70, 229, 0.2) 100%);
-    border: 2px solid rgba(147, 51, 234, 0.5);
+    background: var(--bg-secondary);
+    border: 2px solid #8b5cf6;
 }
 
 .label-gradient {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
-    border: 2px solid rgba(239, 68, 68, 0.5);
+    background: var(--bg-secondary);
+    border: 2px solid #ef4444;
 }
 
 .feature-check {
@@ -33,11 +32,6 @@
     color: #ef4444;
 }
 
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
 .pulse {
-    animation: pulse 2s infinite;
+    display: inline-block;
 }

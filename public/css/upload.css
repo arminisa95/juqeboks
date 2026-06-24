@@ -3,9 +3,9 @@
     max-width: 800px;
     margin: 2rem auto;
     padding: 2rem;
-    background: rgba(30, 25, 100, 0.7);
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-primary);
 }
 
 .upload-header {
@@ -36,7 +36,7 @@
 
 .upload-area:hover {
     border-color: #00ffd0;
-    background: rgba(74, 74, 138, 0.2);
+    background: #1a1a3e;
 }
 
 .upload-area i {
@@ -98,7 +98,6 @@
 
 .btn-upload:hover {
     background: #00e6b8;
-    transform: translateY(-2px);
 }
 
 .file-info {

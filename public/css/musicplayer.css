@@ -10,18 +10,13 @@ MUSIC PLAYER - Enhanced Modern Design
     right: 0;
     height: 90px;
     background: var(--bg-secondary);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border-secondary);
-    border-radius: 6px 6px 0 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 24px;
     padding-right: 100px;
     z-index: 1000;
-    box-shadow: var(--shadow-lg),
-                inset 0 1px 0 var(--shadow-sm);
 }
 
 /* Video container in player */
@@ -36,7 +31,6 @@ MUSIC PLAYER - Enhanced Modern Design
     border-radius: 6px;
     overflow: hidden;
     border: 1px solid var(--border-secondary);
-    box-shadow: var(--shadow-lg);
     display: none;
     z-index: 1001;
 }
@@ -96,13 +90,7 @@ MUSIC PLAYER - Enhanced Modern Design
     height: 60px;
     border-radius: 4px;
     object-fit: cover;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.3s ease;
     cursor: pointer;
-}
-
-.music-player .now-playing-cover:hover {
-    transform: scale(1.05);
 }
 
 .music-player .now-playing-cover.has-video {
@@ -190,39 +178,36 @@ MUSIC PLAYER - Enhanced Modern Design
 .music-player .like-btn i.far {
     font-size: 1.45rem;
     color: white;
-    transition: transform 0.15s ease, color 0.15s ease;
+    transition: color 0.15s ease;
 }
 
 .music-player .like-btn i.fas {
     font-size: 1.45rem;
     color: #F72193;
-    transition: transform 0.15s ease, color 0.15s ease;
+    transition: color 0.15s ease;
 }
 
 .music-player .share-btn i {
     font-size: 1.45rem;
     color: white;
-    transition: transform 0.15s ease, color 0.15s ease;
+    transition: color 0.15s ease;
 }
 
 .music-player .queue-btn i {
     font-size: 1.3rem;
     color: white;
-    transition: transform 0.15s ease, color 0.15s ease;
+    transition: color 0.15s ease;
 }
 
 .music-player .like-btn:hover i {
-    transform: scale(1.06);
     color: #F72193;
 }
 
 .music-player .share-btn:hover i {
-    transform: scale(1.06);
     color: #F72193;
 }
 
 .music-player .queue-btn:hover i {
-    transform: scale(1.06);
     color: #F72193;
 }
 
@@ -244,7 +229,6 @@ MUSIC PLAYER - Enhanced Modern Design
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease;
 }
 
 .music-player .play-btn,
@@ -255,7 +239,7 @@ MUSIC PLAYER - Enhanced Modern Design
 }
 
 .music-player .play-btn.large:hover {
-    transform: scale(1.05);
+    background: #00ffd0;
 }
 
 .music-player .progress-container {
@@ -462,8 +446,7 @@ main {
     max-height: min(70vh, 560px);
     background: var(--bg-overlay);
     border: 1px solid var(--border-primary);
-    border-radius: 16px 16px 0 0;
-    box-shadow: var(--shadow-sm);
+    border-radius: 12px 12px 0 0;
     overflow: hidden;
     opacity: 0;
     transition: transform 220ms ease, opacity 220ms ease;

@@ -63,8 +63,8 @@
             style.id = 'jukeShareSheetStyles';
             style.textContent = '' +
                 '.juke-share-root{position:fixed;inset:0;z-index:2000;}' +
-                '.juke-share-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);}' +
-                '.juke-share-sheet{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:min(420px,calc(100vw - 24px));background:rgba(18,18,18,0.92);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:14px 14px 10px;color:#fff;box-shadow:0 18px 44px rgba(0,0,0,0.55);}' +
+                '.juke-share-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.55);}' +
+                '.juke-share-sheet{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);width:min(420px,calc(100vw - 24px));background:#121212;border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:14px 14px 10px;color:#fff;}' +
                 '.juke-share-title{font-weight:700;font-size:0.95rem;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
                 '.juke-share-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 6px;}' +
                 '.juke-share-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:10px;color:#fff;padding:10px 12px;cursor:pointer;font-weight:600;}' +

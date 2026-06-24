@@ -337,3 +337,16 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_album_stats_trigger
     AFTER INSERT OR DELETE OR UPDATE ON tracks
     FOR EACH ROW EXECUTE FUNCTION update_album_stats();
+
+-- Indexes for feed performance
+CREATE INDEX IF NOT EXISTS idx_tracks_feed_newest
+    ON tracks (created_at DESC)
+    WHERE COALESCE(is_available, true) = true AND COALESCE(moderation_status, 'approved') = 'approved';
+
+CREATE INDEX IF NOT EXISTS idx_tracks_feed_popular
+    ON tracks (play_count DESC, created_at DESC)
+    WHERE COALESCE(is_available, true) = true AND COALESCE(moderation_status, 'approved') = 'approved';
+
+CREATE INDEX IF NOT EXISTS idx_tracks_feed_genre_newest
+    ON tracks (genre, created_at DESC)
+    WHERE COALESCE(is_available, true) = true AND COALESCE(moderation_status, 'approved') = 'approved';
