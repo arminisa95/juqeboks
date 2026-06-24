@@ -3,20 +3,20 @@
    ======================================== */
 
 /* Mobile Bottom Navigation Bar - Clean 5-Button Design */
-nav.mobile-nav {
+html body nav.mobile-nav {
     display: none;
     position: fixed;
     bottom: 0;
     left: 0;
-    width: 100%;
-    max-width: 100%;
+    right: 0;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    padding-bottom: env(safe-area-inset-bottom);
     height: 60px;
     background: #000;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     z-index: 999;
-    padding: 0;
-    padding-bottom: env(safe-area-inset-bottom);
-    margin: 0;
     box-sizing: border-box;
     gap: 0;
     justify-content: flex-start;
@@ -335,7 +335,7 @@ nav.mobile-nav {
     }
 
     /* Show mobile elements */
-    nav.mobile-nav {
+    html body nav.mobile-nav {
         display: block;
     }
 
