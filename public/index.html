@@ -79,9 +79,15 @@
                 <div class="nav-buttons">
                     <a href="views/analytics-dashboard.html" class="app" target="_blank">_charts</a>
                     <a href="#/upload" class="app">_uqload</a>
-                    <a href="#/pref" class="app">_settings</a>
+                    <div class="nav-dropdown auth-user-dropdown" style="display: none;">
+                        <a href="#" class="nav-dropdown-toggle auth-user-name">_username</a>
+                        <div class="nav-dropdown-menu">
+                            <a href="#/pref">_settings</a>
+                            <a href="views/subscription-plans.html" target="_blank">_abo</a>
+                            <a href="#" class="auth-logout">_logout</a>
+                        </div>
+                    </div>
                     <a href="#/login" class="login auth-login">_U</a>
-                    <a href="#/profile" class="login auth-user">_U</a>
                 </div>
             </div>
         </nav>

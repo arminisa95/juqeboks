@@ -555,20 +555,20 @@ async function register(username, email, password, firstName, lastName, accountT
 function updateAuthUI() {
     const user = getCurrentUser();
     const loginLinks = document.querySelectorAll('.auth-login');
-    const userLinks = document.querySelectorAll('.auth-user');
+    const userDropdown = document.querySelector('.auth-user-dropdown');
+    const userNameEl = document.querySelector('.auth-user-name');
     const usernameDisplay = document.querySelector('.username-display');
 
     if (user) {
         // Show user-specific elements
         loginLinks.forEach(link => link.style.display = 'none');
-        userLinks.forEach(link => {
-            link.style.display = '';
-            // Keep auth-user links as "_U" (don't show username in top nav)
-            if (link.textContent.startsWith('_') && link.textContent !== '_U') {
-                link.textContent = '_U';
-                link.style.color = '';
-            }
-        });
+        if (userDropdown) userDropdown.style.display = '';
+        if (userNameEl) {
+            const displayName = user.username || user.firstName || 'User';
+            userNameEl.textContent = '_' + displayName;
+        }
+        // Mobile user buttons (keep as _U)
+        document.querySelectorAll('.auth-user').forEach(el => el.style.display = '');
         
         if (usernameDisplay) {
             usernameDisplay.textContent = user.username || user.firstName || 'User';
@@ -579,9 +579,8 @@ function updateAuthUI() {
     } else {
         // Show login elements
         loginLinks.forEach(link => link.style.display = '');
-        userLinks.forEach(link => {
-            link.style.display = 'none';
-        });
+        if (userDropdown) userDropdown.style.display = 'none';
+        document.querySelectorAll('.auth-user').forEach(el => el.style.display = 'none');
         
         if (usernameDisplay) {
             usernameDisplay.textContent = '';
@@ -593,6 +592,28 @@ function updateAuthUI() {
 
     if (typeof setFloatingButtonDestination === 'function') {
         setFloatingButtonDestination();
+    }
+}
+
+// Bind desktop user dropdown logout and toggle once
+function setupUserDropdown() {
+    const dropdown = document.querySelector('.auth-user-dropdown');
+    if (!dropdown || dropdown.dataset.bound === '1') return;
+    dropdown.dataset.bound = '1';
+
+    const toggle = dropdown.querySelector('.auth-user-name');
+    if (toggle) {
+        toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+        });
+    }
+
+    const logoutLink = dropdown.querySelector('.auth-logout');
+    if (logoutLink) {
+        logoutLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            logout();
+        });
     }
 }
 
@@ -1176,6 +1197,7 @@ function setupPrefPage() {
 // Initialize auth on page load
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthUI();
+    setupUserDropdown();
     setupLoginForm();
     setupRegisterForm();
     setupWelcomeScreen();

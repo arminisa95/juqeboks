@@ -154,6 +154,21 @@ nav {
     background: #fff;
 }
 
+/* User dropdown in header right */
+.auth-user-dropdown .nav-dropdown-menu {
+    left: auto;
+    right: 0;
+}
+
+.nav-dropdown-menu a.auth-logout {
+    color: #ff6b6b;
+}
+
+.nav-dropdown-menu a.auth-logout:hover {
+    color: #000;
+    background: #ff6b6b;
+}
+
 .login {
     color: #fff !important;
     font-weight: 700;
