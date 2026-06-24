@@ -3856,16 +3856,73 @@ async function reportTrackCopyright(trackId, trackTitle) {
     }
 }
 
+function setupLibraryTabs() {
+    const navItems = document.querySelectorAll('.library-nav-item');
+    const panels = document.querySelectorAll('.library-panel');
+    if (!navItems.length || !panels.length) return;
+
+    function showLibraryPanel(name) {
+        navItems.forEach(btn => {
+            const v = btn.getAttribute('data-view');
+            btn.classList.toggle('active', v === name);
+        });
+        panels.forEach(panel => {
+            const p = panel.getAttribute('data-panel');
+            panel.classList.toggle('active', p === name);
+        });
+        if (name === 'tracks') {
+            loadMyTracks();
+        } else if (name === 'playlists') {
+            const grid = document.getElementById('playlistsGrid');
+            if (grid) {
+                const token = getAuthToken();
+                if (!token) {
+                    grid.innerHTML = '<div class="empty-state">Please log in</div>';
+                    return;
+                }
+                apiFetchJson('/playlists/my', {
+                    headers: { Authorization: `Bearer ${token}` }
+                }, d => Array.isArray(d)).then(playlists => {
+                    renderKoleqtionPlaylists(playlists, grid);
+                }).catch(() => {
+                    grid.innerHTML = '<div class="empty-state">Failed to load playlists</div>';
+                });
+            }
+        } else if (name === 'albums') {
+            const grid = document.getElementById('albumsGrid');
+            if (grid) grid.innerHTML = '<div class="empty-state">Albums coming soon</div>';
+        }
+    }
+
+    navItems.forEach(btn => {
+        if (btn.dataset.bound) return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => {
+            const v = btn.getAttribute('data-view');
+            if (v) showLibraryPanel(v);
+        });
+    });
+
+    // Open tab from URL query parameter
+    const hash = window.location.hash || '';
+    const tabMatch = hash.match(/[?&]tab=([^&]+)/);
+    const tabName = tabMatch ? tabMatch[1] : 'tracks';
+    const validTabs = ['tracks', 'playlists', 'albums'];
+    showLibraryPanel(validTabs.includes(tabName) ? tabName : 'tracks');
+}
+
 window.JukeApi = {
     loadTracks,
     loadMyTracks,
     loadUserTracks,
     loadDisqoPage,
-    setupKoleqtionTabs
+    setupKoleqtionTabs,
+    setupLibraryTabs
 };
 
 window.deleteTrack = deleteTrack;
 window.reportTrackCopyright = reportTrackCopyright;
 window.loadDisqoPage = loadDisqoPage;
 window.setupKoleqtionTabs = setupKoleqtionTabs;
+window.setupLibraryTabs = setupLibraryTabs;
 window.openTrackMediaViewer = openTrackMediaViewer;

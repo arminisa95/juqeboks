@@ -61,7 +61,14 @@
         <nav>
             <div class="nav-buttons">
                 <a href="#/feed" class="feed">_feed</a>
-                <a href="#/lists" class="artists">_lists</a>
+                <div class="nav-dropdown">
+                    <a href="#/koleqtion" class="nav-dropdown-toggle">_lists</a>
+                    <div class="nav-dropdown-menu">
+                        <a href="#/koleqtion?tab=tracks">_tracks</a>
+                        <a href="#/koleqtion?tab=playlists">_playlists</a>
+                        <a href="#/koleqtion?tab=albums">_albums</a>
+                    </div>
+                </div>
                 <a href="#/disqo" class="lists">_disqo</a>
             </div>
             <div class="search-container">
@@ -72,7 +79,7 @@
                 <div class="nav-buttons">
                     <a href="views/analytics-dashboard.html" class="app" target="_blank">_charts</a>
                     <a href="#/upload" class="app">_uqload</a>
-                    <a href="#/koleqtion" class="register">_koleqtion</a>
+                    <a href="#/pref" class="app">_settings</a>
                     <a href="#/login" class="login auth-login">_U</a>
                     <a href="#/profile" class="login auth-user">_U</a>
                 </div>
@@ -143,7 +150,7 @@
         <main>
             <div class="library-container">
                 <aside class="library-nav" aria-label="Library directories">
-                    <div class="library-nav-title">_koleqtion</div>
+                    <div class="library-nav-title">_lists</div>
                     <div class="library-nav-subtitle">Your Library</div>
                     <div class="library-nav-items" role="tablist">
                         <button class="library-nav-item active" type="button" role="tab" data-view="tracks">_tracks</button>

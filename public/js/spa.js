@@ -100,6 +100,15 @@
             return;
         }
 
+        // Highlight lists dropdown items and parent
+        if (route === '#/koleqtion' || route.startsWith('#/koleqtion')) {
+            var toggle = document.querySelector('nav .nav-dropdown-toggle');
+            if (toggle) toggle.classList.add('active');
+            var subLink = document.querySelector('nav .nav-dropdown-menu a[href="' + route + '"]');
+            if (subLink) subLink.classList.add('active');
+            return;
+        }
+
         var link = document.querySelector('nav .nav-buttons a[href="' + route + '"]');
         if (link) link.classList.add('active');
     }
@@ -138,17 +147,10 @@
                 break;
 
             case '#/koleqtion':
-                if (window.JukeApi && typeof window.JukeApi.loadMyTracks === 'function') {
-                    window.JukeApi.loadMyTracks();
-                } else if (window.JukeApi && typeof window.JukeApi.loadTracks === 'function') {
-                    window.JukeApi.loadTracks();
-                } else if (typeof loadTracks === 'function') {
-                    loadTracks();
-                }
-                if (window.JukeApi && typeof window.JukeApi.setupKoleqtionTabs === 'function') {
-                    window.JukeApi.setupKoleqtionTabs();
-                } else if (typeof setupKoleqtionTabs === 'function') {
-                    setupKoleqtionTabs();
+                if (window.JukeApi && typeof window.JukeApi.setupLibraryTabs === 'function') {
+                    window.JukeApi.setupLibraryTabs();
+                } else if (typeof setupLibraryTabs === 'function') {
+                    setupLibraryTabs();
                 }
                 break;
 

@@ -596,36 +596,18 @@ function updateAuthUI() {
     }
 }
 
-// Update koleqtion text to show username with underscore
+// Update library title to show username with underscore; keep dropdown links unchanged
 function updateKoleqtionText(username) {
-    const koleqtionElements = document.querySelectorAll('.library-nav-title');
-    const koleqtionLinks = document.querySelectorAll('a[href*="koleqtion"], a[href="#/koleqtion"]');
-    const mobileKoleqtion = document.querySelector('.mobile-nav-item[data-nav="koleqtion"] span');
-    
-    const displayText = username ? `_${username}` : '_koleqtion';
+    const libraryTitles = document.querySelectorAll('.library-nav-title');
+    const displayText = username ? `_${username}` : '_lists';
     const isUserLoggedIn = !!username;
     
-    // Update library nav titles
-    koleqtionElements.forEach(element => {
-        if (element.textContent.includes('_koleqtion') || element.textContent.startsWith('_')) {
+    libraryTitles.forEach(element => {
+        if (element.textContent.includes('_lists') || element.textContent.startsWith('_')) {
             element.textContent = displayText;
             element.style.color = isUserLoggedIn ? '#00ffd0' : '';
         }
     });
-    
-    // Update koleqtion links
-    koleqtionLinks.forEach(link => {
-        if (link.textContent.includes('_koleqtion') || link.textContent.startsWith('_')) {
-            link.textContent = displayText;
-            link.style.color = isUserLoggedIn ? '#00ffd0' : '';
-        }
-    });
-    
-    // Update mobile navigation
-    if (mobileKoleqtion) {
-        mobileKoleqtion.textContent = displayText;
-        mobileKoleqtion.style.color = isUserLoggedIn ? '#00ffd0' : '';
-    }
 }
 
 // Handle login form submission
