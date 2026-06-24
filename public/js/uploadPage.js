@@ -7,6 +7,7 @@
         var coverInfo = document.getElementById('coverInfo');
         var videoInput = document.getElementById('videoInput');
         var videoInfo = document.getElementById('videoInfo');
+        var videoAudioModeGroup = document.getElementById('videoAudioModeGroup');
         var uploadForm = document.getElementById('uploadForm');
 
         if (!dropZone || !fileInput || !fileInfo || !uploadForm) return;
@@ -108,17 +109,27 @@
             });
         }
 
+        function updateVideoAudioModeVisibility() {
+            if (!videoAudioModeGroup) return;
+            if (videoInput && videoInput.files && videoInput.files.length > 0) {
+                videoAudioModeGroup.style.display = '';
+            } else {
+                videoAudioModeGroup.style.display = 'none';
+            }
+        }
+
         if (videoInput && videoInfo) {
             videoInput.addEventListener('change', function (e) {
                 var files = e.target.files;
                 if (!files || files.length === 0) {
                     videoInfo.textContent = 'No video selected';
+                    updateVideoAudioModeVisibility();
                     return;
                 }
-                
+
                 const file = files[0];
                 const fileType = file.type.split('/')[0];
-                
+
                 // If it's a video, open media editor
                 if (fileType === 'video' && typeof openMediaEditor === 'function') {
                     openMediaEditor(file, function(processedFile) {
@@ -126,10 +137,12 @@
                         dataTransfer.items.add(processedFile);
                         videoInput.files = dataTransfer.files;
                         videoInfo.textContent = 'Selected: ' + processedFile.name + ' (' + Math.round(processedFile.size / 1024 / 1024) + ' MB)';
+                        updateVideoAudioModeVisibility();
                     });
                 } else {
                     // Fallback for non-videos or if editor not available
                     videoInfo.textContent = 'Selected: ' + file.name + ' (' + Math.round(file.size / 1024 / 1024) + ' MB)';
+                    updateVideoAudioModeVisibility();
                 }
             });
         }
@@ -199,20 +212,30 @@
 
             var formData = new FormData();
             var files = fileInput.files;
+            var videoFiles = videoInput ? videoInput.files : null;
+            var hasAudio = files && files.length > 0;
+            var hasVideo = videoFiles && videoFiles.length > 0;
 
-            if (!files || files.length === 0) {
-                showUploadNotification('Please select at least one file to upload', 'error');
+            if (!hasAudio && !hasVideo) {
+                showUploadNotification('Please select an audio or video file to upload', 'error');
                 return;
             }
 
-            formData.append('audioFile', files[0]);
+            if (hasAudio) {
+                formData.append('audioFile', files[0]);
+            }
 
             if (coverInput && coverInput.files && coverInput.files[0]) {
                 formData.append('coverImage', coverInput.files[0]);
             }
 
-            if (videoInput && videoInput.files && videoInput.files[0]) {
-                formData.append('videoFile', videoInput.files[0]);
+            if (hasVideo) {
+                formData.append('videoFile', videoFiles[0]);
+            }
+
+            var videoAudioMode = document.querySelector('input[name="videoAudioMode"]:checked');
+            if (hasVideo && videoAudioMode) {
+                formData.append('videoAudioMode', videoAudioMode.value);
             }
 
             var titleEl = document.getElementById('trackTitle');

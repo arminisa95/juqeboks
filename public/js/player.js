@@ -322,6 +322,24 @@
         }
     }
 
+    function getVideoAudioMode(track) {
+        if (!track || !track.metadata) return null;
+        try {
+            var meta = typeof track.metadata === 'string' ? JSON.parse(track.metadata) : track.metadata;
+            return meta && meta.videoAudioMode ? String(meta.videoAudioMode) : null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function applyVideoAudioMode(track) {
+        var mode = getVideoAudioMode(track);
+        if (mode === 'mute') {
+            audio.muted = true;
+            state.muted = true;
+        }
+    }
+
     function playTrackFromObject(track, opts) {
         try {
             if (!track || typeof track !== 'object') return;
@@ -346,12 +364,15 @@
             state.videoUrl = track.video_url ? resolveAssetUrl(track.video_url) : null;
             state.currentTime = 0;
             state.showVideo = !!(autoShowVideo && state.videoUrl);
+            state.muted = false;
 
             updateVideoToggleVisibility();
 
             audio.src = audioUrl;
             audio.currentTime = 0;
             audio.volume = state.volume;
+            audio.muted = false;
+            applyVideoAudioMode(track);
 
             state.isPlaying = true;
             saveState();
@@ -956,7 +977,8 @@
         state.videoUrl = track.video_url ? resolveAssetUrl(track.video_url) : null;
         state.currentTime = 0;
         state.showVideo = false;
-        
+        state.muted = false;
+
         updateVideoToggleVisibility();
 
         try {
@@ -973,6 +995,8 @@
         audio.src = audioUrl;
         audio.currentTime = 0;
         audio.volume = state.volume;
+        audio.muted = false;
+        applyVideoAudioMode(track);
 
         saveState();
 

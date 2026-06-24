@@ -3075,10 +3075,16 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
         const { title, artist: artistRaw, genre } = req.body;
         const rawAlbum = (req.body && typeof req.body.album === 'string') ? req.body.album : '';
         const albumTitle = (rawAlbum || '').trim() || 'Single';
-        const file = req.files && req.files.audioFile ? req.files.audioFile[0] : null;
+        const videoAudioMode = req.body && req.body.videoAudioMode ? String(req.body.videoAudioMode) : null;
+        let file = req.files && req.files.audioFile ? req.files.audioFile[0] : null;
         const cover = req.files && req.files.coverImage ? req.files.coverImage[0] : null;
         const video = req.files && req.files.videoFile ? req.files.videoFile[0] : null;
         const userId = req.user.id;
+
+        // If no audio file but a video is provided, use the video as the audio source
+        if (!file && video) {
+            file = video;
+        }
 
         const termsConfirmed = req.body && (req.body.termsConfirmed === 'true' || req.body.termsConfirmed === true);
         const rightsConfirmed = req.body && (req.body.rightsConfirmed === 'true' || req.body.rightsConfirmed === true);
@@ -3167,9 +3173,23 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
         let videoUrl = video ? `/uploads/${path.basename(video.path)}` : null;
         let filePathValue = file.path;
         let metadata = {};
+        if (videoAudioMode) {
+            metadata.videoAudioMode = videoAudioMode;
+        }
 
         if (s3) {
-            const audioObj = await uploadFileToS3(s3, file, 'tracks/audio');
+            const audioIsVideo = file === video;
+            let audioObj;
+            let videoObj;
+
+            if (audioIsVideo) {
+                // Upload once as video; reuse the same object for audio
+                videoObj = await uploadFileToS3(s3, video, 'tracks/videos');
+                audioObj = videoObj;
+            } else {
+                audioObj = await uploadFileToS3(s3, file, 'tracks/audio');
+            }
+
             audioUrl = audioObj.url;
             filePathValue = audioObj.key;
             metadata.storage = 's3';
@@ -3181,8 +3201,10 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, upload.fields([{ 
                 metadata.cover_key = coverObj.key;
             }
 
-            if (video) {
-                const videoObj = await uploadFileToS3(s3, video, 'tracks/videos');
+            if (video && !audioIsVideo) {
+                videoObj = await uploadFileToS3(s3, video, 'tracks/videos');
+            }
+            if (videoObj) {
                 videoUrl = videoObj.url;
                 metadata.video_key = videoObj.key;
             }
