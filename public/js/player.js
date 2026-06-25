@@ -1201,6 +1201,33 @@
         }
     }
 
+    function isTrackLiked(trackId) {
+        try {
+            if (typeof window.isTrackLiked === 'function') return window.isTrackLiked(trackId);
+            if (typeof likedTrackIds !== 'undefined') return likedTrackIds.has(String(trackId));
+        } catch (_) {}
+        return false;
+    }
+
+    function likeTrackSafe(trackId) {
+        try {
+            if (typeof window.likeTrack === 'function') window.likeTrack(trackId);
+            else if (typeof likeTrack === 'function') likeTrack(trackId);
+        } catch (_) {}
+    }
+
+    function updateQueueLikeButton(trackId) {
+        try {
+            var liked = isTrackLiked(trackId);
+            var buttons = document.querySelectorAll('.juke-queue-like[data-queue-like-id="' + String(trackId).replace(/"/g, '&quot;') + '"]');
+            buttons.forEach(function (btn) {
+                btn.classList.toggle('liked', liked);
+                var icon = btn.querySelector('i');
+                if (icon) icon.className = liked ? 'fas fa-heart' : 'far fa-heart';
+            });
+        } catch (_) {}
+    }
+
     function buildQueueListHtml() {
         var html = '';
         try {
@@ -1219,6 +1246,9 @@
                 var safeTitle = t && t.title ? String(t.title) : 'Untitled';
                 var safeArtist = (t && (t.artist_name || t.uploader_username)) ? String(t.artist_name || t.uploader_username) : '';
                 var cover = resolveAssetUrl(t.cover_image_url) || getImageUrl('images/juqe.png');
+                var isLiked = isTrackLiked(idStr);
+                var likeIconClass = isLiked ? 'fas fa-heart' : 'far fa-heart';
+                var likeActiveClass = isLiked ? ' liked' : '';
                 html += '' +
                     '<div class="juke-queue-item' + active + '" role="button" tabindex="0" data-queue-track-id="' + idStr + '">' +
                     '  <img class="juke-queue-cover" src="' + String(cover).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" alt="">' +
@@ -1226,6 +1256,9 @@
                     '    <div class="juke-queue-title">' + safeTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
                     '    <div class="juke-queue-artist">' + safeArtist.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
                     '  </div>' +
+                    '  <button type="button" class="juke-queue-like' + likeActiveClass + '" data-queue-like-id="' + idStr + '" aria-label="Like">' +
+                    '    <i class="' + likeIconClass + '"></i>' +
+                    '  </button>' +
                     '</div>';
             });
         } catch (_) {
@@ -1265,6 +1298,22 @@
                     return;
                 }
             } catch (_) {
+            }
+
+            var likeBtn = null;
+            try {
+                likeBtn = target.closest ? target.closest('.juke-queue-like[data-queue-like-id]') : null;
+            } catch (_) {
+                likeBtn = null;
+            }
+            if (likeBtn) {
+                e.stopPropagation();
+                var likeId = likeBtn.getAttribute('data-queue-like-id');
+                if (likeId) {
+                    likeTrackSafe(likeId);
+                    updateQueueLikeButton(likeId);
+                }
+                return;
             }
 
             var item = null;

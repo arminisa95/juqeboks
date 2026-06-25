@@ -165,26 +165,38 @@ async function extractVideoFrameToFile(videoPath, outputDir) {
             console.log('ffmpeg-static not available');
             return null;
         }
+        if (!fs.existsSync(videoPath)) {
+            console.log('Video file not found for frame extraction:', videoPath);
+            return null;
+        }
         const outputPath = path.join(outputDir, `frame-${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`);
         await new Promise((resolve, reject) => {
             execFile(ffmpeg, [
-                '-ss', '00:00:01',
+                '-ss', '00:00:00.100',
                 '-i', videoPath,
                 '-frames:v', '1',
                 '-q:v', '2',
                 '-y',
                 outputPath
-            ], (err) => {
-                if (err) reject(err);
-                else resolve();
+            ], (err, stdout, stderr) => {
+                if (err) {
+                    console.error('ffmpeg stderr:', stderr);
+                    reject(err);
+                } else resolve();
             });
         });
         if (!fs.existsSync(outputPath)) return null;
+        const stat = fs.statSync(outputPath);
+        if (stat.size < 1000) {
+            console.log('Extracted frame is too small, discarding:', outputPath, stat.size);
+            try { fs.unlinkSync(outputPath); } catch (_) {}
+            return null;
+        }
         return {
             path: outputPath,
             originalname: 'video-frame.jpg',
             mimetype: 'image/jpeg',
-            size: fs.statSync(outputPath).size,
+            size: stat.size,
             filename: path.basename(outputPath)
         };
     } catch (err) {

@@ -440,17 +440,17 @@ main {
 .juke-queue-root .juke-queue-sheet {
     position: absolute;
     left: 50%;
-    bottom: 0;
-    transform: translate(-50%, 16px);
-    width: min(520px, calc(100vw - 18px));
-    max-height: min(70vh, 560px);
+    top: 50%;
+    transform: translate(-50%, calc(-50% + 16px));
+    width: min(560px, calc(100vw - 24px));
+    max-height: min(80vh, 640px);
     background: var(--bg-overlay);
     border: 1px solid var(--border-primary);
-    border-radius: 12px 12px 0 0;
+    border-radius: 16px;
     overflow: hidden;
     opacity: 0;
-    transition: transform 220ms ease, opacity 220ms ease;
-    padding-bottom: env(safe-area-inset-bottom);
+    transition: transform 260ms ease, opacity 260ms ease;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
 }
 
 .juke-queue-root.open {
@@ -462,7 +462,7 @@ main {
 }
 
 .juke-queue-root.open .juke-queue-sheet {
-    transform: translate(-50%, 0);
+    transform: translate(-50%, -50%);
     opacity: 1;
 }
 
@@ -525,6 +525,35 @@ main {
     border-radius: 10px;
     object-fit: cover;
     flex-shrink: 0;
+}
+
+.juke-queue-like {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.65);
+    padding: 8px;
+    margin-left: 4px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: color 160ms ease, background 160ms ease, transform 160ms ease;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.juke-queue-like:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.juke-queue-like:active {
+    transform: scale(0.92);
+}
+
+.juke-queue-like.liked,
+.juke-queue-like.liked:hover {
+    color: #f72193;
 }
 
 .juke-queue-meta {
