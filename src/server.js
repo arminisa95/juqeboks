@@ -437,10 +437,14 @@ app.use(cors({
         // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
-        // Allow subdomains of the app base URL
-        const baseUrl = new URL(APP_BASE_URL);
         const originHost = new URL(origin).host;
+        const baseUrl = new URL(APP_BASE_URL);
+        // Allow exact app base URL and its subdomains
         if (originHost === baseUrl.host || originHost.endsWith('.' + baseUrl.host)) return callback(null, true);
+        // Allow known frontend hosting origins
+        if (originHost.endsWith('.github.io')) return callback(null, true);
+        if (originHost === 'juqeboks.com' || originHost.endsWith('.juqeboks.com')) return callback(null, true);
+        if (originHost.endsWith('.onrender.com')) return callback(null, true);
         console.warn('Blocked CORS origin:', origin);
         callback(new Error('Not allowed by CORS'));
     },
