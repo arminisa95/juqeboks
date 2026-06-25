@@ -378,6 +378,10 @@
 
             state.isPlaying = true;
             saveState();
+            try { if (typeof window.updateFeedPlayStates === 'function') window.updateFeedPlayStates(); } catch (_) {}
+            try {
+                document.querySelectorAll('.post-media-video').forEach(function (v) { try { if (!v.paused) v.pause(); } catch (_) {} });
+            } catch (_) {}
 
             try {
                 var token = localStorage.getItem('juke_token');
@@ -410,6 +414,7 @@
                 }).catch(function () {
                     state.isPlaying = false;
                     saveState();
+                    try { if (typeof window.updateFeedPlayStates === 'function') window.updateFeedPlayStates(); } catch (_) {}
                     try {
                         if (window.JukePlayer && typeof window.JukePlayer.render === 'function') window.JukePlayer.render();
                     } catch (_) {
@@ -896,6 +901,7 @@
         audio.addEventListener('timeupdate', function () {
             render();
             syncInlineVideos();
+            try { if (typeof window.updateFeedPlayStates === 'function') window.updateFeedPlayStates(); } catch (_) {}
         });
 
         audio.addEventListener('pause', function () {
@@ -903,6 +909,7 @@
             saveState();
             render();
             syncInlineVideos();
+            try { if (typeof window.updateFeedPlayStates === 'function') window.updateFeedPlayStates(); } catch (_) {}
         });
 
         audio.addEventListener('play', function () {
@@ -910,6 +917,7 @@
             saveState();
             render();
             syncInlineVideos();
+            try { if (typeof window.updateFeedPlayStates === 'function') window.updateFeedPlayStates(); } catch (_) {}
         });
 
         audio.addEventListener('ended', function () {
@@ -1043,7 +1051,12 @@
         audio.muted = false;
         applyVideoAudioMode(track);
 
+        state.isPlaying = true;
         saveState();
+        try { if (typeof window.updateFeedPlayStates === 'function') window.updateFeedPlayStates(); } catch (_) {}
+        try {
+            document.querySelectorAll('.post-media-video').forEach(function (v) { try { if (!v.paused) v.pause(); } catch (_) {} });
+        } catch (_) {}
 
         try {
             await audio.play();
@@ -1061,6 +1074,7 @@
         } catch (_) {
             state.isPlaying = false;
             saveState();
+            try { if (typeof window.updateFeedPlayStates === 'function') window.updateFeedPlayStates(); } catch (_) {}
         }
 
         if (window.JukePlayer && typeof window.JukePlayer.render === 'function') {
@@ -1171,6 +1185,7 @@
         loadState();
         el = ensurePlayerElement();
         var bound = bindPlayer(el);
+        try { if (typeof window.updateFeedPlayStates === 'function') window.updateFeedPlayStates(); } catch (_) {}
 
         updateBodyPadding(el);
 
@@ -1191,6 +1206,18 @@
         window.JukePlayer.setQueueTracks = setQueueTracks;
         window.JukePlayer.openQueue = openQueue;
         window.JukePlayer.closeQueue = closeQueue;
+        window.JukePlayer.isPlayingTrack = function (trackId) {
+            return !!state.isPlaying && state.trackId != null && String(state.trackId) === String(trackId);
+        };
+        window.JukePlayer.togglePlay = async function () {
+            try {
+                if (state.isPlaying) {
+                    audio.pause();
+                } else if (state.audioUrl) {
+                    await audio.play();
+                }
+            } catch (_) {}
+        };
 
         window.playTrack = function (trackId) {
             return playTrackById(trackId);

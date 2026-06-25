@@ -117,6 +117,7 @@ function playTrackInVisualPlayer(track) {
     try {
         if (window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
             window.JukePlayer.playTrack(track, { autoShowVideo: false });
+            updateFeedPlayStates();
             return;
         }
         if (track && track.id && typeof playTrack === 'function') {
@@ -125,6 +126,19 @@ function playTrackInVisualPlayer(track) {
     } catch (_) {
     }
 }
+
+function updateFeedPlayStates() {
+    try {
+        var isPlayingFn = window.JukePlayer && typeof window.JukePlayer.isPlayingTrack === 'function' ? window.JukePlayer.isPlayingTrack : null;
+        document.querySelectorAll('.post-media-wrap').forEach(function (wrap) {
+            var tid = wrap.getAttribute('data-track-id');
+            if (!tid) return;
+            wrap.classList.toggle('is-playing', !!isPlayingFn && isPlayingFn(tid));
+        });
+    } catch (_) {}
+}
+
+window.updateFeedPlayStates = updateFeedPlayStates;
 
 window.repostTrackById = function (trackId, meta) {
     try {
@@ -2731,6 +2745,12 @@ function createFeedPostCard(track) {
             play.dataset.bound = '1';
             play.addEventListener('click', function (e) {
                 e.stopPropagation();
+                try {
+                    if (window.JukePlayer && typeof window.JukePlayer.isPlayingTrack === 'function' && window.JukePlayer.isPlayingTrack(track.id) && typeof window.JukePlayer.togglePlay === 'function') {
+                        window.JukePlayer.togglePlay();
+                        return;
+                    }
+                } catch (_) {}
                 if (track.video_url || track.audio_url) {
                     playTrackInVisualPlayer(track);
                 } else {

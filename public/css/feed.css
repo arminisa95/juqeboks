@@ -700,33 +700,59 @@ video.post-media {
 
 .post-play {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
-    background: rgba(0, 0, 0, 0.25);
-    border: none;
+    inset: auto 12px 12px auto;
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(0, 180, 150, 0.14);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.18s ease, background 0.18s ease;
+    transition: opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
 
-.music-card:hover .post-play,
-.post-media-wrap.has-video .post-play {
+.music-card:hover .post-play {
     opacity: 1;
 }
 
 .post-play:hover {
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 180, 150, 0.10);
+    border-color: rgba(0, 180, 150, 0.24);
 }
 
 .post-play i {
+    font-size: 1.1rem;
+    transition: opacity 0.18s ease;
+}
+
+/* Full-size centered play/pause toggle for video posts */
+.post-media-wrap.has-video .post-play {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+    opacity: 1;
+}
+
+.post-media-wrap.has-video .post-play:hover {
+    background: rgba(0, 0, 0, 0.15);
+    border: none;
+}
+
+.post-media-wrap.has-video .post-play i {
     font-size: 2.2rem;
     filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+    opacity: 1;
+}
+
+.post-media-wrap.has-video.is-playing .post-play i {
+    opacity: 0;
 }
 
 .post-actions {
