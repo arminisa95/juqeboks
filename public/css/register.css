@@ -423,24 +423,51 @@ body.auth-page {
     margin-bottom: 20px;
 }
 
+.welcome-features-note {
+    text-align: center;
+    font-size: 0.9em;
+    color: #333;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
 .account-type-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 16px;
     margin-bottom: 24px;
+    align-items: stretch;
 }
 
 .account-type-grid.three-column {
     grid-template-columns: repeat(3, 1fr);
 }
 
-.code-card {
+.account-type-card {
+    border: 2px solid #000;
+    border-radius: 0;
+    padding: 20px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 220px;
+}
+
+.account-type-card > * {
+    width: 100%;
 }
 
 .code-card .code-input-wrap {
     margin-bottom: 16px;
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .code-card .code-input-wrap input {
@@ -462,16 +489,6 @@ body.auth-page {
     .account-type-grid.three-column {
         grid-template-columns: 1fr;
     }
-}
-
-.account-type-card {
-    border: 2px solid #000;
-    border-radius: 0;
-    padding: 20px;
-    background: #fff;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: center;
 }
 
 .account-type-card:hover {
@@ -547,6 +564,8 @@ body.auth-page {
     cursor: pointer;
     font-weight: 600;
     transition: all 0.2s ease;
+    margin-top: auto;
+    text-transform: lowercase;
 }
 
 .account-type-card:hover .account-type-select {
