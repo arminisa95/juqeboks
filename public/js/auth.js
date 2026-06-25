@@ -516,11 +516,11 @@ function showMessage(messageEl, message, type) {
 }
 
 // Register function
-async function register(username, email, password, firstName, lastName, accountType, groupSize) {
+async function register(username, email, password, firstName, lastName, accountType, groupSize, registrationCode) {
     try {
         const result = await postAuthJson(
             '/auth/register',
-            { username, email, password, firstName, lastName, accountType, groupSize },
+            { username, email, password, firstName, lastName, accountType, groupSize, registrationCode },
             function (data) { return !!(data && data.token && data.user); }
         );
         const data = result.data;
@@ -536,12 +536,17 @@ async function register(username, email, password, firstName, lastName, accountT
                     document.dispatchEvent(new Event('auth:changed'));
                 } catch (_) {
                 }
-                window.location.hash = '#/feed';
+                // If registration code applied, go straight to feed; otherwise payment flow
+                if (data.codeApplied) {
+                    window.location.hash = '#/feed';
+                } else {
+                    window.location.hash = '#/verify-pending';
+                }
             } else {
                 const base = getBasePath();
                 window.location.href = `${base}/views/user.html`;
             }
-            return { success: true };
+            return { success: true, codeApplied: !!data.codeApplied };
         } else {
             return { success: false, error: data.error };
         }
@@ -716,6 +721,7 @@ function setupRegisterForm() {
         const lastName = document.getElementById('lastName').value.trim();
         const accountTypeValue = accountTypeInput ? accountTypeInput.value : 'user';
         const groupSize = document.getElementById('groupSize') ? document.getElementById('groupSize').value : 5;
+        const registrationCode = document.getElementById('registrationCode') ? document.getElementById('registrationCode').value.trim() : '';
         const paymentMethodEl = form.querySelector('input[name="paymentMethod"]:checked');
         const paymentMethod = paymentMethodEl ? paymentMethodEl.value : 'card';
         const terms = document.getElementById('terms');
@@ -745,7 +751,7 @@ function setupRegisterForm() {
         submitBtn.textContent = 'Creating account...';
 
         // Attempt registration
-        const result = await register(username, email, password, firstName, lastName, accountTypeValue, groupSize);
+        const result = await register(username, email, password, firstName, lastName, accountTypeValue, groupSize, registrationCode);
 
         if (!result.success) {
             showRegisterError(result.error || 'Registration failed. Please try a different username or email.');

@@ -221,6 +221,58 @@ async function createCheckoutSession(user, priceId, customerId) {
     }
 }
 
+async function applyRegistrationCode(userId, code) {
+    if (!code || !userId) return { success: false, error: 'Missing code or user' };
+    const normalized = String(code).trim().toUpperCase();
+    try {
+        const row = await db.get(
+            'SELECT id FROM registration_codes WHERE code = $1 AND is_active = true AND used_by_user_id IS NULL AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)',
+            [normalized]
+        );
+        if (!row) return { success: false, error: 'Invalid or already used registration code' };
+
+        const expiresAt = new Date();
+        expiresAt.setFullYear(expiresAt.getFullYear() + 2);
+
+        await db.query(
+            'UPDATE registration_codes SET is_active = false, used_at = CURRENT_TIMESTAMP, used_by_user_id = $1 WHERE id = $2',
+            [userId, row.id]
+        );
+        await db.query(
+            'UPDATE users SET registration_paid = true, subscription_tier = $1, subscription_expires_at = $2, is_frozen = false WHERE id = $3',
+            ['premium', expiresAt.toISOString(), userId]
+        );
+        return { success: true, expiresAt: expiresAt.toISOString() };
+    } catch (error) {
+        console.error('Apply registration code error:', error);
+        return { success: false, error: 'Failed to apply code' };
+    }
+}
+
+async function checkAndUpdateAccountFreeze(userId) {
+    try {
+        const user = await db.get('SELECT registration_paid, subscription_expires_at, is_frozen, stripe_subscription_id FROM users WHERE id = $1', [userId]);
+        if (!user) return { isFrozen: false, registrationPaid: false };
+
+        const now = new Date();
+        const expired = user.subscription_expires_at && new Date(user.subscription_expires_at) < now;
+
+        // If free code expired and no active Stripe subscription, freeze account
+        if (expired && user.registration_paid && !user.stripe_subscription_id) {
+            await db.query(
+                'UPDATE users SET registration_paid = false, is_frozen = true WHERE id = $1',
+                [userId]
+            );
+            return { isFrozen: true, registrationPaid: false };
+        }
+
+        return { isFrozen: !!user.is_frozen, registrationPaid: !!user.registration_paid };
+    } catch (error) {
+        console.error('Check account freeze error:', error);
+        return { isFrozen: false, registrationPaid: false };
+    }
+}
+
 // Stripe webhook (must use raw body, so it is defined before express.json())
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -248,9 +300,25 @@ app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), asy
 
         if (userId) {
             try {
+                let subscriptionExpiresAt = null;
+                if (subscriptionId && stripe) {
+                    try {
+                        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+                        if (subscription && subscription.current_period_end) {
+                            subscriptionExpiresAt = new Date(subscription.current_period_end * 1000).toISOString();
+                        }
+                    } catch (stripeErr) {
+                        console.error('Webhook subscription fetch error:', stripeErr.message);
+                    }
+                }
+                if (!subscriptionExpiresAt) {
+                    const fallback = new Date();
+                    fallback.setMonth(fallback.getMonth() + 1);
+                    subscriptionExpiresAt = fallback.toISOString();
+                }
                 await db.query(
-                    'UPDATE users SET registration_paid = true, stripe_subscription_id = $1 WHERE id = $2',
-                    [subscriptionId || null, userId]
+                    'UPDATE users SET registration_paid = true, is_frozen = false, stripe_subscription_id = $1, subscription_expires_at = $2 WHERE id = $3',
+                    [subscriptionId || null, subscriptionExpiresAt, userId]
                 );
                 await db.query(
                     `INSERT INTO upload_credits (user_id, credits) VALUES ($1, 999) ON CONFLICT (user_id) DO NOTHING`,
@@ -334,6 +402,9 @@ async function initializeDatabase() {
                 email_verified BOOLEAN DEFAULT false,
                 copyright_strikes INTEGER DEFAULT 0,
                 upload_disabled BOOLEAN DEFAULT false,
+                registration_paid BOOLEAN DEFAULT false,
+                subscription_expires_at TIMESTAMP WITH TIME ZONE,
+                is_frozen BOOLEAN DEFAULT false,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
@@ -531,6 +602,22 @@ async function initializeDatabase() {
             console.error('CREATE TABLE user_reposts error (non-fatal):', repostsErr.message);
         }
 
+        try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS registration_codes (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    code VARCHAR(32) UNIQUE NOT NULL,
+                    is_active BOOLEAN DEFAULT true,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    used_at TIMESTAMP WITH TIME ZONE,
+                    used_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                    expires_at TIMESTAMP WITH TIME ZONE
+                );
+            `);
+        } catch (codesErr) {
+            console.error('CREATE TABLE registration_codes error (non-fatal):', codesErr.message);
+        }
+
         // These ALTER TABLE statements must always run regardless of schema creation result
         // Each wrapped individually to handle type mismatches on production (SERIAL vs UUID)
         const alterStatements = [
@@ -561,6 +648,8 @@ async function initializeDatabase() {
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_token VARCHAR(255)",
             'ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP WITH TIME ZONE',
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_paid BOOLEAN DEFAULT false",
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMP WITH TIME ZONE',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT false',
             'ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)',
             'ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255)',
             'ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_checkout_session_id VARCHAR(255)',
@@ -772,7 +861,7 @@ const isValidId = (value) => {
 // Register new user
 app.post('/api/auth/register', async (req, res) => {
     try {
-        const { username, email, password, firstName, lastName, accountType, groupSize } = req.body;
+        const { username, email, password, firstName, lastName, accountType, groupSize, registrationCode } = req.body;
 
         const normalizedAccountType = ['user', 'group'].includes(accountType) ? accountType : 'user';
         const normalizedGroupSize = normalizedAccountType === 'group' ? (Math.min(Math.max(parseInt(groupSize, 10) || 5, 2), 20)) : 1;
@@ -838,10 +927,22 @@ app.post('/api/auth/register', async (req, res) => {
             console.error('Email send error (non-fatal):', emailErr.message);
         }
 
-        // Create Stripe checkout session (non-fatal)
+        // Apply registration code if provided (2-year free subscription)
+        let codeResult = null;
+        if (registrationCode) {
+            codeResult = await applyRegistrationCode(newUser.id, registrationCode);
+            if (!codeResult.success) {
+                return res.status(400).json({ error: codeResult.error });
+            }
+            // Re-fetch user after code applied
+            const updated = await db.get('SELECT * FROM users WHERE id = $1', [newUser.id]);
+            if (updated) newUser = updated;
+        }
+
+        // Create Stripe checkout session only if no valid code was used
         let checkoutUrl = null;
         let stripeSessionId = null;
-        if (stripe) {
+        if (!codeResult && stripe) {
             try {
                 const customerId = await createStripeCustomer(newUser);
                 const priceId = await getOrCreateStripePrice(normalizedAccountType, normalizedGroupSize);
@@ -876,13 +977,17 @@ app.post('/api/auth/register', async (req, res) => {
                 isAdmin: !!(newUser.is_admin || isAdmin),
                 emailVerified: !!newUser.email_verified,
                 registrationPaid: !!newUser.registration_paid,
+                subscriptionExpiresAt: newUser.subscription_expires_at || null,
+                isFrozen: !!newUser.is_frozen,
             },
             token,
             needsEmailVerification: true,
-            needsPayment: !!(stripe),
+            needsPayment: !codeResult && !!(stripe),
             checkoutUrl,
             stripeSessionId,
             emailSent,
+            codeApplied: !!codeResult,
+            subscriptionExpiresAt: codeResult ? codeResult.expiresAt : null,
         });
 
     } catch (error) {
@@ -1019,11 +1124,18 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        // Check if free code expired and freeze account if needed
+        const freezeStatus = await checkAndUpdateAccountFreeze(user.id);
+        const isFrozen = freezeStatus.isFrozen;
+        const registrationPaid = freezeStatus.registrationPaid;
+
         // Generate token
         const token = generateToken(user);
         const needsEmailVerification = !user.email_verified;
-        const needsPayment = !user.registration_paid;
-        const redirectTo = (needsEmailVerification || needsPayment) ? 'verify-pending' : 'feed';
+        const needsPayment = !registrationPaid;
+        let redirectTo = 'feed';
+        if (isFrozen) redirectTo = 'verify-pending';
+        else if (needsEmailVerification || needsPayment) redirectTo = 'verify-pending';
 
         res.json({
             message: 'Login successful',
@@ -1038,11 +1150,14 @@ app.post('/api/auth/login', async (req, res) => {
                 subscriptionTier: user.subscription_tier || 'premium',
                 isAdmin: !!user.is_admin,
                 emailVerified: !!user.email_verified,
-                registrationPaid: !!user.registration_paid,
+                registrationPaid: registrationPaid,
+                subscriptionExpiresAt: user.subscription_expires_at || null,
+                isFrozen: isFrozen,
             },
             token,
             needsEmailVerification,
             needsPayment,
+            isFrozen,
             redirectTo,
         });
 
@@ -2976,11 +3091,11 @@ async function checkUploadCredits(req, res, next) {
     try {
         let user;
         try {
-            user = await db.get('SELECT subscription_tier, email_verified, registration_paid FROM users WHERE id = $1', [req.user.id]);
+            user = await db.get('SELECT subscription_tier, email_verified, registration_paid, is_frozen FROM users WHERE id = $1', [req.user.id]);
         } catch (columnError) {
             if (columnError.message && columnError.message.includes('subscription_tier')) {
                 console.log('subscription_tier column missing, treating user as free tier');
-                user = { subscription_tier: 'free', email_verified: true, registration_paid: true };
+                user = { subscription_tier: 'free', email_verified: true, registration_paid: true, is_frozen: false };
             } else {
                 throw columnError;
             }
@@ -3003,6 +3118,15 @@ async function checkUploadCredits(req, res, next) {
             return res.status(402).json({
                 success: false,
                 error: 'Please complete your subscription payment before uploading.',
+                needsPayment: true,
+            });
+        }
+
+        if (user.is_frozen) {
+            return res.status(402).json({
+                success: false,
+                error: 'Your account is frozen. Please complete your subscription to reactivate.',
+                isFrozen: true,
                 needsPayment: true,
             });
         }

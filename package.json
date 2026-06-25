@@ -9,7 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:test": "node src/database/test-connection.js",
     "db:setup": "node src/database/setup-local-db.js",
-    "db:migrate:feed-indexes": "node src/database/migrate-feed-indexes.js"
+    "db:migrate:feed-indexes": "node src/database/migrate-feed-indexes.js",
+    "generate:codes": "node src/database/generate-registration-codes.js"
   },
   "engines": {
     "node": ">=18.0.0"

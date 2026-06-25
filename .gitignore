@@ -48,3 +48,7 @@ coverage/
 # Runtime
 *.pid
 *.seed
+
+# Registration codes (sensitive, generated locally)
+registration-codes.txt
+registration-codes.sql
