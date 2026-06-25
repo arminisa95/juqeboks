@@ -698,6 +698,28 @@ video.post-media {
     background: #000;
 }
 
+.video-loader {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.post-media-wrap.is-loading .video-loader {
+    opacity: 1;
+}
+
+.post-media-wrap.is-loading .post-play i {
+    opacity: 0;
+}
+
 .post-play {
     position: absolute;
     inset: auto 12px 12px auto;

@@ -2620,9 +2620,16 @@ function createFeedPostCard(track) {
     const safeArtist = (artistName && typeof artistName === 'string') ? artistName : '';
     const uploadedShort = formatTrackDateShort(track);
     const videoUrl = track.video_url ? resolveAssetUrl(track.video_url) : null;
+    const isCurrentTrack = (function () {
+        try {
+            return !!(window.JukePlayer && typeof window.JukePlayer.isPlayingTrack === 'function' && window.JukePlayer.isPlayingTrack(track.id));
+        } catch (_) { return false; }
+    })();
+    const preloadAttr = isCurrentTrack ? 'auto' : 'metadata';
     const coverMedia = videoUrl
-        ? `<video class="post-media post-media-video" data-track-id="${track.id}" src="${videoUrl}" poster="${coverUrl}" muted playsinline preload="metadata" data-video-url="${videoUrl}"></video>`
+        ? `<video class="post-media post-media-video" data-track-id="${track.id}" src="${videoUrl}" poster="${coverUrl}" muted playsinline preload="${preloadAttr}" data-video-url="${videoUrl}"></video>`
         : `<img class="post-media" src="${coverUrl}" alt="${safeTitle}" loading="lazy" decoding="async">`;
+    const loaderOverlay = videoUrl ? `<div class="video-loader"><i class="fas fa-spinner fa-spin"></i></div>` : '';
     const uploaderLine = (uploaderName && uploaderId && String(uploaderId) !== String(currentUserId || ''))
         ? `<a href="#/koleqtion/${uploaderId}" class="uploader-link">@${uploaderName}</a>`
         : (uploaderName ? `<span class="uploader-link">@${uploaderName}</span>` : '');
@@ -2639,6 +2646,7 @@ function createFeedPostCard(track) {
 
         <div class="post-media-wrap ${videoUrl ? 'has-video' : ''}" data-track-id="${track.id}">
             ${coverMedia}
+            ${loaderOverlay}
             <i class="fas fa-heart double-tap-heart"></i>
             <button class="post-play" type="button" aria-label="Play" data-track-id="${track.id}">
                 <i class="fas fa-play"></i>
@@ -2756,6 +2764,23 @@ function createFeedPostCard(track) {
                 } else {
                     playTrack(String(track.id));
                 }
+            });
+        }
+
+        var videoEl = card.querySelector('.post-media-video');
+        if (videoEl && !videoEl.dataset.bound) {
+            videoEl.dataset.bound = '1';
+            videoEl.addEventListener('waiting', function () {
+                try { cover.classList.add('is-loading'); } catch (_) {}
+            });
+            videoEl.addEventListener('playing', function () {
+                try { cover.classList.remove('is-loading'); } catch (_) {}
+            });
+            videoEl.addEventListener('canplay', function () {
+                try { cover.classList.remove('is-loading'); } catch (_) {}
+            });
+            videoEl.addEventListener('stalled', function () {
+                try { cover.classList.add('is-loading'); } catch (_) {}
             });
         }
         

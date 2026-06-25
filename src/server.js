@@ -158,6 +158,61 @@ async function deleteS3KeyIfAny(key) {
     }
 }
 
+async function compressVideoFile(videoPath, outputDir) {
+    try {
+        const ffmpeg = require('ffmpeg-static');
+        if (!ffmpeg) {
+            console.log('ffmpeg-static not available, skipping video compression');
+            return null;
+        }
+        if (!fs.existsSync(videoPath)) {
+            console.log('Video file not found for compression:', videoPath);
+            return null;
+        }
+        const outputPath = path.join(outputDir, `compressed-${Date.now()}-${Math.round(Math.random() * 1e9)}.mp4`);
+        const originalSize = fs.statSync(videoPath).size;
+        await new Promise((resolve, reject) => {
+            execFile(ffmpeg, [
+                '-i', videoPath,
+                '-c:v', 'libx264',
+                '-preset', 'fast',
+                '-crf', '28',
+                '-maxrate', '2500k',
+                '-bufsize', '5000k',
+                '-vf', 'scale=-2:720:force_original_aspect_ratio=decrease',
+                '-movflags', '+faststart',
+                '-c:a', 'aac',
+                '-b:a', '192k',
+                '-ar', '44100',
+                '-y',
+                outputPath
+            ], { timeout: 600000 }, (err, stdout, stderr) => {
+                if (err) {
+                    console.error('Video compression failed:', stderr);
+                    reject(err);
+                } else resolve();
+            });
+        });
+        if (!fs.existsSync(outputPath)) return null;
+        const compressedSize = fs.statSync(outputPath).size;
+        if (compressedSize < 1000) {
+            console.log('Compressed video is too small, discarding:', outputPath, compressedSize);
+            try { fs.unlinkSync(outputPath); } catch (_) {}
+            return null;
+        }
+        console.log(`Video compressed: ${Math.round(originalSize / 1024 / 1024)}MB -> ${Math.round(compressedSize / 1024 / 1024)}MB`);
+        return {
+            path: outputPath,
+            originalname: 'compressed-video.mp4',
+            mimetype: 'video/mp4',
+            size: compressedSize
+        };
+    } catch (e) {
+        console.error('compressVideoFile error:', e);
+        return null;
+    }
+}
+
 async function extractVideoFrameToFile(videoPath, outputDir) {
     try {
         const ffmpeg = require('ffmpeg-static');
@@ -3448,11 +3503,23 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, trackUpload.field
         const videoAudioMode = req.body && req.body.videoAudioMode ? String(req.body.videoAudioMode) : null;
         let file = req.files && req.files.audioFile ? req.files.audioFile[0] : null;
         let cover = req.files && req.files.coverImage ? req.files.coverImage[0] : null;
-        const video = req.files && req.files.videoFile ? req.files.videoFile[0] : null;
+        let video = req.files && req.files.videoFile ? req.files.videoFile[0] : null;
         const userId = req.user.id;
         let metadata = {};
         if (videoAudioMode) {
             metadata.videoAudioMode = videoAudioMode;
+        }
+
+        // Compress uploaded video for faster streaming
+        if (video) {
+            const compressedVideo = await compressVideoFile(video.path, uploadsDir);
+            if (compressedVideo) {
+                try {
+                    if (fs.existsSync(video.path)) fs.unlinkSync(video.path);
+                } catch (_) {}
+                video = compressedVideo;
+                logStep('video compressed');
+            }
         }
 
         // If no audio file but a video is provided, use the video as the audio source
