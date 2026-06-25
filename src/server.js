@@ -10,6 +10,7 @@ const path = require('path');
 const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
 const crypto = require('crypto');
+const { execFile } = require('child_process');
 const { sendEmailVerification } = require('./services/email');
 
 const app = express();
@@ -154,6 +155,41 @@ async function deleteS3KeyIfAny(key) {
         await client.send(new DeleteObjectCommand({ Bucket: S3_BUCKET, Key: key }));
     } catch (e) {
         console.error('S3 delete failed:', e);
+    }
+}
+
+async function extractVideoFrameToFile(videoPath, outputDir) {
+    try {
+        const ffmpeg = require('ffmpeg-static');
+        if (!ffmpeg) {
+            console.log('ffmpeg-static not available');
+            return null;
+        }
+        const outputPath = path.join(outputDir, `frame-${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`);
+        await new Promise((resolve, reject) => {
+            execFile(ffmpeg, [
+                '-ss', '00:00:01',
+                '-i', videoPath,
+                '-frames:v', '1',
+                '-q:v', '2',
+                '-y',
+                outputPath
+            ], (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
+        if (!fs.existsSync(outputPath)) return null;
+        return {
+            path: outputPath,
+            originalname: 'video-frame.jpg',
+            mimetype: 'image/jpeg',
+            size: fs.statSync(outputPath).size,
+            filename: path.basename(outputPath)
+        };
+    } catch (err) {
+        console.error('Frame extraction failed:', err.message);
+        return null;
     }
 }
 
@@ -3399,13 +3435,27 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, trackUpload.field
         const albumTitle = (rawAlbum || '').trim() || 'Single';
         const videoAudioMode = req.body && req.body.videoAudioMode ? String(req.body.videoAudioMode) : null;
         let file = req.files && req.files.audioFile ? req.files.audioFile[0] : null;
-        const cover = req.files && req.files.coverImage ? req.files.coverImage[0] : null;
+        let cover = req.files && req.files.coverImage ? req.files.coverImage[0] : null;
         const video = req.files && req.files.videoFile ? req.files.videoFile[0] : null;
         const userId = req.user.id;
+        let metadata = {};
+        if (videoAudioMode) {
+            metadata.videoAudioMode = videoAudioMode;
+        }
 
         // If no audio file but a video is provided, use the video as the audio source
         if (!file && video) {
             file = video;
+        }
+
+        // If a video is uploaded but no cover image is provided, extract the first frame as cover
+        if (video && !cover) {
+            const extractedCover = await extractVideoFrameToFile(video.path, uploadsDir);
+            if (extractedCover) {
+                cover = extractedCover;
+                metadata.cover_extracted_from_video = true;
+                logStep('extracted cover frame from video');
+            }
         }
 
         const termsConfirmed = req.body && (req.body.termsConfirmed === 'true' || req.body.termsConfirmed === true);
@@ -3496,10 +3546,6 @@ app.post('/api/upload', authenticateToken, checkUploadCredits, trackUpload.field
         let coverUrl = cover ? `/uploads/${path.basename(cover.path)}` : null;
         let videoUrl = video ? `/uploads/${path.basename(video.path)}` : null;
         let filePathValue = file.path;
-        let metadata = {};
-        if (videoAudioMode) {
-            metadata.videoAudioMode = videoAudioMode;
-        }
 
         if (s3) {
             logStep('starting S3 uploads');
