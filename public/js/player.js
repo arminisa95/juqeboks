@@ -205,7 +205,9 @@
         currentTime: 0,
         volume: 0.7,
         muted: false,
-        showVideo: false
+        showVideo: false,
+        shuffle: false,
+        repeat: false
     };
 
     var playSession = {
@@ -446,6 +448,8 @@
         state.currentTime = Number.isFinite(parsed.currentTime) ? parsed.currentTime : 0;
         state.volume = Number.isFinite(parsed.volume) ? parsed.volume : 0.7;
         state.muted = !!parsed.muted;
+        state.shuffle = !!parsed.shuffle;
+        state.repeat = !!parsed.repeat;
 
         audio.volume = state.volume;
         audio.muted = !!state.muted;
@@ -465,7 +469,9 @@
             isPlaying: state.isPlaying,
             currentTime: audio.currentTime || state.currentTime || 0,
             volume: audio.volume,
-            muted: !!audio.muted
+            muted: !!audio.muted,
+            shuffle: !!state.shuffle,
+            repeat: !!state.repeat
         }));
     }
 
@@ -501,66 +507,68 @@
         if (!hasControls) {
             el.innerHTML = `
                 <div class="player-video-container" id="playerVideoContainer">
-                    <video id="playerVideo" playsinline></video>
+                    <video id="playerVideo" playsinline muted></video>
                     <button class="player-video-toggle" id="closeVideo" aria-label="Close video">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="now-playing">
-                    <div class="track-info">
-                        <img src="${getImageUrl('images/juqe.png')}" alt="Now Playing" class="now-playing-cover">
-                        <div class="track-details">
-                            <h4 class="now-playing-title">Not Playing</h4>
-                            <p class="now-playing-artist">-</p>
+                <div class="player-controls-row">
+                    <div class="now-playing">
+                        <div class="track-info">
+                            <img src="${getImageUrl('images/juqe.png')}" alt="Now Playing" class="now-playing-cover">
+                            <div class="track-details">
+                                <h4 class="now-playing-title">Not Playing</h4>
+                                <p class="now-playing-artist">-</p>
+                            </div>
+                            <button class="like-btn" aria-label="Like track" data-track-id="">
+                                <i class="far fa-heart"></i>
+                            </button>
+                            <button class="share-btn" aria-label="Share track" data-track-id="">
+                                <i class="far fa-paper-plane"></i>
+                            </button>
+                            <button class="queue-btn" id="queueToggle" aria-label="Queue" title="Queue">
+                                <i class="fas fa-list"></i>
+                            </button>
                         </div>
-                        <button class="like-btn" aria-label="Like track" data-track-id="">
-                            <i class="far fa-heart"></i>
-                        </button>
-                        <button class="share-btn" aria-label="Share track" data-track-id="">
-                            <i class="far fa-paper-plane"></i>
-                        </button>
-                        <button class="queue-btn" id="queueToggle" aria-label="Queue" title="Queue">
-                            <i class="fas fa-list"></i>
-                        </button>
                     </div>
-                </div>
 
-                <div class="player-controls">
-                    <div class="control-buttons">
-                        <button class="control-btn" id="shuffle" aria-label="Shuffle">
-                            <i class="fas fa-random"></i>
-                        </button>
-                        <button class="control-btn" id="prev" aria-label="Previous track">
-                            <i class="fas fa-step-backward"></i>
-                        </button>
-                        <button class="play-btn large" id="play" aria-label="Play/Pause">
-                            <i class="fas fa-play"></i>
-                        </button>
-                        <button class="control-btn" id="next" aria-label="Next track">
-                            <i class="fas fa-step-forward"></i>
-                        </button>
-                        <button class="control-btn" id="repeat" aria-label="Repeat">
-                            <i class="fas fa-redo"></i>
-                        </button>
-                        <button class="control-btn" id="videoToggle" aria-label="Toggle video" style="display:none;">
-                            <i class="fas fa-video"></i>
-                        </button>
-                    </div>
-                    <div class="progress-container">
-                        <span class="time current-time">0:00</span>
-                        <div class="progress-bar">
-                            <div class="progress"></div>
+                    <div class="player-controls">
+                        <div class="control-buttons">
+                            <button class="control-btn" id="shuffle" aria-label="Shuffle">
+                                <i class="fas fa-random"></i>
+                            </button>
+                            <button class="control-btn" id="prev" aria-label="Previous track">
+                                <i class="fas fa-step-backward"></i>
+                            </button>
+                            <button class="play-btn large" id="play" aria-label="Play/Pause">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <button class="control-btn" id="next" aria-label="Next track">
+                                <i class="fas fa-step-forward"></i>
+                            </button>
+                            <button class="control-btn" id="repeat" aria-label="Repeat">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                            <button class="control-btn" id="videoToggle" aria-label="Toggle video" style="display:none;">
+                                <i class="fas fa-video"></i>
+                            </button>
                         </div>
-                        <span class="time duration">0:00</span>
+                        <div class="progress-container">
+                            <span class="time current-time">0:00</span>
+                            <div class="progress-bar">
+                                <div class="progress"></div>
+                            </div>
+                            <span class="time duration">0:00</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="volume-controls">
-                    <button class="volume-btn" type="button" aria-label="Mute/Unmute">
-                        <i class="fas fa-volume-up"></i>
-                    </button>
-                    <div class="volume-slider-container">
-                        <input type="range" class="volume-slider" min="0" max="100" value="70">
+                    <div class="volume-controls">
+                        <button class="volume-btn" type="button" aria-label="Mute/Unmute">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <div class="volume-slider-container">
+                            <input type="range" class="volume-slider" min="0" max="100" value="70">
+                        </div>
                     </div>
                 </div>
             `;
@@ -633,6 +641,12 @@
             var pct = Math.max(0, Math.min(1, x / rect.width));
             audio.currentTime = pct * audio.duration;
             state.currentTime = audio.currentTime;
+            try {
+                var videoEl = document.getElementById('playerVideo');
+                if (videoEl && Number.isFinite(videoEl.duration)) {
+                    videoEl.currentTime = audio.currentTime;
+                }
+            } catch (_) {}
             saveState();
             render();
         }
@@ -677,6 +691,13 @@
             if (playIcon) {
                 playIcon.className = state.isPlaying ? 'fas fa-pause' : 'fas fa-play';
             }
+
+            try {
+                var shuffleBtn = el.querySelector('#shuffle');
+                var repeatBtn = el.querySelector('#repeat');
+                if (shuffleBtn) shuffleBtn.classList.toggle('active', !!state.shuffle);
+                if (repeatBtn) repeatBtn.classList.toggle('active', !!state.repeat);
+            } catch (_) {}
 
             if (currentTimeEl) currentTimeEl.textContent = formatTime(audio.currentTime || 0);
             if (durationEl) durationEl.textContent = formatTime(audio.duration || 0);
@@ -816,6 +837,24 @@
                 });
             }
 
+            var shuffleBtn = el.querySelector('#shuffle');
+            if (shuffleBtn) {
+                shuffleBtn.addEventListener('click', function () {
+                    state.shuffle = !state.shuffle;
+                    saveState();
+                    render();
+                });
+            }
+
+            var repeatBtn = el.querySelector('#repeat');
+            if (repeatBtn) {
+                repeatBtn.addEventListener('click', function () {
+                    state.repeat = !state.repeat;
+                    saveState();
+                    render();
+                });
+            }
+
             var videoToggleBtn = el.querySelector('#videoToggle');
             if (videoToggleBtn) {
                 videoToggleBtn.addEventListener('click', function () {
@@ -871,9 +910,12 @@
         });
 
         audio.addEventListener('ended', function () {
-            state.isPlaying = false;
-            saveState();
-            render();
+            if (state.repeat && state.trackId) {
+                audio.currentTime = 0;
+                audio.play().catch(function(){});
+            } else {
+                playNextTrack();
+            }
         });
 
         render();
@@ -1033,13 +1075,19 @@
         var videoContainer = document.getElementById('playerVideoContainer');
         var videoEl = document.getElementById('playerVideo');
         var coverEl = document.querySelector('.now-playing-cover');
-        
+        var playerEl = document.querySelector('.music-player');
+        var shouldShow = !!(state.showVideo && state.videoUrl);
+
         if (videoToggle) {
             videoToggle.style.display = state.videoUrl ? '' : 'none';
         }
-        
+
+        if (playerEl) {
+            playerEl.classList.toggle('video-active', shouldShow);
+        }
+
         if (videoContainer && videoEl) {
-            if (state.showVideo && state.videoUrl) {
+            if (shouldShow) {
                 videoContainer.classList.add('active');
                 videoEl.src = state.videoUrl;
                 videoEl.currentTime = audio.currentTime || 0;
@@ -1050,10 +1098,14 @@
                 videoEl.removeAttribute('src');
             }
         }
-        
+
         if (coverEl) {
             coverEl.classList.toggle('has-video', !!state.videoUrl);
         }
+
+        try {
+            if (playerEl) updateBodyPadding(playerEl);
+        } catch (_) {}
     }
     
     function toggleVideo() {
@@ -1419,7 +1471,13 @@
 
     function playPrevTrack() {
         var idx = findCurrentTrackIndex();
-        if (idx > 0) {
+        if (state.shuffle && globalTrackList.length > 1) {
+            var nextIdx = Math.floor(Math.random() * globalTrackList.length);
+            if (String(globalTrackList[nextIdx]) === String(state.trackId)) {
+                nextIdx = (nextIdx + 1) % globalTrackList.length;
+            }
+            playTrackById(globalTrackList[nextIdx]);
+        } else if (idx > 0) {
             playTrackById(globalTrackList[idx - 1]);
         } else if (historyIndex > 0) {
             historyIndex -= 1;
@@ -1429,7 +1487,18 @@
 
     function playNextTrack() {
         var idx = findCurrentTrackIndex();
-        if (idx >= 0 && idx < globalTrackList.length - 1) {
+        if (state.repeat && state.trackId) {
+            audio.currentTime = 0;
+            audio.play().catch(function(){});
+            return;
+        }
+        if (state.shuffle && globalTrackList.length > 1) {
+            var nextIdx = Math.floor(Math.random() * globalTrackList.length);
+            if (String(globalTrackList[nextIdx]) === String(state.trackId)) {
+                nextIdx = (nextIdx + 1) % globalTrackList.length;
+            }
+            playTrackById(globalTrackList[nextIdx]);
+        } else if (idx >= 0 && idx < globalTrackList.length - 1) {
             playTrackById(globalTrackList[idx + 1]);
         } else if (historyIndex >= 0 && historyIndex < history.length - 1) {
             historyIndex += 1;
