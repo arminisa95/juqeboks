@@ -10,6 +10,7 @@ async function postAuthJson(path, payload, validateOkData) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(payload)
             });
 
@@ -130,6 +131,15 @@ function getCurrentUser() {
 
 // Logout user
 function logout() {
+    try {
+        const bases = (window.JukeAPIBase && typeof window.JukeAPIBase.getApiBases === 'function') ? window.JukeAPIBase.getApiBases() : [''];
+        bases.forEach(function (base) {
+            try {
+                fetch(base + '/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(function () {});
+            } catch (_) {}
+        });
+    } catch (_) {}
+
     localStorage.removeItem('juke_token');
     localStorage.removeItem('juke_user');
     currentUser = null;

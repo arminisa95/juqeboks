@@ -1,6 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { db } = require('./database/connection');
@@ -499,35 +502,58 @@ app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), asy
     res.json({ received: true });
 });
 
-// Security middleware (optional until npm install helmet express-rate-limit is run)
-let helmet = null;
-let rateLimit = null;
-try {
-    helmet = require('helmet');
-} catch (_) {
-    console.warn('helmet not installed, skipping security headers');
-}
-try {
-    rateLimit = require('express-rate-limit');
-} catch (_) {
-    console.warn('express-rate-limit not installed, skipping rate limiting');
-}
-if (helmet) {
-    app.use(helmet({
-        contentSecurityPolicy: false // Disable CSP by default to avoid breaking frontend; enable manually later
-    }));
-}
-if (rateLimit) {
-    const authLimiter = rateLimit({
-        windowMs: 15 * 60 * 1000,
-        max: 10,
-        message: { error: 'Too many attempts, please try again later.' }
-    });
-    app.use('/api/auth/', authLimiter);
-    app.use('/api/upload', rateLimit({ windowMs: 15 * 60 * 1000, max: 20 }));
-}
+// Security headers
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:"],
+            imgSrc: ["'self'", "blob:", "data:", "https:"],
+            mediaSrc: ["'self'", "blob:", "https:"],
+            connectSrc: ["'self'", "https:"],
+            fontSrc: ["'self'", "https:"],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'none'"],
+            upgradeInsecureRequests: []
+        }
+    },
+    crossOriginEmbedderPolicy: false
+}));
+
+// Rate limiting
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many attempts, please try again later.' }
+});
+app.use('/api/auth/', authLimiter);
+app.use('/api/upload', rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false }));
+
+// General API rate limiting
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 500,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please try again later.' }
+});
+app.use('/api/', apiLimiter);
+
+// Stricter rate limiting for file downloads
+const downloadLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many download requests, please try again later.' }
+});
 
 // Middleware
+app.use(cookieParser());
+
 const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean);
 if (allowedOrigins.length === 0) {
     allowedOrigins.push(APP_BASE_URL);
@@ -570,8 +596,23 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Serve uploaded files
-app.use('/uploads', express.static(uploadsDir));
+function isMediaFile(filePath) {
+    return /\.(mp3|mp4|webm|ogg|wav|m4a|flac|aac|mov|mkv|avi)$/i.test(filePath || '');
+}
+
+function protectMedia(req, res, next) {
+    if (!isMediaFile(req.path)) return next();
+    const token = (req.headers['authorization'] && req.headers['authorization'].split(' ')[1]) || (req.cookies && req.cookies.juke_token) || null;
+    if (!token) return res.status(401).send('Access token required');
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).send('Invalid token');
+        req.user = user;
+        next();
+    });
+}
+
+// Serve uploaded files — media files require authentication
+app.use('/uploads', downloadLimiter, protectMedia, express.static(uploadsDir));
 
 // Serve static frontend files from public/
 const publicDir = path.join(__dirname, '..', 'public');
@@ -1045,7 +1086,7 @@ async function ensureAdminUser() {
 // JUKE Music Streaming Platform API Server v2
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = (authHeader && authHeader.split(' ')[1]) || (req.cookies && req.cookies.juke_token) || null;
 
     if (!token) {
         return res.status(401).json({ error: 'Access token required' });
@@ -1414,6 +1455,14 @@ app.post('/api/auth/login', async (req, res) => {
         const needsPayment = !registrationPaid;
         const redirectTo = (needsEmailVerification || needsPayment) ? 'verify-pending' : 'feed';
 
+        // Set HTTP-only cookie for media authentication
+        res.cookie('juke_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000
+        });
+
         res.json({
             message: 'Login successful',
             user: {
@@ -1442,6 +1491,14 @@ app.post('/api/auth/login', async (req, res) => {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed: ' + (error.message || 'Internal server error') });
     }
+});
+
+// Logout user
+app.post('/api/auth/logout', (req, res) => {
+    try {
+        res.clearCookie('juke_token');
+    } catch (_) {}
+    res.json({ success: true, message: 'Logged out' });
 });
 
 // Change password

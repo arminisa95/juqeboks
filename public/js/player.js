@@ -1831,6 +1831,13 @@
         audio.addEventListener('play', updateMobilePlayer);
         audio.addEventListener('pause', updateMobilePlayer);
         audio.addEventListener('loadedmetadata', updateMobilePlayer);
+
+        // Deter casual downloads via right-click on media elements
+        document.addEventListener('contextmenu', function (e) {
+            if (e.target && (e.target.tagName === 'AUDIO' || e.target.tagName === 'VIDEO' || e.target.closest('audio, video'))) {
+                e.preventDefault();
+            }
+        });
     });
 
     document.addEventListener('auth:changed', function () {
