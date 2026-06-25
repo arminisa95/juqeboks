@@ -64,6 +64,7 @@
                 <div class="nav-dropdown">
                     <a href="#/koleqtion" class="nav-dropdown-toggle">_lists</a>
                     <div class="nav-dropdown-menu">
+                        <a href="#/lists?tab=liked-all">_liked</a>
                         <a href="#/koleqtion?tab=tracks">_tracks</a>
                         <a href="#/koleqtion?tab=playlists">_playlists</a>
                         <a href="#/koleqtion?tab=albums">_albums</a>
@@ -204,9 +205,13 @@
                         <i class="fas fa-history"></i>
                         <span>History</span>
                     </button>
-                    <button class="lists-tab" data-tab="liked">
+                    <button class="lists-tab" data-tab="liked-all">
                         <i class="fas fa-heart"></i>
                         <span>Liked</span>
+                    </button>
+                    <button class="lists-tab" data-tab="liked">
+                        <i class="fas fa-music"></i>
+                        <span>Tracks</span>
                     </button>
                     <button class="lists-tab" data-tab="playlists">
                         <i class="fas fa-list"></i>
@@ -229,6 +234,7 @@
                     <div class="lists-nav-subtitle">Directories</div>
                     <div class="lists-nav-items" role="tablist">
                         <button class="lists-nav-item active" type="button" role="tab" data-view="history">_history</button>
+                        <button class="lists-nav-item" type="button" role="tab" data-view="liked-all">_liked</button>
                         <button class="lists-nav-item" type="button" role="tab" data-view="liked">_liked tracks</button>
                         <button class="lists-nav-item" type="button" role="tab" data-view="liked-playlists">_liked playlists</button>
                     </div>
@@ -246,6 +252,14 @@
                             </button>
                         </div>
                         <div id="historyTracks" class="history-list"></div>
+                    </div>
+
+                    <div class="lists-panel" id="listsPanelLikedAll" data-panel="liked-all" role="tabpanel">
+                        <div class="lists-panel-header">
+                            <div class="lists-panel-title">_liked</div>
+                            <div class="lists-panel-hint">All your liked content</div>
+                        </div>
+                        <div id="likedAll" class="cards-grid"></div>
                     </div>
 
                     <div class="lists-panel" id="listsPanelLiked" data-panel="liked" role="tabpanel">

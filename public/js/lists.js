@@ -145,6 +145,70 @@ async function loadLikedPlaylistsInto(likedPlaylistsEl) {
     }
 }
 
+async function loadLikedTracks() {
+    const token = getAuthToken();
+    if (!token) return;
+    const likedEl = document.getElementById('likedTracks');
+    if (!likedEl) return;
+
+    try {
+        const profile = await apiFetchJson('/users/profile', {
+            headers: { Authorization: `Bearer ${token}` }
+        }, function (d) {
+            return !!d && typeof d === 'object' && !Array.isArray(d);
+        });
+
+        const favorites = (profile && profile.favorites) ? profile.favorites : [];
+        likedEl.innerHTML = '';
+        if (favorites.length === 0) {
+            setEmpty(likedEl, 'No liked tracks yet.');
+        } else {
+            favorites.forEach((t) => likedEl.appendChild(renderTrackCard(t)));
+        }
+    } catch (e) {
+        console.error(e);
+        setEmpty(likedEl, 'Failed to load liked tracks.');
+    }
+}
+
+async function loadLikedAll() {
+    const token = getAuthToken();
+    if (!token) return;
+    const likedAllEl = document.getElementById('likedAll');
+    if (!likedAllEl) return;
+
+    likedAllEl.innerHTML = '';
+    setEmpty(likedAllEl, 'Loading...');
+
+    try {
+        const profile = await apiFetchJson('/users/profile', {
+            headers: { Authorization: `Bearer ${token}` }
+        }, function (d) {
+            return !!d && typeof d === 'object' && !Array.isArray(d);
+        });
+
+        const likedPlaylists = await apiFetchJson('/playlists/liked', {
+            headers: { Authorization: `Bearer ${token}` }
+        }, function (d) {
+            return Array.isArray(d);
+        });
+
+        const likedTracks = (profile && profile.favorites) ? profile.favorites : [];
+        likedAllEl.innerHTML = '';
+
+        if ((!likedTracks || likedTracks.length === 0) && (!likedPlaylists || likedPlaylists.length === 0)) {
+            setEmpty(likedAllEl, 'No liked content yet.');
+            return;
+        }
+
+        likedTracks.forEach((t) => likedAllEl.appendChild(renderTrackCard(t)));
+        likedPlaylists.forEach((p) => likedAllEl.appendChild(renderPlaylistCard(p)));
+    } catch (e) {
+        console.error(e);
+        setEmpty(likedAllEl, 'Failed to load liked content.');
+    }
+}
+
 function getListsUi() {
     return {
         shell: document.getElementById('listsShell'),
@@ -187,6 +251,13 @@ function showPanel(panelName) {
     // Load content for the panel
     if (panelName === 'history') {
         renderHistory();
+    } else if (panelName === 'liked-all') {
+        loadLikedAll();
+    } else if (panelName === 'liked') {
+        loadLikedTracks();
+    } else if (panelName === 'liked-playlists') {
+        const likedPlaylistsEl = document.getElementById('likedPlaylists');
+        if (likedPlaylistsEl) loadLikedPlaylistsInto(likedPlaylistsEl);
     }
 }
 
@@ -969,18 +1040,27 @@ async function loadLists() {
 
     const curatedEl = document.getElementById('curatedPlaylists');
     const likedEl = document.getElementById('likedTracks');
+    const likedAllEl = document.getElementById('likedAll');
     const likedPlaylistsEl = document.getElementById('likedPlaylists');
     const randomEl = document.getElementById('randomPlaylists');
 
     
     bindListsNavigatorUi();
-    showPanel('history'); // Show history by default
+
+    // Open panel from URL query parameter if present
+    const hash = window.location.hash || '';
+    const tabMatch = hash.match(/[?&]tab=([^&]+)/);
+    const urlTab = tabMatch ? tabMatch[1] : null;
+    const validTabs = ['history', 'liked-all', 'liked', 'playlists', 'liked-playlists'];
+    const initialPanel = validTabs.includes(urlTab) ? urlTab : 'history';
+    showPanel(initialPanel);
 
     // Check which panel is currently active
     const activePanel = document.querySelector('.lists-panel.active');
 
     if (curatedEl) setEmpty(curatedEl, 'Loading...');
     if (likedEl) setEmpty(likedEl, 'Loading...');
+    if (likedAllEl) setEmpty(likedAllEl, 'Loading...');
     if (likedPlaylistsEl) setEmpty(likedPlaylistsEl, 'Loading...');
     if (randomEl) setEmpty(randomEl, 'Loading...');
 
@@ -1014,6 +1094,23 @@ async function loadLists() {
             try {
                 await loadLikedPlaylistsInto(likedPlaylistsEl);
             } catch (_) {
+            }
+        }
+
+        if (likedAllEl) {
+            likedAllEl.innerHTML = '';
+            const favorites = profile.favorites || [];
+            let likedPlaylists = [];
+            try {
+                likedPlaylists = await apiFetchJson('/playlists/liked', {
+                    headers: { Authorization: `Bearer ${token}` }
+                }, function (d) { return Array.isArray(d); }) || [];
+            } catch (_) {}
+            if (favorites.length === 0 && likedPlaylists.length === 0) {
+                setEmpty(likedAllEl, 'No liked content yet.');
+            } else {
+                favorites.forEach((t) => likedAllEl.appendChild(renderTrackCard(t)));
+                likedPlaylists.forEach((p) => likedAllEl.appendChild(renderPlaylistCard(p)));
             }
         }
 
@@ -1538,6 +1635,8 @@ function bindMobileTabs() {
             // Load content for the panel
             if (targetPanel === 'history') {
                 renderHistory();
+            } else if (targetPanel === 'liked-all') {
+                loadLikedAll();
             } else if (targetPanel === 'liked') {
                 loadLikedTracks();
             } else if (targetPanel === 'playlists') {
@@ -1625,7 +1724,9 @@ window.JukeHistory = {
 window.JukeLists = {
     loadLists,
     createPlaylist,
-    initHistory: initHistoryFeature
+    initHistory: initHistoryFeature,
+    loadLikedAll,
+    loadLikedTracks
 };
 
 window.createPlaylist = createPlaylist;

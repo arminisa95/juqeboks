@@ -101,7 +101,7 @@
         }
 
         // Highlight lists dropdown items and parent
-        if (route === '#/koleqtion' || route.startsWith('#/koleqtion')) {
+        if (route === '#/koleqtion' || route.startsWith('#/koleqtion') || route === '#/lists' || route.startsWith('#/lists')) {
             var toggle = document.querySelector('nav .nav-dropdown-toggle');
             if (toggle) toggle.classList.add('active');
             var subLink = document.querySelector('nav .nav-dropdown-menu a[href="' + route + '"]');

@@ -746,6 +746,7 @@
 
     .lists-tab {
         flex: 1;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -755,14 +756,15 @@
         border: none;
         border-radius: 10px;
         color: rgba(255, 255, 255, 0.5);
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         font-weight: 600;
         letter-spacing: 0.3px;
-        padding: 6px 4px;
+        padding: 6px 2px;
         cursor: pointer;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
+        white-space: nowrap;
     }
 
     .lists-tab i {
@@ -772,6 +774,9 @@
 
     .lists-tab span {
         text-transform: uppercase;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
     }
 
     .lists-tab:active {
