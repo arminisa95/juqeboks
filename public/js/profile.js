@@ -1,5 +1,14 @@
 // JUKE Profile: my uploads, reposts, bio, repost from others
 (function () {
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     function requireAuth() {
         const token = localStorage.getItem('juke_token');
         if (!token) {
@@ -26,7 +35,7 @@
     }
 
     function safeText(text) {
-        return String(text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return escapeHtml(text || '');
     }
 
     function formatDuration(seconds) {
@@ -45,21 +54,22 @@
         const artist = safeText(track.artist_name || track.artist || 'Unknown artist');
         const duration = formatDuration(track.duration_seconds || track.duration);
         const uploader = safeText(track.uploader_name || track.username || '');
+        const trackId = escapeHtml(track.id || '');
 
         let actions = '';
         if (options.canDelete) {
-            actions += `<button class="profile-track-btn delete" data-repost-id="${track.repost_id || ''}" data-track-id="${track.id}" title="Remove">×</button>`;
+            actions += `<button class="profile-track-btn delete" data-repost-id="${escapeHtml(track.repost_id || '')}" data-track-id="${trackId}" title="Remove">×</button>`;
         }
         if (options.canRepost) {
-            actions += `<button class="profile-track-btn repost" data-track-id="${track.id}" title="Repost">↻</button>`;
+            actions += `<button class="profile-track-btn repost" data-track-id="${trackId}" title="Repost">↻</button>`;
         }
         if (options.canPlay) {
-            actions += `<button class="profile-track-btn play" data-track-id="${track.id}" title="Play">▶</button>`;
+            actions += `<button class="profile-track-btn play" data-track-id="${trackId}" title="Play">▶</button>`;
         }
 
         card.innerHTML = `
             <div class="profile-track-cover">
-                <img src="${cover}" alt="${title}" loading="lazy">
+                <img src="${escapeHtml(cover)}" alt="${title}" loading="lazy">
             </div>
             <div class="profile-track-info">
                 <div class="profile-track-title">${title}</div>

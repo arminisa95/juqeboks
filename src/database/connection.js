@@ -4,12 +4,17 @@ const { Pool } = require('pg');
 const isProduction = process.env.NODE_ENV === 'production';
 const isLocalhost = !process.env.DB_HOST || process.env.DB_HOST === 'localhost';
 
+if (!process.env.DB_PASSWORD) {
+    console.error('FATAL: DB_PASSWORD environment variable is required');
+    process.exit(1);
+}
+
 // Database configuration
 const config = {
     user: process.env.DB_USER || 'juke_user',
     host: process.env.DB_HOST ? (process.env.DB_HOST.includes('.oregon-postgres.render.com') ? process.env.DB_HOST : `${process.env.DB_HOST}.oregon-postgres.render.com`) : 'localhost',
     database: process.env.DB_NAME || 'juke_db',
-    password: process.env.DB_PASSWORD || 'your_password_here',
+    password: process.env.DB_PASSWORD,
     port: parseInt(process.env.DB_PORT, 10) || 5432,
     ssl: isLocalhost ? false : (process.env.DB_SSL === 'false' ? false : {
         rejectUnauthorized: false

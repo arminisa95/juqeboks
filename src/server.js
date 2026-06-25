@@ -14,7 +14,11 @@ const { sendEmailVerification } = require('./services/email');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is required');
+    process.exit(1);
+}
 
 const S3_BUCKET = process.env.S3_BUCKET || '';
 const S3_REGION = process.env.S3_REGION || 'auto';
@@ -330,21 +334,21 @@ async function checkAndUpdateAccountFreeze(userId) {
 // Stripe webhook (must use raw body, so it is defined before express.json())
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
-    let event;
 
-    if (stripe && STRIPE_WEBHOOK_SECRET && sig) {
-        try {
-            event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
-        } catch (err) {
-            console.error('Stripe webhook signature verification failed:', err.message);
-            return res.status(400).send(`Webhook Error: ${err.message}`);
-        }
-    } else {
-        try {
-            event = JSON.parse(req.body);
-        } catch (err) {
-            return res.status(400).send('Invalid JSON');
-        }
+    if (!stripe || !STRIPE_WEBHOOK_SECRET) {
+        return res.status(400).send('Stripe webhook not configured');
+    }
+
+    if (!sig) {
+        return res.status(400).send('Missing stripe-signature header');
+    }
+
+    let event;
+    try {
+        event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
+    } catch (err) {
+        console.error('Stripe webhook signature verification failed:', err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
     if (event.type === 'checkout.session.completed') {
@@ -392,8 +396,56 @@ app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), asy
     res.json({ received: true });
 });
 
+// Security middleware (optional until npm install helmet express-rate-limit is run)
+let helmet = null;
+let rateLimit = null;
+try {
+    helmet = require('helmet');
+} catch (_) {
+    console.warn('helmet not installed, skipping security headers');
+}
+try {
+    rateLimit = require('express-rate-limit');
+} catch (_) {
+    console.warn('express-rate-limit not installed, skipping rate limiting');
+}
+if (helmet) {
+    app.use(helmet({
+        contentSecurityPolicy: false // Disable CSP by default to avoid breaking frontend; enable manually later
+    }));
+}
+if (rateLimit) {
+    const authLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 10,
+        message: { error: 'Too many attempts, please try again later.' }
+    });
+    app.use('/api/auth/', authLimiter);
+    app.use('/api/upload', rateLimit({ windowMs: 15 * 60 * 1000, max: 20 }));
+}
+
 // Middleware
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean);
+if (allowedOrigins.length === 0) {
+    allowedOrigins.push(APP_BASE_URL);
+    if (process.env.NODE_ENV !== 'production') {
+        allowedOrigins.push('http://localhost:3000', 'http://localhost:8080');
+    }
+}
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        // Allow subdomains of the app base URL
+        const baseUrl = new URL(APP_BASE_URL);
+        const originHost = new URL(origin).host;
+        if (originHost === baseUrl.host || originHost.endsWith('.' + baseUrl.host)) return callback(null, true);
+        console.warn('Blocked CORS origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -428,14 +480,29 @@ const storage = multer.diskStorage({
     }
 });
 
+const allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/flac', 'audio/x-flac', 'audio/aac', 'audio/ogg', 'audio/webm', 'audio/mp4', 'video/mp4', 'video/webm', 'video/quicktime'];
+const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+function fileFilter(allowedTypes) {
+    return (req, file, cb) => {
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type: ' + file.mimetype), false);
+        }
+    };
+}
+
 const upload = multer({
     storage,
-    limits: { fileSize: 50 * 1024 * 1024 }
+    limits: { fileSize: 50 * 1024 * 1024 },
+    fileFilter: fileFilter(allowedImageTypes)
 });
 
 const trackUpload = multer({
     storage,
-    limits: { fileSize: 500 * 1024 * 1024 }
+    limits: { fileSize: 500 * 1024 * 1024 },
+    fileFilter: fileFilter(allowedAudioTypes)
 });
 
 // Update your initializeDatabase function in server.js
@@ -928,7 +995,6 @@ app.post('/api/auth/register', async (req, res) => {
 
         const normalizedAccountType = ['user', 'group'].includes(accountType) ? accountType : 'user';
         const normalizedGroupSize = normalizedAccountType === 'group' ? (Math.min(Math.max(parseInt(groupSize, 10) || 5, 2), 20)) : 1;
-        const isAdmin = String(username || '').trim().toLowerCase() === 'admin' && String(password || '') === 'admin';
 
         // Validate input
         if (!username || !email || !password) {
@@ -959,7 +1025,7 @@ app.post('/api/auth/register', async (req, res) => {
                 password_hash: passwordHash,
                 first_name: firstName || null,
                 last_name: lastName || null,
-                is_admin: isAdmin,
+                is_admin: false,
             });
         } catch (insertErr) {
             console.error('User insert error:', insertErr.message);
@@ -1047,7 +1113,7 @@ app.post('/api/auth/register', async (req, res) => {
                 lastName: newUser.last_name,
                 accountType: newUser.account_type || 'user',
                 groupSize: newUser.group_size || 1,
-                isAdmin: !!(newUser.is_admin || isAdmin),
+                isAdmin: false,
                 emailVerified: !!newUser.email_verified,
                 registrationPaid: !!newUser.registration_paid,
                 subscriptionExpiresAt: newUser.subscription_expires_at || null,
@@ -3307,9 +3373,8 @@ async function checkUploadCredits(req, res, next) {
             }
         }
         
-        // Allow upload on any database error for now
-        console.log('Allowing upload due to database error');
-        return next();
+        // Fail closed: do not allow uploads on unexpected database errors
+        return res.status(500).json({ error: 'Upload verification failed. Please try again.' });
     }
 }
 

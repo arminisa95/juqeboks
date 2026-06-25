@@ -36,9 +36,7 @@ async function sendEmailVerification(user, token) {
     const text = `Willkommen bei juqeboks! Bestätige deine E-Mail mit diesem Code: ${token}\n\nLink: ${verifyUrl}`;
 
     if (!transporter) {
-        console.log('SMTP not configured. Verification email would be sent to', user.email);
-        console.log('Verification token:', token);
-        console.log('Verification URL:', verifyUrl);
+        console.log('SMTP not configured. Verification email simulated for', user.email);
         return { simulated: true, token };
     }
 
