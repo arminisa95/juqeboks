@@ -163,7 +163,7 @@ async function getOrCreateStripePrice(accountType, groupSize) {
     if (createdPriceIds[accountType]) return createdPriceIds[accountType];
 
     const isGroup = accountType === 'group';
-    const unitAmount = isGroup ? 1500 : 500;
+    const unitAmount = isGroup ? 1200 : 400;
     const name = isGroup ? 'juqeboks Group (5 Users)' : 'juqeboks User Subscription';
     const description = isGroup ? 'Monthly subscription for 5 users' : 'Monthly user subscription';
 
@@ -1078,9 +1078,12 @@ app.get('/api/payments/checkout-status', authenticateToken, async (req, res) => 
         const paid = session && session.payment_status === 'paid';
 
         if (paid && session.metadata && session.metadata.user_id === req.user.id) {
+            const subscriptionExpiresAt = session.subscription && stripe
+                ? await stripe.subscriptions.retrieve(session.subscription).then((s) => s && s.current_period_end ? new Date(s.current_period_end * 1000).toISOString() : null).catch(() => null)
+                : null;
             await db.query(
-                'UPDATE users SET registration_paid = true, stripe_subscription_id = $1 WHERE id = $2',
-                [session.subscription || null, req.user.id]
+                'UPDATE users SET registration_paid = true, is_frozen = false, stripe_subscription_id = $1, subscription_expires_at = $2 WHERE id = $3',
+                [session.subscription || null, subscriptionExpiresAt, req.user.id]
             );
         }
 
@@ -2720,7 +2723,7 @@ app.post('/api/admin/royalties/calculate', authenticateToken, async (req, res) =
         // Total subscription revenue collected this month (in cents)
         const revenueResult = await db.get(`
             SELECT COALESCE(SUM(
-                CASE WHEN account_type = 'group' THEN 1500 ELSE 500 END
+                CASE WHEN account_type = 'group' THEN 1200 ELSE 400 END
             ), 0) as total_cents
             FROM users
             WHERE registration_paid = true
@@ -2767,7 +2770,7 @@ app.post('/api/admin/royalties/calculate', authenticateToken, async (req, res) =
 
         // User subscription value (in cents) for this month
         const userValues = await db.getAll(`
-            SELECT id, CASE WHEN account_type = 'group' THEN 1500 ELSE 500 END as value_cents
+            SELECT id, CASE WHEN account_type = 'group' THEN 1200 ELSE 400 END as value_cents
             FROM users
             WHERE registration_paid = true AND email_verified = true
         `);
@@ -2943,7 +2946,7 @@ app.get('/api/analytics', async (req, res) => {
     if (totalPlaySeconds) result.totalPlaySeconds = parseInt(totalPlaySeconds.seconds, 10) || 0;
 
     const totalRevenue = await safeQuery('totalRevenue', () => db.get(`
-        SELECT COALESCE(SUM(CASE WHEN account_type = 'group' THEN 1500 ELSE 500 END), 0) as cents
+        SELECT COALESCE(SUM(CASE WHEN account_type = 'group' THEN 1200 ELSE 400 END), 0) as cents
         FROM users
         WHERE registration_paid = true AND email_verified = true AND created_at < $1
     `, [endDate]));

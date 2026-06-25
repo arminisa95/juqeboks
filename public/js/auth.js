@@ -696,8 +696,8 @@ function setupRegisterForm() {
     const selectedPrice = document.getElementById('selectedTypePrice');
 
     const labels = {
-        user: { label: 'Individual', price: '5€ / month' },
-        group: { label: 'Group', price: '15€ / month (5 users)' }
+        user: { label: 'Individual', price: '4€ / month' },
+        group: { label: 'Group', price: '12€ / month (5 users)' }
     };
     const info = labels[accountType] || labels.user;
 
@@ -817,7 +817,7 @@ function setupVerifyPending() {
 
     if (paymentDescription) {
         const accountType = user ? user.accountType : 'user';
-        const price = accountType === 'group' ? '15€' : '5€';
+        const price = accountType === 'group' ? '12€' : '4€';
         paymentDescription.textContent = `Complete your secure ${price}/month subscription via Stripe.`;
     }
 
