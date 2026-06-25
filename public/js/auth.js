@@ -529,6 +529,9 @@ async function register(username, email, password, firstName, lastName, accountT
             // Store token and user data
             localStorage.setItem('juke_token', data.token);
             localStorage.setItem('juke_user', JSON.stringify(data.user));
+            if (data.groupCodes && data.groupCodes.length) {
+                localStorage.setItem('juke_group_codes', JSON.stringify(data.groupCodes));
+            }
             currentUser = data.user;
 
             if (document.body && document.body.dataset && document.body.dataset.spa) {
@@ -690,21 +693,43 @@ function setupRegisterForm() {
     // Account type from URL
     const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
     const accountType = params.get('type') || 'user';
+    const preFilledCode = params.get('code') || '';
     const accountTypeInput = document.getElementById('accountType');
     const groupSizeField = document.getElementById('groupSizeField');
+    const registrationCodeField = document.getElementById('registrationCodeField');
+    const paymentMethodsField = document.getElementById('paymentMethodsField');
     const selectedLabel = document.getElementById('selectedTypeLabel');
     const selectedPrice = document.getElementById('selectedTypePrice');
+    const termsText = document.getElementById('termsText');
+    const submitBtn = document.getElementById('registerSubmitBtn');
+    const preFilledCodeInput = document.getElementById('preFilledCode');
 
     const labels = {
         user: { label: 'Individual', price: '4€ / month' },
-        group: { label: 'Group', price: '12€ / month (5 users)' }
+        group: { label: 'Group', price: '12€ / month (5 users)' },
+        code: { label: 'Code Registration', price: '2 years free' }
     };
     const info = labels[accountType] || labels.user;
 
-    if (accountTypeInput) accountTypeInput.value = accountType;
+    if (accountTypeInput) accountTypeInput.value = accountType === 'code' ? 'user' : accountType;
     if (selectedLabel) selectedLabel.textContent = info.label;
     if (selectedPrice) selectedPrice.textContent = info.price;
     if (groupSizeField) groupSizeField.style.display = accountType === 'group' ? 'block' : 'none';
+
+    if (accountType === 'code') {
+        if (registrationCodeField) registrationCodeField.style.display = 'block';
+        if (paymentMethodsField) paymentMethodsField.style.display = 'none';
+        if (termsText) termsText.innerHTML = 'I agree to the <a href="#/impressum" class="link-turquoise">Terms of Service</a>.';
+        if (submitBtn) submitBtn.textContent = 'Create account';
+        if (preFilledCodeInput) preFilledCodeInput.value = preFilledCode;
+        const codeInput = document.getElementById('registrationCode');
+        if (codeInput && preFilledCode) codeInput.value = preFilledCode;
+    } else {
+        if (registrationCodeField) registrationCodeField.style.display = 'none';
+        if (paymentMethodsField) paymentMethodsField.style.display = 'block';
+        if (termsText) termsText.innerHTML = 'I agree to the <a href="#/impressum" class="link-turquoise">Terms of Service</a> and authorize the payment.';
+        if (submitBtn) submitBtn.textContent = 'Continue to payment';
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -722,10 +747,16 @@ function setupRegisterForm() {
         const accountTypeValue = accountTypeInput ? accountTypeInput.value : 'user';
         const groupSize = document.getElementById('groupSize') ? document.getElementById('groupSize').value : 5;
         const registrationCode = document.getElementById('registrationCode') ? document.getElementById('registrationCode').value.trim() : '';
+        const isCodeFlow = accountType === 'code';
         const paymentMethodEl = form.querySelector('input[name="paymentMethod"]:checked');
         const paymentMethod = paymentMethodEl ? paymentMethodEl.value : 'card';
         const terms = document.getElementById('terms');
         const submitBtn = form.querySelector('button[type="submit"]');
+
+        if (isCodeFlow && !registrationCode) {
+            showRegisterError('Please enter a registration code.');
+            return;
+        }
 
         function showRegisterError(msg) {
             const div = document.createElement('div');
@@ -770,10 +801,39 @@ function setupWelcomeScreen() {
 
     cards.forEach(function (card) {
         const type = card.dataset.type;
+        if (type === 'code') return;
         card.addEventListener('click', function () {
             window.location.hash = '#/register?type=' + encodeURIComponent(type);
         });
     });
+
+    const codeBtn = document.getElementById('welcomeCodeBtn');
+    const codeInput = document.getElementById('welcomeCodeInput');
+    if (codeBtn && codeInput) {
+        codeBtn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            const code = codeInput.value.trim();
+            if (!code) {
+                alert('Please enter a registration code.');
+                return;
+            }
+            codeBtn.disabled = true;
+            codeBtn.textContent = 'Checking...';
+            try {
+                const result = await postAuthJson('/auth/validate-code', { code }, function (d) { return !!(d && d.valid); });
+                if (result.ok && result.data.valid) {
+                    window.location.hash = '#/register?type=code&code=' + encodeURIComponent(code);
+                } else {
+                    alert(result.data.error || 'Invalid or already used code.');
+                }
+            } catch (err) {
+                console.error('Code validation error:', err);
+                alert('Failed to validate code. Please try again.');
+            }
+            codeBtn.disabled = false;
+            codeBtn.textContent = 'Continue';
+        });
+    }
 }
 
 // Verify pending screen
@@ -788,6 +848,8 @@ function setupVerifyPending() {
     const stepPayment = document.getElementById('step-payment');
     const stepDone = document.getElementById('step-done');
     const paymentDescription = document.getElementById('paymentDescription');
+    const groupCodesDisplay = document.getElementById('groupCodesDisplay');
+    const groupCodesList = document.getElementById('groupCodesList');
 
     const user = getCurrentUser();
     const pending = localStorage.getItem('juke_pending_email') || (user ? user.email : '');
@@ -810,6 +872,19 @@ function setupVerifyPending() {
             if (stepEmail) stepEmail.style.display = 'none';
             if (stepPayment) stepPayment.style.display = 'none';
             if (stepDone) stepDone.style.display = 'flex';
+            if (groupCodesDisplay && groupCodesList) {
+                const storedCodes = localStorage.getItem('juke_group_codes');
+                if (storedCodes) {
+                    try {
+                        const codes = JSON.parse(storedCodes);
+                        if (codes && codes.length) {
+                            groupCodesList.innerHTML = codes.map((c) => '<li>' + c + '</li>').join('');
+                            groupCodesDisplay.style.display = 'block';
+                        }
+                    } catch (_) {
+                    }
+                }
+            }
         } else if (verified) {
             if (stepEmail) stepEmail.style.display = 'none';
         }

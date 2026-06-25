@@ -226,7 +226,7 @@ async function applyRegistrationCode(userId, code) {
     const normalized = String(code).trim().toUpperCase();
     try {
         const row = await db.get(
-            'SELECT id FROM registration_codes WHERE code = $1 AND is_active = true AND used_by_user_id IS NULL AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)',
+            'SELECT id, group_owner_id FROM registration_codes WHERE code = $1 AND is_active = true AND used_by_user_id IS NULL AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)',
             [normalized]
         );
         if (!row) return { success: false, error: 'Invalid or already used registration code' };
@@ -236,37 +236,91 @@ async function applyRegistrationCode(userId, code) {
 
         await db.query(
             'UPDATE registration_codes SET is_active = false, used_at = CURRENT_TIMESTAMP, used_by_user_id = $1 WHERE id = $2',
-            [userId, row.id]
+            [String(userId), row.id]
         );
         await db.query(
-            'UPDATE users SET registration_paid = true, subscription_tier = $1, subscription_expires_at = $2, is_frozen = false WHERE id = $3',
-            ['premium', expiresAt.toISOString(), userId]
+            'UPDATE users SET registration_paid = true, subscription_tier = $1, subscription_expires_at = $2, is_frozen = false, group_owner_id = $3 WHERE id = $4',
+            ['premium', expiresAt.toISOString(), row.group_owner_id || null, String(userId)]
         );
-        return { success: true, expiresAt: expiresAt.toISOString() };
+        return { success: true, expiresAt: expiresAt.toISOString(), groupOwnerId: row.group_owner_id || null };
     } catch (error) {
         console.error('Apply registration code error:', error);
         return { success: false, error: 'Failed to apply code' };
     }
 }
 
+async function generateGroupCodes(groupOwnerId) {
+    const codes = [];
+    while (codes.length < 4) {
+        const code = crypto.randomBytes(6).toString('hex').toUpperCase();
+        const existing = await db.get('SELECT id FROM registration_codes WHERE code = $1', [code]);
+        if (!existing) codes.push(code);
+    }
+    for (const code of codes) {
+        await db.query(
+            'INSERT INTO registration_codes (code, is_active, group_owner_id) VALUES ($1, true, $2)',
+            [code, String(groupOwnerId)]
+        );
+    }
+    return codes;
+}
+
+async function validateRegistrationCode(code) {
+    if (!code) return { valid: false };
+    const normalized = String(code).trim().toUpperCase();
+    try {
+        const row = await db.get(
+            'SELECT id, group_owner_id FROM registration_codes WHERE code = $1 AND is_active = true AND used_by_user_id IS NULL AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)',
+            [normalized]
+        );
+        if (!row) return { valid: false, error: 'Invalid or already used registration code' };
+        return { valid: true, groupOwnerId: row.group_owner_id || null };
+    } catch (error) {
+        console.error('Validate registration code error:', error);
+        return { valid: false, error: 'Failed to validate code' };
+    }
+}
+
 async function checkAndUpdateAccountFreeze(userId) {
     try {
-        const user = await db.get('SELECT registration_paid, subscription_expires_at, is_frozen, stripe_subscription_id FROM users WHERE id = $1', [userId]);
+        const user = await db.get('SELECT id, registration_paid, subscription_expires_at, is_frozen, stripe_subscription_id, group_owner_id FROM users WHERE id = $1', [userId]);
         if (!user) return { isFrozen: false, registrationPaid: false };
 
         const now = new Date();
         const expired = user.subscription_expires_at && new Date(user.subscription_expires_at) < now;
+        let isFrozen = !!user.is_frozen;
+        let registrationPaid = !!user.registration_paid;
+
+        // If this user is a group member and the group owner is frozen, freeze this member too
+        if (user.group_owner_id) {
+            const owner = await db.get('SELECT id, is_frozen, registration_paid, subscription_expires_at FROM users WHERE id = $1', [user.group_owner_id]);
+            if (owner) {
+                const ownerExpired = owner.subscription_expires_at && new Date(owner.subscription_expires_at) < now;
+                if (owner.is_frozen || (ownerExpired && owner.registration_paid && !owner.stripe_subscription_id)) {
+                    if (!user.is_frozen) {
+                        await db.query('UPDATE users SET is_frozen = true, registration_paid = false WHERE id = $1', [String(userId)]);
+                    }
+                    return { isFrozen: true, registrationPaid: false };
+                }
+            }
+        }
 
         // If free code expired and no active Stripe subscription, freeze account
         if (expired && user.registration_paid && !user.stripe_subscription_id) {
             await db.query(
                 'UPDATE users SET registration_paid = false, is_frozen = true WHERE id = $1',
-                [userId]
+                [String(userId)]
             );
             return { isFrozen: true, registrationPaid: false };
         }
 
-        return { isFrozen: !!user.is_frozen, registrationPaid: !!user.registration_paid };
+        // If group owner is not frozen but this member was frozen, unfreeze them
+        if (user.is_frozen && user.registration_paid && !expired) {
+            await db.query('UPDATE users SET is_frozen = false WHERE id = $1', [String(userId)]);
+            isFrozen = false;
+        }
+
+        return { isFrozen, registrationPaid };
     } catch (error) {
         console.error('Check account freeze error:', error);
         return { isFrozen: false, registrationPaid: false };
@@ -319,6 +373,11 @@ app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), asy
                 await db.query(
                     'UPDATE users SET registration_paid = true, is_frozen = false, stripe_subscription_id = $1, subscription_expires_at = $2 WHERE id = $3',
                     [subscriptionId || null, subscriptionExpiresAt, userId]
+                );
+                // Unfreeze group members if this user is a group owner
+                await db.query(
+                    'UPDATE users SET is_frozen = false, registration_paid = true WHERE group_owner_id = $1',
+                    [userId]
                 );
                 await db.query(
                     `INSERT INTO upload_credits (user_id, credits) VALUES ($1, 999) ON CONFLICT (user_id) DO NOTHING`,
@@ -405,6 +464,7 @@ async function initializeDatabase() {
                 registration_paid BOOLEAN DEFAULT false,
                 subscription_expires_at TIMESTAMP WITH TIME ZONE,
                 is_frozen BOOLEAN DEFAULT false,
+                group_owner_id VARCHAR(255),
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
@@ -610,7 +670,8 @@ async function initializeDatabase() {
                     is_active BOOLEAN DEFAULT true,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                     used_at TIMESTAMP WITH TIME ZONE,
-                    used_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                    used_by_user_id VARCHAR(255),
+                    group_owner_id VARCHAR(255),
                     expires_at TIMESTAMP WITH TIME ZONE
                 );
             `);
@@ -650,6 +711,8 @@ async function initializeDatabase() {
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_paid BOOLEAN DEFAULT false",
             'ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMP WITH TIME ZONE',
             'ALTER TABLE users ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT false',
+            'ALTER TABLE users ADD COLUMN IF NOT EXISTS group_owner_id VARCHAR(255)',
+            'ALTER TABLE registration_codes ADD COLUMN IF NOT EXISTS group_owner_id VARCHAR(255)',
             'ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)',
             'ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255)',
             'ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_checkout_session_id VARCHAR(255)',
@@ -961,6 +1024,16 @@ app.post('/api/auth/register', async (req, res) => {
             }
         }
 
+        // Generate 4 group codes for group accounts
+        let groupCodes = null;
+        if (normalizedAccountType === 'group') {
+            try {
+                groupCodes = await generateGroupCodes(newUser.id);
+            } catch (groupCodeErr) {
+                console.error('Group code generation error (non-fatal):', groupCodeErr.message);
+            }
+        }
+
         // Generate token
         const token = generateToken(newUser);
 
@@ -988,11 +1061,27 @@ app.post('/api/auth/register', async (req, res) => {
             emailSent,
             codeApplied: !!codeResult,
             subscriptionExpiresAt: codeResult ? codeResult.expiresAt : null,
+            groupCodes: groupCodes || null,
         });
 
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ error: 'Registration failed: ' + (error.message || 'Internal server error') });
+    }
+});
+
+// Validate registration code before registration
+app.post('/api/auth/validate-code', async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) {
+            return res.status(400).json({ valid: false, error: 'Code is required' });
+        }
+        const result = await validateRegistrationCode(code);
+        return res.json(result);
+    } catch (error) {
+        console.error('Validate code endpoint error:', error);
+        return res.status(500).json({ valid: false, error: 'Internal server error' });
     }
 });
 
@@ -1085,6 +1174,11 @@ app.get('/api/payments/checkout-status', authenticateToken, async (req, res) => 
                 'UPDATE users SET registration_paid = true, is_frozen = false, stripe_subscription_id = $1, subscription_expires_at = $2 WHERE id = $3',
                 [session.subscription || null, subscriptionExpiresAt, req.user.id]
             );
+            // Unfreeze group members if this user is a group owner
+            await db.query(
+                'UPDATE users SET is_frozen = false, registration_paid = true WHERE group_owner_id = $1',
+                [req.user.id]
+            );
         }
 
         res.json({
@@ -1132,13 +1226,20 @@ app.post('/api/auth/login', async (req, res) => {
         const isFrozen = freezeStatus.isFrozen;
         const registrationPaid = freezeStatus.registrationPaid;
 
+        if (isFrozen) {
+            return res.status(403).json({
+                error: 'Your account is frozen because the subscription expired. Please complete your subscription to reactivate.',
+                isFrozen: true,
+                needsPayment: true,
+                redirectTo: 'verify-pending'
+            });
+        }
+
         // Generate token
         const token = generateToken(user);
         const needsEmailVerification = !user.email_verified;
         const needsPayment = !registrationPaid;
-        let redirectTo = 'feed';
-        if (isFrozen) redirectTo = 'verify-pending';
-        else if (needsEmailVerification || needsPayment) redirectTo = 'verify-pending';
+        const redirectTo = (needsEmailVerification || needsPayment) ? 'verify-pending' : 'feed';
 
         res.json({
             message: 'Login successful',
@@ -1155,12 +1256,12 @@ app.post('/api/auth/login', async (req, res) => {
                 emailVerified: !!user.email_verified,
                 registrationPaid: registrationPaid,
                 subscriptionExpiresAt: user.subscription_expires_at || null,
-                isFrozen: isFrozen,
+                isFrozen: false,
             },
             token,
             needsEmailVerification,
             needsPayment,
-            isFrozen,
+            isFrozen: false,
             redirectTo,
         });
 

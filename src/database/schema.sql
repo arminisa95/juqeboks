@@ -30,6 +30,7 @@ CREATE TABLE users (
     registration_paid BOOLEAN DEFAULT false,
     subscription_expires_at TIMESTAMP WITH TIME ZONE,
     is_frozen BOOLEAN DEFAULT false,
+    group_owner_id VARCHAR(255),
     stripe_customer_id VARCHAR(255),
     stripe_subscription_id VARCHAR(255),
     stripe_checkout_session_id VARCHAR(255),
@@ -44,7 +45,8 @@ CREATE TABLE IF NOT EXISTS registration_codes (
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     used_at TIMESTAMP WITH TIME ZONE,
-    used_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    used_by_user_id VARCHAR(255),
+    group_owner_id VARCHAR(255),
     expires_at TIMESTAMP WITH TIME ZONE
 );
 

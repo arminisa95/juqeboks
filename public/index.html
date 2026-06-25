@@ -421,7 +421,7 @@
                     </button>
                 </div>
                 <p class="welcome-subtitle">Choose your subscription to get started</p>
-                <div class="account-type-grid two-column">
+                <div class="account-type-grid three-column">
                     <div class="account-type-card" data-type="user">
                         <div class="account-type-icon">_user</div>
                         <h3>Individual</h3>
@@ -446,6 +446,16 @@
                             <li>Everyone can upload</li>
                         </ul>
                         <button type="button" class="account-type-select">Choose _group</button>
+                    </div>
+                    <div class="account-type-card code-card" data-type="code">
+                        <div class="account-type-icon">_code</div>
+                        <h3>Have a code</h3>
+                        <p class="account-type-price">2 years <span>free</span></p>
+                        <p class="account-type-mini">Individual or group invite</p>
+                        <div class="code-input-wrap">
+                            <input type="text" id="welcomeCodeInput" placeholder="Enter code" autocomplete="off">
+                        </div>
+                        <button type="button" id="welcomeCodeBtn" class="account-type-select">Continue</button>
                     </div>
                 </div>
                 <div class="login-link">
@@ -473,11 +483,16 @@
 
                 <form id="registerForm">
                     <input type="hidden" id="accountType" name="accountType" value="user">
+                    <input type="hidden" id="preFilledCode" value="">
                     <div class="form-group" id="groupSizeField" style="display:none;">
                         <label for="groupSize">Group size</label>
                         <select id="groupSize" name="groupSize">
                             <option value="5" selected>5 users (12€)</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="registrationCodeField" style="display:none;">
+                        <label for="registrationCode">Registration code</label>
+                        <input type="text" id="registrationCode" name="registrationCode" placeholder="Enter code for 2-year free access">
                     </div>
                     <div class="form-group">
                         <label for="registerUsername">Username</label>
@@ -508,12 +523,7 @@
                         <label for="confirm-password">Confirm Password</label>
                         <input type="password" id="confirm-password" name="confirm-password" required>
                     </div>
-                    <div class="form-group">
-                        <label for="registrationCode">Registration code (optional)</label>
-                        <input type="text" id="registrationCode" name="registrationCode" placeholder="Enter code for 2-year free access">
-                    </div>
-
-                    <div class="form-group payment-methods">
+                    <div class="form-group payment-methods" id="paymentMethodsField">
                         <label>Payment method</label>
                         <div class="payment-methods-grid">
                             <label class="payment-method-option">
@@ -530,11 +540,11 @@
                     <div class="form-group terms-checkbox">
                         <label>
                             <input type="checkbox" id="terms" required>
-                            I agree to the <a href="#/impressum" class="link-turquoise">Terms of Service</a> and authorize the payment.
+                            <span id="termsText">I agree to the <a href="#/impressum" class="link-turquoise">Terms of Service</a> and authorize the payment.</span>
                         </label>
                     </div>
 
-                    <button type="submit" class="register-btn">Continue to payment</button>
+                    <button type="submit" class="register-btn" id="registerSubmitBtn">Continue to payment</button>
                 </form>
 
                 <div class="login-link">
@@ -586,6 +596,11 @@
                         <div class="step-content">
                             <h3>All done!</h3>
                             <p>Your account is active.</p>
+                            <div id="groupCodesDisplay" class="group-codes-display" style="display:none;">
+                                <h4>Your group invite codes</h4>
+                                <p>Share these 4 codes with your group members:</p>
+                                <ul id="groupCodesList"></ul>
+                            </div>
                             <button type="button" id="continueToFeedBtn" class="register-btn">Continue to juqeboks</button>
                         </div>
                     </div>
