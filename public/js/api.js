@@ -116,7 +116,7 @@ function playInlineVideo(container, track) {
 function playTrackInVisualPlayer(track) {
     try {
         if (window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
-            window.JukePlayer.playTrack(track, { autoShowVideo: true });
+            window.JukePlayer.playTrack(track, { autoShowVideo: false });
             return;
         }
         if (track && track.id && typeof playTrack === 'function') {
@@ -2605,7 +2605,10 @@ function createFeedPostCard(track) {
     const safeTitle = (track && track.title) ? String(track.title) : '';
     const safeArtist = (artistName && typeof artistName === 'string') ? artistName : '';
     const uploadedShort = formatTrackDateShort(track);
-    const coverMedia = `<img class="post-media" src="${coverUrl}" alt="${safeTitle}" loading="lazy" decoding="async">`;
+    const videoUrl = track.video_url ? resolveAssetUrl(track.video_url) : null;
+    const coverMedia = videoUrl
+        ? `<video class="post-media post-media-video" data-track-id="${track.id}" src="${videoUrl}" poster="${coverUrl}" muted playsinline preload="metadata" data-video-url="${videoUrl}"></video>`
+        : `<img class="post-media" src="${coverUrl}" alt="${safeTitle}" loading="lazy" decoding="async">`;
     const uploaderLine = (uploaderName && uploaderId && String(uploaderId) !== String(currentUserId || ''))
         ? `<a href="#/koleqtion/${uploaderId}" class="uploader-link">@${uploaderName}</a>`
         : (uploaderName ? `<span class="uploader-link">@${uploaderName}</span>` : '');
@@ -2620,7 +2623,7 @@ function createFeedPostCard(track) {
             <div class="post-header-right">${uploaderLine}${uploadedLine}</div>
         </div>
 
-        <div class="post-media-wrap" data-track-id="${track.id}">
+        <div class="post-media-wrap ${videoUrl ? 'has-video' : ''}" data-track-id="${track.id}">
             ${coverMedia}
             <i class="fas fa-heart double-tap-heart"></i>
             <button class="post-play" type="button" aria-label="Play" data-track-id="${track.id}">

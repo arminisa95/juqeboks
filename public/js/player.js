@@ -365,7 +365,7 @@
             state.audioUrl = audioUrl;
             state.videoUrl = track.video_url ? resolveAssetUrl(track.video_url) : null;
             state.currentTime = 0;
-            state.showVideo = !!(autoShowVideo && state.videoUrl);
+            state.showVideo = false;
             state.muted = false;
 
             updateVideoToggleVisibility();
@@ -895,18 +895,21 @@
 
         audio.addEventListener('timeupdate', function () {
             render();
+            syncInlineVideos();
         });
 
         audio.addEventListener('pause', function () {
             state.isPlaying = false;
             saveState();
             render();
+            syncInlineVideos();
         });
 
         audio.addEventListener('play', function () {
             state.isPlaying = true;
             saveState();
             render();
+            syncInlineVideos();
         });
 
         audio.addEventListener('ended', function () {
@@ -1076,10 +1079,10 @@
         var videoEl = document.getElementById('playerVideo');
         var coverEl = document.querySelector('.now-playing-cover');
         var playerEl = document.querySelector('.music-player');
-        var shouldShow = !!(state.showVideo && state.videoUrl);
+        var shouldShow = false;
 
         if (videoToggle) {
-            videoToggle.style.display = state.videoUrl ? '' : 'none';
+            videoToggle.style.display = 'none';
         }
 
         if (playerEl) {
@@ -1126,6 +1129,29 @@
         } else if (!state.isPlaying && !videoEl.paused) {
             videoEl.pause();
         }
+    }
+
+    function syncInlineVideos() {
+        if (!state.trackId || !state.videoUrl) return;
+        var tid = String(state.trackId);
+        try {
+            if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') tid = CSS.escape(tid);
+            else tid = tid.replace(/"/g, '\\"').replace(/'/g, "\\'");
+        } catch (_) {}
+        var videos = document.querySelectorAll('.post-media-video[data-track-id="' + tid + '"]');
+        if (!videos.length) return;
+        videos.forEach(function (videoEl) {
+            try {
+                if (Math.abs(videoEl.currentTime - audio.currentTime) > 0.5) {
+                    videoEl.currentTime = audio.currentTime;
+                }
+                if (state.isPlaying && videoEl.paused) {
+                    videoEl.play().catch(function(){});
+                } else if (!state.isPlaying && !videoEl.paused) {
+                    videoEl.pause();
+                }
+            } catch (_) {}
+        });
     }
 
     function initOrUpdatePlayer() {
@@ -1393,7 +1419,7 @@
 
             try {
                 if (trackObj && window.JukePlayer && typeof window.JukePlayer.playTrack === 'function') {
-                    window.JukePlayer.playTrack(trackObj, { autoShowVideo: !!trackObj.video_url });
+                    window.JukePlayer.playTrack(trackObj, { autoShowVideo: false });
                 } else if (typeof playTrackById === 'function') {
                     playTrackById(String(tid));
                 }
