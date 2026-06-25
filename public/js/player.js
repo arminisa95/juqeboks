@@ -1577,6 +1577,9 @@
         var fsCurrentTime = document.getElementById('fsCurrentTime');
         var fsDuration = document.getElementById('fsDuration');
         var fsPlay = document.getElementById('fsPlay');
+        var fsShuffle = document.getElementById('fsShuffle');
+        var fsRepeat = document.getElementById('fsRepeat');
+        var fsLike = document.getElementById('fsLike');
 
         if (!miniPlayer) return;
 
@@ -1611,6 +1614,7 @@
             if (likeIcon && state.trackId && typeof window.isTrackLiked === 'function') {
                 var liked = window.isTrackLiked(state.trackId);
                 likeIcon.className = liked ? 'fas fa-heart' : 'far fa-heart';
+                miniLike.classList.toggle('liked', liked);
             }
         }
 
@@ -1630,6 +1634,21 @@
             var fsIcon = fsPlay.querySelector('i');
             if (fsIcon) fsIcon.className = state.isPlaying ? 'fas fa-pause' : 'fas fa-play';
         }
+
+        if (fsShuffle) {
+            fsShuffle.classList.toggle('active', !!state.shuffle);
+        }
+
+        if (fsRepeat) {
+            fsRepeat.classList.toggle('active', !!state.repeat);
+        }
+
+        if (fsLike && state.trackId && typeof window.isTrackLiked === 'function') {
+            var fsLikeIcon = fsLike.querySelector('i');
+            var liked = window.isTrackLiked(state.trackId);
+            fsLike.classList.toggle('liked', liked);
+            if (fsLikeIcon) fsLikeIcon.className = liked ? 'fas fa-heart' : 'far fa-heart';
+        }
     }
 
     function bindMobilePlayer() {
@@ -1645,6 +1664,9 @@
         var fsNext = document.getElementById('fsNext');
         var fsShare = document.getElementById('fsShare');
         var fsQueue = document.getElementById('fsQueue');
+        var fsLike = document.getElementById('fsLike');
+        var fsShuffle = document.getElementById('fsShuffle');
+        var fsRepeat = document.getElementById('fsRepeat');
         var fsProgressBar = document.getElementById('fsProgressBar');
 
         if (miniPlay && !miniPlay.dataset.bound) {
@@ -1676,6 +1698,7 @@
                 e.stopPropagation();
                 if (state.trackId && typeof window.likeTrack === 'function') {
                     window.likeTrack(state.trackId);
+                    setTimeout(updateMobilePlayer, 50);
                 }
             });
         }
@@ -1747,6 +1770,37 @@
                 var x = e.clientX - rect.left;
                 var pct = Math.max(0, Math.min(1, x / rect.width));
                 audio.currentTime = pct * audio.duration;
+                try { syncInlineVideos(); } catch (_) {}
+            });
+        }
+
+        if (fsLike && !fsLike.dataset.bound) {
+            fsLike.dataset.bound = '1';
+            fsLike.addEventListener('click', function () {
+                if (state.trackId && typeof window.likeTrack === 'function') {
+                    window.likeTrack(state.trackId);
+                    setTimeout(updateMobilePlayer, 50);
+                }
+            });
+        }
+
+        if (fsShuffle && !fsShuffle.dataset.bound) {
+            fsShuffle.dataset.bound = '1';
+            fsShuffle.addEventListener('click', function () {
+                state.shuffle = !state.shuffle;
+                saveState();
+                updateMobilePlayer();
+                try { render(); } catch (_) {}
+            });
+        }
+
+        if (fsRepeat && !fsRepeat.dataset.bound) {
+            fsRepeat.dataset.bound = '1';
+            fsRepeat.addEventListener('click', function () {
+                state.repeat = !state.repeat;
+                saveState();
+                updateMobilePlayer();
+                try { render(); } catch (_) {}
             });
         }
     }

@@ -284,6 +284,10 @@ html body nav.mobile-nav {
     font-size: 1rem;
 }
 
+.mobile-mini-player .mini-like.liked {
+    color: #F72193;
+}
+
 /* Expanded Full Screen Player */
 .fullscreen-player {
     display: none;
@@ -302,6 +306,181 @@ html body nav.mobile-nav {
 
 .fullscreen-player.active {
     display: flex;
+}
+
+/* Fullscreen player inner layout */
+.fs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0 16px;
+    flex-shrink: 0;
+}
+
+.fs-close,
+.fs-more,
+.fs-bottom-btn,
+.fs-ctrl-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fs-close {
+    font-size: 1.4rem;
+    width: 40px;
+    height: 40px;
+}
+
+.fs-title-small {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.fs-more {
+    font-size: 1.2rem;
+    width: 40px;
+    height: 40px;
+}
+
+.fs-artwork {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 24px;
+    min-height: 0;
+}
+
+.fs-cover {
+    width: 100%;
+    max-width: 340px;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.fs-info {
+    flex-shrink: 0;
+    padding: 0 8px 24px;
+    text-align: center;
+}
+
+.fs-track-title {
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fs-track-artist {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 1rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fs-progress {
+    flex-shrink: 0;
+    padding: 0 8px 20px;
+}
+
+.fs-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+}
+
+.fs-progress-fill {
+    height: 100%;
+    background: #fff;
+    border-radius: 2px;
+    width: 0%;
+}
+
+.fs-times {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.fs-controls {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 28px;
+}
+
+.fs-ctrl-btn {
+    font-size: 1.4rem;
+    color: rgba(255, 255, 255, 0.75);
+    width: 44px;
+    height: 44px;
+    transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.fs-ctrl-btn:active {
+    transform: scale(0.92);
+}
+
+.fs-ctrl-btn.active {
+    color: #00ffd0;
+}
+
+.fs-play-btn {
+    width: 64px;
+    height: 64px;
+    font-size: 1.8rem;
+    background: #fff;
+    color: #000;
+    border-radius: 50%;
+}
+
+.fs-play-btn i {
+    margin-left: 2px;
+}
+
+.fs-bottom {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 8px 0 24px;
+}
+
+.fs-bottom-btn {
+    font-size: 1.4rem;
+    color: rgba(255, 255, 255, 0.75);
+    width: 48px;
+    height: 48px;
+    transition: color 0.15s ease;
+}
+
+.fs-bottom-btn.active {
+    color: #00ffd0;
+}
+
+.fs-bottom-btn.liked {
+    color: #F72193;
 }
 
 /* Mobile auth pages - black & white */
